@@ -41,7 +41,7 @@ object FetchData extends IOApp.Simple {
   }
 
   def run: IO[Unit] = {
-    val fileNames = FileName.generateLast5Hours()
+    val fileNames = FileName.generateLastNHours(10)
     //    fileNames.foreach(println)
     val urls = fileNames.map(baseUrl / _)
     BlazeClientBuilder[IO](global).resource.use { client =>

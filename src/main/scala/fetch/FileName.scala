@@ -5,16 +5,17 @@ import java.time.{LocalDateTime, Duration}
 
 object FileName {
   private val interval = Duration.ofMinutes(30)
-  private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")s
+  private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
 
   def generateLastHour(): List[String] = {
     val now = LocalDateTime.now
     generate(now.minusHours(1), now)
   }
 
-  def generateLast5Hours(): List[String] = {
-    val now = roundToInterval(LocalDateTime.now, false)
-    generate(now.minusHours(5), now)
+  // TODO side effect
+  def generateLastNHours(hours: Int, now: LocalDateTime = LocalDateTime.now): List[String] = {
+    val roundNow = roundToInterval(now, false)
+    generate(roundNow.minusHours(hours), roundNow)
   }
 
   private def roundToInterval(time: LocalDateTime, roundUp: Boolean): LocalDateTime = {
@@ -33,7 +34,7 @@ object FileName {
     Iterator.iterate(roundStartTime) { time =>
       time.plus(interval)
     }.takeWhile(!_.isAfter(roundEndTime))
-      .filter(_.getMinute == 30)
+      .filter(_.getMinute == 30) // current server accepts only 2:30 3:30 4:30, etc. Later will be available each 10min or even 1min
       .map(time => s"${formatter.format(time)}.csv")
       .toList
   }
