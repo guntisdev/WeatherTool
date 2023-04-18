@@ -13,6 +13,7 @@ import java.nio.file.{Files, Paths}
 import scala.concurrent.ExecutionContext.global
 
 object FetchData extends IOApp.Simple {
+  // TODO wrap config in IO
   private val config = ConfigFactory.load()
   private val basicCredentials = BasicCredentials(config.getString("username"), config.getString("password"))
   private val baseUrl = Uri.unsafeFromString(config.getString("url")) // 20220831_1330.csv
@@ -20,6 +21,7 @@ object FetchData extends IOApp.Simple {
 
   def saveToFile(fileName: String, content: String): IO[Unit] = {
     val path = Paths.get(s"data/$fileName")
+    // TODO redeemWith instead of flatMap
     IO(Files.writeString(path, content)).attempt.flatMap {
       case Right(_) => IO(println(s"write: $fileName"))
       case Left(error) => IO(println(s"Write file '$fileName' failed with error: ${error.getMessage}"))

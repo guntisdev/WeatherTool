@@ -24,8 +24,44 @@ case class MeteoData(
                       atmPressure: Option[Double],
                       dewPoint: Option[Double],
                       airHumidity: Option[Double],
-                      sunshineDuration: Option[Double]
+                      sunshineDuration: Option[Double],
                     )
+
+sealed trait AggregateMeteo
+object AggregateMeteo {
+  case object tempMax extends AggregateMeteo
+
+  case object tempMin extends AggregateMeteo
+
+  case object tempAvg extends AggregateMeteo
+
+  case object precipitationSum extends AggregateMeteo
+
+  case object windSpeedAvg extends AggregateMeteo
+
+  case object windGustMax extends AggregateMeteo
+
+  case object snowThicknessAvg extends AggregateMeteo
+
+  case object dewPointAvg extends AggregateMeteo
+
+  case object airHumidityAvg extends AggregateMeteo
+}
+
+object Meteo {
+  def stringToAggregateParam(strParam: String): Option[AggregateMeteo] = strParam match {
+    case "tempMax" => Some(AggregateMeteo.tempMax)
+    case "tempMin" => Some(AggregateMeteo.tempMin)
+    case "tempAvg" => Some(AggregateMeteo.tempAvg)
+    case "precipitationSum" => Some(AggregateMeteo.precipitationSum)
+    case "windSpeedAvg" => Some(AggregateMeteo.windSpeedAvg)
+    case "windGustMax" => Some(AggregateMeteo.windGustMax)
+    case "snowThicknessAvg" => Some(AggregateMeteo.snowThicknessAvg)
+    case "dewPointAvg" => Some(AggregateMeteo.dewPointAvg)
+    case "airHumidityAvg" => Some(AggregateMeteo.airHumidityAvg)
+    case _ => None
+  }
+}
 
 object MeteoData {
   def fromDoubles(data: List[Option[Double]]): Option[MeteoData] = data match {

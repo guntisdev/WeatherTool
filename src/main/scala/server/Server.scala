@@ -6,18 +6,19 @@ import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
+import parse.{Meteo, Parser}
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.util.Try
 
 object Server extends IOApp {
-  private val formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm")
+  private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
   private val appRoutes = HttpRoutes.of[IO] {
-    // http://localhost:3000/202304131030-202304132030/riga,liepaja/tempAvg
-    case GET -> Root / timestampRange / cities / weatherParam =>
+    // http://localhost:3000/20230409_2200-20230501_1230/Liepāja,Rēzekne/tempAvg
+    case GET -> Root / timestampRange / cities / aggregate =>
       // TODO proly better to Validated with chained errors
-      val res = for {
+      val parsedArguments = for {
         (from, to) <- timestampRange.split("-").toList
           .map(str => Try(LocalDateTime.parse(str, formatter)).toOption) match {
           case List(Some(from), Some(to)) => Some(from, to)
@@ -27,13 +28,16 @@ object Server extends IOApp {
           case list => Some(list)
           case Nil => None
         }
-        param <- if (weatherParam.isEmpty) None else Some(weatherParam)
-      }
-        // TODO yield to parser method which accepts those args
-      yield s"Timestamp From: $from, Timestamp To: $to, Cities: ${cityList.mkString(", ")}, Weather Param: $param"
+        aggregate <- Meteo.stringToAggregateParam(aggregate)
 
-      res match {
-        case Some(responseTxt) => Ok(responseTxt)
+      }
+      yield (from, to, cityList, aggregate)
+
+      parsedArguments match {
+        case Some((from, to, cityList, aggregate)) => {
+          val resultData = Parser.queryData(from, to, cityList, aggregate)
+          Ok(resultData.toString())
+        }
         case _ => BadRequest(s"Invalid request format")
       }
   }
