@@ -15,7 +15,6 @@ libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-blaze-server" % "0.23.9",
   "org.http4s" %% "http4s-blaze-client" % "0.23.13",
   "org.http4s" %% "http4s-circe" % http4sVersion,
-  "org.http4s" %% "http4s-jdk-http-client" % "0.8.0",
 
   "ch.qos.logback" % "logback-classic" % "1.2.9",
   "com.typesafe" % "config" % "1.4.1",
