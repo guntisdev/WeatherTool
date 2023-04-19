@@ -59,27 +59,28 @@ object Parser {
   }
 
   def queryData(
-     from: LocalDateTime,
-     to: LocalDateTime,
+     data: List[String],
      cities: List[String],
      aggregator: AggregateMeteo,
    ): IO[Map[String, Double]] = {
     for {
-      lines <- db.DBService.getInRange(from, to)
-      weatherLines <- IO.pure(aggregateLines(lines, cities, aggregator))
+
+      weatherLines <- IO.pure(aggregateLines(data, cities, aggregator))
 //      _ <- IO.println(weatherLines)
     } yield weatherLines
   }
 
+  // TODO remove this. Just for testing
   private def run: IO[Unit] = {
     println("================ start parser")
 
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    val start = LocalDateTime.parse("20230409_2200", formatter)
-    val end = LocalDateTime.parse("20230501_1230", formatter)
+    val from = LocalDateTime.parse("20230414_2200", formatter)
+    val to = LocalDateTime.parse("20230501_1230", formatter)
 
     for {
-      parsed <- queryData(start, end, List("Liepāja", "Rēzekne", "randomstr"), AggregateMeteo.tempAvg)
+      lines <- db.DBService.getInRange(from, to)
+      parsed <- queryData(lines, List("Liepāja", "Rēzekne", "randomstr"), AggregateMeteo.tempAvg)
       _ <- IO.println(parsed)
     } yield ()
   }
