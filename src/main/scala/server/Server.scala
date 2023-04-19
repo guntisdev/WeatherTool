@@ -15,8 +15,8 @@ import scala.util.Try
 object Server extends IOApp {
   private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
   private val appRoutes = HttpRoutes.of[IO] {
-    // http://localhost:3000/20230409_2200-20230501_1230/Liepāja,Rēzekne/tempAvg
-    case GET -> Root / timestampRange / cities / aggregate =>
+    // http://localhost:3000/query/20230409_2200-20230501_1230/Liepāja,Rēzekne/tempAvg
+    case GET -> Root / "query" / timestampRange / cities / aggregate =>
       // TODO proly better to Validated with chained errors
       val parsedArguments = for {
         (from, to) <- timestampRange.split("-").toList
@@ -40,6 +40,16 @@ object Server extends IOApp {
         }
         case _ => BadRequest(s"Invalid request format")
       }
+
+    case GET -> Root / "fetch" / dateRange =>
+      ???
+
+    case GET -> Root / "show" / "fetched_dates" =>
+      ???
+
+    case GET -> Root / "show" / dateRange =>
+      ???
+
   }
 
   private val httpApp = Router("/" -> appRoutes).orNotFound

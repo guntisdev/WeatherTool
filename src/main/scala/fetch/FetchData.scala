@@ -17,16 +17,6 @@ object FetchData extends IOApp.Simple {
   private val config = ConfigFactory.load()
   private val basicCredentials = BasicCredentials(config.getString("username"), config.getString("password"))
   private val baseUrl = Uri.unsafeFromString(config.getString("url")) // 20220831_1330.csv
-//  private val baseUrl = Uri.unsafeFromString("https://jsonplaceholder.typicode.com/") // todos/1
-
-  def saveToFile(fileName: String, content: String): IO[Unit] = {
-    val path = Paths.get(s"data/$fileName")
-    // TODO redeemWith instead of flatMap
-    IO(Files.writeString(path, content)).attempt.flatMap {
-      case Right(_) => IO(println(s"write: $fileName"))
-      case Left(error) => IO(println(s"Write file '$fileName' failed with error: ${error.getMessage}"))
-    }
-  }
 
   def makeRequest(client: Client[IO], url: Uri): IO[Unit] = {
     val fileName = url.path.toString()
@@ -36,7 +26,7 @@ object FetchData extends IOApp.Simple {
         .pure[IO]
       responseOrError <- client.expect[String](request).attempt
       _ <- responseOrError match {
-        case Right(response) => saveToFile(fileName, response)
+        case Right(response) => db.DBService.save(fileName, response)
         case Left(error) => IO(println(s"Request failed to url: $url with error: ${error.getMessage}"))
       }
     } yield ()
@@ -44,7 +34,6 @@ object FetchData extends IOApp.Simple {
 
   def run: IO[Unit] = {
     val fileNames = FileName.generateLastNHours(10)
-    //    fileNames.foreach(println)
     val urls = fileNames.map(baseUrl / _)
     BlazeClientBuilder[IO](global).resource.use { client =>
       urls.traverse(url => makeRequest(client, url)) // urls.map(...).sequence
