@@ -6,23 +6,6 @@ import java.time.format.DateTimeFormatter
 import scala.io.Source
 import scala.util.Try
 
-/*
-import cats.effect.{IO, Resource}
-import java.io.File
-
-def readFile(file: File): IO[String] =
-  IO(scala.io.Source.fromFile(file).mkString).handleErrorWith(_ => IO.pure(""))
-
-def readFiles(dir: File): IO[List[(String, String)]] =
-  IO(dir.listFiles.toList)
-    .flatMap(files =>
-      files.traverse { file =>
-        readFile(file).map((file.getName, _))
-      }
-    )
-    .handleErrorWith(_ => IO.pure(List.empty))
- */
-
 object Parser {
   val data_path = "/Users/guntissmaukstelis/sandbox/hello/data/"
 
