@@ -15,10 +15,10 @@ object DBService {
   private val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
   private val dataPath = "/Users/guntissmaukstelis/sandbox/WeatherTool/data/"
 
-  private def readFile(fileName: String): IO[String] = {
+  private def readFile(fileName: String): IO[List[String]] = {
     val file = new File(dataPath, fileName)
     val sourceResource = Resource.fromAutoCloseable(IO(Source.fromFile(file)))
-    sourceResource.use(source => IO(source.mkString)).handleErrorWith(_ => IO.pure(""))
+    sourceResource.use(source => IO(source.getLines().toList)).handleErrorWith(_ => IO.pure(List.empty))
   }
 
   private def readFileNames(path: String): IO[List[String]] =
@@ -42,8 +42,8 @@ object DBService {
     for {
       fileNames <- readFileNames(dataPath)
         .map (_.filter (inRange (_, from, to)))
-      fileContent <- fileNames.traverse(readFile)
-    } yield fileContent
+      fileLines <- fileNames.traverse(readFile)
+    } yield fileLines.flatten
   }
 
   def save(fileName: String, content: String): IO[Unit] = {

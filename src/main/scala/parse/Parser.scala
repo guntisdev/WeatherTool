@@ -1,44 +1,18 @@
 package parse
 
-import java.io.File
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
+
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import scala.io.Source
 import scala.util.Try
 
 object Parser {
-  val data_path = "/Users/guntissmaukstelis/sandbox/hello/data/"
-
-  def fileToDateTime(file: File): LocalDateTime = {
-    val dateString = file.toString.split("/").last.split("\\.").head
-    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    LocalDateTime.parse(dateString, formatter)
-  }
-
-  def getFiles(path: String): List[File] = new File(path).listFiles.toList
-
-  def getFilesInRange(start: LocalDateTime, end: LocalDateTime): List[File] = {
-    val fileMap = getFiles(data_path).map(file => fileToDateTime(file) -> file).toMap
-    fileMap
-      .filter { case (k, _) =>
-        k.plusSeconds(1).isAfter(start) && k.minusSeconds(1).isBefore(end)
-      }
-      .map { case (_, v) => v }.toList
-  }
-
-  // TODO I guess this should be wrapped in IO
-  def readFromFile(file: File): List[String] = {
-    val source = Source.fromFile(file)
-    val lineList = source.getLines.toList
-    source.close()
-    lineList.tail // remove header line
-  }
-
   def parseLine(line: String): Option[WeatherStationData] = {
     val paramCount = MeteoData.getCount
 
     def parseTimestamp(timestampStr: String): Option[LocalDateTime] = {
-      val formatter = DateTimeFormatter.ofPattern("yyyyMM.dd HH:mm")
+      val formatter = DateTimeFormatter.ofPattern("yyyydd.MM HH:mm")
       Try(LocalDateTime.parse(s"2023${timestampStr.trim}", formatter)).toEither match {
         case Right(timestamp) => Some(timestamp)
         case Left(_) => None
@@ -61,38 +35,56 @@ object Parser {
     } yield WeatherStationData(city, timestamp, meteoData, phenomena)
   }
 
-  def readFromVariable(str: String): List[String] = str.split("\n").toList // Data.csv
-
-  def queryData(from: LocalDateTime, to: LocalDateTime, cities: List[String], aggregator: AggregateMeteo): Map[String, Double] = {
-    val res = getFilesInRange(from, to)
-      .flatMap(readFromFile)
+  private def aggregateLines(
+    lines: List[String],
+    cities: List[String],
+    aggregator: AggregateMeteo,
+  ): Map[String, Double] = {
+    val weatherByCity = lines
       .flatMap(parseLine)
       .filter(line => cities.contains(line.city))
       .groupBy(_.city)
 
-//    res.foreach(println)
-
     aggregator match {
-      case AggregateMeteo.tempAvg => res.map { case (city, weatherData) => city -> weatherData.flatMap(_.meteo.tempMax).max }
-      case AggregateMeteo.tempAvg => res.map { case (city, weatherData) => city -> weatherData.flatMap(_.meteo.tempMin).min }
-      case AggregateMeteo.tempAvg => res.map { case (city, weatherData) => city -> {
+      case AggregateMeteo.tempAvg => weatherByCity.map { case (city, weatherData) => city -> weatherData.flatMap(_.meteo.tempMax).max }
+      case AggregateMeteo.tempAvg => weatherByCity.map { case (city, weatherData) => city -> weatherData.flatMap(_.meteo.tempMin).min }
+      case AggregateMeteo.tempAvg => weatherByCity.map { case (city, weatherData) => city -> {
         val avgList = weatherData.flatMap(_.meteo.tempAvg)
         avgList.sum / avgList.length
-      }}
-      case AggregateMeteo.precipitationSum => res.map { case (city, weatherData) => city -> weatherData.flatMap(_.meteo.precipitation).sum }
+      }
+      }
+      case AggregateMeteo.precipitationSum => weatherByCity.map { case (city, weatherData) => city -> weatherData.flatMap(_.meteo.precipitation).sum }
       //  TODO add here other aggregateParams
     }
   }
 
-  def main(args: Array[String]): Unit = {
+  def queryData(
+     from: LocalDateTime,
+     to: LocalDateTime,
+     cities: List[String],
+     aggregator: AggregateMeteo,
+   ): IO[Map[String, Double]] = {
+    for {
+      lines <- db.DBService.getInRange(from, to)
+      weatherLines <- IO.pure(aggregateLines(lines, cities, aggregator))
+//      _ <- IO.println(weatherLines)
+    } yield weatherLines
+  }
+
+  private def run: IO[Unit] = {
     println("================ start parser")
 
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
     val start = LocalDateTime.parse("20230409_2200", formatter)
     val end = LocalDateTime.parse("20230501_1230", formatter)
 
-    val parsed = queryData(start, end, List("Liepāja", "Rēzekne", "randomstr"), AggregateMeteo.tempAvg)
-//    parsed.foreach(println)
-      println(parsed.toString())
+    for {
+      parsed <- queryData(start, end, List("Liepāja", "Rēzekne", "randomstr"), AggregateMeteo.tempAvg)
+      _ <- IO.println(parsed)
+    } yield ()
+  }
+
+  def main(args: Array[String]): Unit = {
+    run.unsafeRunSync()
   }
 }
