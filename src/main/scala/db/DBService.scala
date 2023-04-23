@@ -1,6 +1,5 @@
 package db
 
-import cats.effect.unsafe.implicits.global
 import cats.effect.{IO, Resource}
 import cats.implicits.toTraverseOps
 
@@ -58,42 +57,21 @@ object DBService {
       )
   }
 
-  def getDates(): IO[Set[LocalDate]] = {
+  // dates in which we have saved data
+  def getDates(): IO[List[LocalDate]] = {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     for {
       fileNames <- readFileNames(dataPath)
-      datesStr <- IO.pure(fileNames.map(_.take(8)).toSet)
+      datesStr <- IO.pure(fileNames.map(_.take(8)).distinct) // take yyyyMMdd
       dates <- IO.pure(datesStr.flatMap(str => {
         Try(LocalDate.parse(str, formatter)).toOption
       }))
-    } yield dates
+    } yield dates.sorted
   }
 
-  def fetchDates(date: LocalDate): IO[List[String]] = {
-    ???
-  }
-
-  // TODO remove this. Just testing
-  private def testGetInRange: IO[Unit] = {
-    val from = LocalDateTime.parse("20230414_2200", dateFormatter)
-    val to = LocalDateTime.parse("20230501_1230", dateFormatter)
-
-    for {
-      lines <- getInRange(from, to)
-      _ <- lines.traverse(IO.println)
-    } yield ()
-  }
-
-  private def testGetDates: IO[Unit] = {
-    for {
-      dates <- getDates()
-      _ <- IO.println(dates)
-    } yield ()
-  }
-
-  def main(args: Array[String]): Unit = {
-    println("----------------> db main")
-//    testGetInRange.unsafeRunSync()
-    testGetDates.unsafeRunSync()
+  def getDateFileNames(date: LocalDate): IO[List[String]] = {
+    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+    val dateStr: String = date.format(formatter)
+    readFileNames(dataPath).map(_.filter(_.startsWith(dateStr)).sorted)
   }
 }
