@@ -1,22 +1,22 @@
 package fetch
 
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, Duration}
+import java.time.{Duration, LocalDate, LocalDateTime}
 
-object FileName {
+object FileNameService {
   private val interval = Duration.ofMinutes(30)
   private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-
-  def generateLastHour(): List[String] = {
-    // TODO IO.timer() IOTimer
-    val now = LocalDateTime.now
-    generate(now.minusHours(1), now)
-  }
 
   // TODO side effect
   def generateLastNHours(hours: Int, now: LocalDateTime = LocalDateTime.now): List[String] = {
     val roundNow = roundToInterval(now, false)
     generate(roundNow.minusHours(hours), roundNow)
+  }
+
+  def generateFromDate(date: LocalDate): List[String] = {
+    val from = LocalDateTime.of(date.getYear, date.getMonth, date.getDayOfMonth, 0, 0)
+    val to = LocalDateTime.of(date.getYear, date.getMonth, date.getDayOfMonth, 23, 59)
+    generate(from, to)
   }
 
   private def roundToInterval(time: LocalDateTime, roundUp: Boolean): LocalDateTime = {
