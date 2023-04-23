@@ -52,8 +52,8 @@ object Server extends IOApp {
         case _ => BadRequest(s"Invalid request format")
       }
 
-    // http://localhost:3000/fetchDate/20230423
-    case GET -> Root / "fetchDate" / dateStr => {
+    // http://localhost:3000/fetch/date/20230423
+    case GET -> Root / "fetch" / "date" / dateStr => {
       val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
       val maybeDate = Try(LocalDate.parse(dateStr, dateFormatter)).toEither
       maybeDate match {
@@ -81,8 +81,28 @@ object Server extends IOApp {
       }
     }
 
-    case GET -> Root / "show" / "fetched_dates" =>
-      ???
+    // http://localhost:3000/show/all_dates
+    case GET -> Root / "show" / "all_dates" =>
+      DBService.getDates().flatMap(dates => {
+        val printer = Printer.spaces2.copy(dropNullValues = true)
+        val prettyJson = printer.print(dates.asJson)
+        Ok(prettyJson)
+      })
+
+    // http://localhost:3000/show/date/20230423
+    case GET -> Root / "show" / "date" / dateStr =>
+      val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+      val maybeDate = Try(LocalDate.parse(dateStr, dateFormatter)).toEither
+      maybeDate match {
+        case Right(date) => {
+          DBService.getDateFileNames(date).flatMap(fileNames => {
+            val printer = Printer.spaces2.copy(dropNullValues = true)
+            val prettyJson = printer.print(fileNames.asJson)
+            Ok(prettyJson)
+          })
+        }
+        case Left(_) => BadRequest("Invalid request format")
+      }
 
     case GET -> Root / "show" / dateRange =>
       ???
