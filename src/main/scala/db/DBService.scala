@@ -6,7 +6,7 @@ import cats.implicits.toTraverseOps
 
 import java.io.File
 import java.nio.file.{Files, Paths}
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 import scala.io.Source
 import scala.util.Try
@@ -46,19 +46,35 @@ object DBService {
     } yield fileLines.flatten
   }
 
-  def save(fileName: String, content: String): IO[Unit] = {
+  def save(fileName: String, content: String): IO[Either[Throwable, String]] = {
     val path = Paths.get(s"$dataPath/$fileName")
-    // TODO redeemWith instead of flatMap
-    IO(Files.writeString(path, content)).attempt.flatMap {
-      case Right(_) => IO.println(s"write: $fileName")
-      case Left(error) => IO.println(s"Write file '$fileName' failed with error: ${error.getMessage}")
-    }
+    IO(Files.writeString(path, content))
+      .redeemWith(
+        error => IO(Left(error))
+//          .flatTap(_ => IO.println(s"Write file '$fileName' failed with error: ${error.getMessage}"))
+        ,
+        _ => IO(Right(fileName))
+//          .flatTap(_ => IO.println(s"write: $fileName"))
+      )
+  }
+
+  def getDates(): IO[Set[LocalDate]] = {
+    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+    for {
+      fileNames <- readFileNames(dataPath)
+      datesStr <- IO.pure(fileNames.map(_.take(8)).toSet)
+      dates <- IO.pure(datesStr.flatMap(str => {
+        Try(LocalDate.parse(str, formatter)).toOption
+      }))
+    } yield dates
+  }
+
+  def fetchDates(date: LocalDate): IO[List[String]] = {
+    ???
   }
 
   // TODO remove this. Just testing
-  private def run: IO[Unit] = {
-    println("----------------> db main")
-
+  private def testGetInRange: IO[Unit] = {
     val from = LocalDateTime.parse("20230414_2200", dateFormatter)
     val to = LocalDateTime.parse("20230501_1230", dateFormatter)
 
@@ -68,7 +84,16 @@ object DBService {
     } yield ()
   }
 
+  private def testGetDates: IO[Unit] = {
+    for {
+      dates <- getDates()
+      _ <- IO.println(dates)
+    } yield ()
+  }
+
   def main(args: Array[String]): Unit = {
-    run.unsafeRunSync()
+    println("----------------> db main")
+//    testGetInRange.unsafeRunSync()
+    testGetDates.unsafeRunSync()
   }
 }

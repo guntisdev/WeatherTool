@@ -1,14 +1,21 @@
 package server
 
 import cats.effect._
+import cats.implicits.toTraverseOps
+import db.DBService
+import fetch.FetchService
+import io.circe.{Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
+import io.circe.syntax._
+import io.circe.generic.auto._
+import org.http4s.circe.jsonEncoder
 import parse.{Meteo, Parser}
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 import scala.util.Try
 
@@ -45,8 +52,34 @@ object Server extends IOApp {
         case _ => BadRequest(s"Invalid request format")
       }
 
-    case GET -> Root / "fetch" / dateRange =>
-      ???
+    // http://localhost:3000/fetchDate/20230423
+    case GET -> Root / "fetchDate" / dateStr => {
+      val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+      val maybeDate = Try(LocalDate.parse(dateStr, dateFormatter)).toEither
+      maybeDate match {
+        case Right(date) => {
+          val result = for {
+            fetched <- FetchService.fetchFromDate(date)
+            (fetchErrors, successDownloads) = fetched.partitionMap(identity)
+            saved <- successDownloads.traverse { case (name, content) => DBService.save(name, content) }
+            (saveErrors, successSaves) = saved.partitionMap(identity)
+            successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
+            errors = fetchErrors.map(e => s"FetchError: ${e.getMessage}") ++ saveErrors.map(e => s"SaveError: ${e.getMessage}")
+          } yield (successes, errors)
+
+          result.flatMap { case (successes, errors) =>
+            val responseBody = Json.obj(
+              "errors" -> errors.asJson,
+              "successes" -> successes.asJson
+            )
+            val printer = Printer.spaces2.copy(dropNullValues = true)
+            val prettyJson = printer.print(responseBody)
+            Ok(prettyJson)
+          }
+        }
+        case Left(_) => BadRequest("Invalid request format")
+      }
+    }
 
     case GET -> Root / "show" / "fetched_dates" =>
       ???
