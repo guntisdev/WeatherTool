@@ -44,7 +44,7 @@ object Server extends IOApp {
         case Some((from, to, cityList, aggregate)) => {
           val res = for {
             lines <- db.DBService.getInRange(from, to)
-            parsedData <- parse.Parser.queryData(lines, cityList, aggregate)
+            parsedData <- IO.pure(parse.Parser.queryData(lines, cityList, aggregate))
           } yield parsedData
 
           Ok(res.map(_.toString()))
