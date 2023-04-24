@@ -1,8 +1,5 @@
 package parse
 
-import cats.effect.IO
-import cats.effect.unsafe.implicits.global
-
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.util.Try
@@ -58,34 +55,12 @@ object Parser {
     }
   }
 
+  // TODO move out
   def queryData(
      data: List[String],
      cities: List[String],
      aggregator: AggregateMeteo,
-   ): IO[Map[String, Double]] = {
-    for {
-
-      weatherLines <- IO.pure(aggregateLines(data, cities, aggregator))
-//      _ <- IO.println(weatherLines)
-    } yield weatherLines
-  }
-
-  // TODO remove this. Just for testing
-  private def run: IO[Unit] = {
-    println("================ start parser")
-
-    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    val from = LocalDateTime.parse("20230414_2200", formatter)
-    val to = LocalDateTime.parse("20230501_1230", formatter)
-
-    for {
-      lines <- db.DBService.getInRange(from, to)
-      parsed <- queryData(lines, List("Liepāja", "Rēzekne", "randomstr"), AggregateMeteo.tempAvg)
-      _ <- IO.println(parsed)
-    } yield ()
-  }
-
-  def main(args: Array[String]): Unit = {
-    run.unsafeRunSync()
+   ): Map[String, Double] = {
+    aggregateLines(data, cities, aggregator)
   }
 }
