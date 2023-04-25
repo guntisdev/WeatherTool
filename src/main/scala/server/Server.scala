@@ -4,109 +4,67 @@ import cats.effect._
 import cats.implicits.toTraverseOps
 import db.DBService
 import fetch.FetchService
+import parse.{MeteoData, Parser}
+import server.ValidateRoutes.{Aggregate, CityList, DateTimeRange, ValidDate}
 import io.circe.{Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
-import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import io.circe.syntax._
-import io.circe.generic.auto._
-import org.http4s.circe.jsonEncoder
-import parse.{Meteo, Parser}
 
-import java.time.{LocalDate, LocalDateTime}
-import java.time.format.DateTimeFormatter
-import scala.util.Try
 
 object Server extends IOApp {
-  private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
+
+  // Define the extension method `pretty` for Json
+  implicit class JsonPrettyPrinter(json: Json) {
+    def pretty: String = {
+      val printer = Printer.spaces2.copy(dropNullValues = true)
+      printer.print(json)
+    }
+  }
+
   private val appRoutes = HttpRoutes.of[IO] {
+
     // http://localhost:3000/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempAvg
-    case GET -> Root / "query" / timestampRange / cities / aggregate =>
-      // TODO proly better to Validated with chained errors
-      val parsedArguments = for {
-        (from, to) <- timestampRange.split("-").toList
-          .map(str => Try(LocalDateTime.parse(str, formatter)).toOption) match {
-          case List(Some(from), Some(to)) => Some(from, to)
-          case _ => None
-        }
-        cityList <- cities.split(",").toList match {
-          case list => Some(list)
-          case Nil => None
-        }
-        aggregate <- Meteo.stringToAggregateParam(aggregate)
-
-      }
-      yield (from, to, cityList, aggregate)
-
-      parsedArguments match {
-        case Some((from, to, cityList, aggregate)) => {
-          val res = for {
-            lines <- db.DBService.getInRange(from, to)
-            parsedData <- IO.pure(parse.Parser.queryData(lines, cityList, aggregate))
-          } yield parsedData
-
-          Ok(res.map(_.toString()))
-        }
-        case _ => BadRequest(s"Invalid request format")
-      }
+    case GET -> Root / "query" / DateTimeRange(from, to) / CityList(cities) / Aggregate(aggregate) =>
+      DBService.getInRange(from, to)
+        .map(Parser.queryData(_, cities, aggregate))
+        .flatMap(result => Ok(result.asJson.pretty))
 
     // http://localhost:3000/fetch/date/20230423
-    case GET -> Root / "fetch" / "date" / dateStr => {
-      val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-      val maybeDate = Try(LocalDate.parse(dateStr, dateFormatter)).toEither
-      maybeDate match {
-        case Right(date) => {
-          val result = for {
-            fetched <- FetchService.fetchFromDate(date)
-            (fetchErrors, successDownloads) = fetched.partitionMap(identity)
-            saved <- successDownloads.traverse { case (name, content) => DBService.save(name, content) }
-            (saveErrors, successSaves) = saved.partitionMap(identity)
-            successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
-            errors = fetchErrors.map(e => s"FetchError: ${e.getMessage}") ++ saveErrors.map(e => s"SaveError: ${e.getMessage}")
-          } yield (successes, errors)
+    case GET -> Root / "fetch" / "date" / ValidDate(date) =>
+      val result = for {
+        fetched <- FetchService.fetchFromDate(date)
+        (fetchErrors, successDownloads) = fetched.partitionMap(identity)
+        saved <- successDownloads.traverse { case (name, content) => DBService.save(name, content) }
+        (saveErrors, successSaves) = saved.partitionMap(identity)
+        successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
+        errors = fetchErrors.map(e => s"FetchError: ${e.getMessage}") ++ saveErrors.map(e => s"SaveError: ${e.getMessage}")
+      } yield (successes, errors)
 
-          result.flatMap { case (successes, errors) =>
-            val responseBody = Json.obj(
-              "errors" -> errors.asJson,
-              "successes" -> successes.asJson
-            )
-            val printer = Printer.spaces2.copy(dropNullValues = true)
-            val prettyJson = printer.print(responseBody)
-            Ok(prettyJson)
-          }
-        }
-        case Left(_) => BadRequest("Invalid request format")
+      result.flatMap { case (successes, errors) =>
+        Ok(Json.obj(
+            "errors" -> errors.asJson,
+            "successes" -> successes.asJson
+          ).pretty)
       }
-    }
 
     // http://localhost:3000/show/all_dates
     case GET -> Root / "show" / "all_dates" =>
-      DBService.getDates().flatMap(dates => {
-        val printer = Printer.spaces2.copy(dropNullValues = true)
-        val prettyJson = printer.print(dates.asJson)
-        Ok(prettyJson)
-      })
+      DBService.getDates().flatMap(dates =>
+        Ok(dates.asJson.pretty)
+      )
 
     // http://localhost:3000/show/date/20230423
-    case GET -> Root / "show" / "date" / dateStr =>
-      val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-      val maybeDate = Try(LocalDate.parse(dateStr, dateFormatter)).toEither
-      maybeDate match {
-        case Right(date) => {
-          DBService.getDateFileNames(date).flatMap(fileNames => {
-            val printer = Printer.spaces2.copy(dropNullValues = true)
-            val prettyJson = printer.print(fileNames.asJson)
-            Ok(prettyJson)
-          })
-        }
-        case Left(_) => BadRequest("Invalid request format")
-      }
+    case GET -> Root / "show" / "date" / ValidDate(date) =>
+      DBService.getDateFileNames(date).flatMap(fileNames =>
+        Ok(fileNames.asJson.pretty)
+      )
 
-    case GET -> Root / "show" / dateRange =>
-      ???
-
+    // http://localhost:3000/help
+    case GET -> Root / "help" =>
+      Ok(MeteoData.getKeys.asJson.pretty)
   }
 
   private val httpApp = Router("/" -> appRoutes).orNotFound
