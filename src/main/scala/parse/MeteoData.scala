@@ -1,7 +1,7 @@
 package parse
 
 import java.time.LocalDateTime
-import scala.reflect.runtime.universe.{termNames, typeOf}
+import scala.reflect.runtime.universe._
 
 
 case class WeatherStationData(
@@ -26,42 +26,6 @@ case class MeteoData(
                       airHumidity: Option[Double],
                       sunshineDuration: Option[Double],
                     )
-
-sealed trait AggregateMeteo
-object AggregateMeteo {
-  case object tempMax extends AggregateMeteo
-
-  case object tempMin extends AggregateMeteo
-
-  case object tempAvg extends AggregateMeteo
-
-  case object precipitationSum extends AggregateMeteo
-
-  case object windSpeedAvg extends AggregateMeteo
-
-  case object windGustMax extends AggregateMeteo
-
-  case object snowThicknessAvg extends AggregateMeteo
-
-  case object dewPointAvg extends AggregateMeteo
-
-  case object airHumidityAvg extends AggregateMeteo
-}
-
-object Meteo {
-  def stringToAggregateParam(strParam: String): Option[AggregateMeteo] = strParam match {
-    case "tempMax" => Some(AggregateMeteo.tempMax)
-    case "tempMin" => Some(AggregateMeteo.tempMin)
-    case "tempAvg" => Some(AggregateMeteo.tempAvg)
-    case "precipitationSum" => Some(AggregateMeteo.precipitationSum)
-    case "windSpeedAvg" => Some(AggregateMeteo.windSpeedAvg)
-    case "windGustMax" => Some(AggregateMeteo.windGustMax)
-    case "snowThicknessAvg" => Some(AggregateMeteo.snowThicknessAvg)
-    case "dewPointAvg" => Some(AggregateMeteo.dewPointAvg)
-    case "airHumidityAvg" => Some(AggregateMeteo.airHumidityAvg)
-    case _ => None
-  }
-}
 
 object MeteoData {
   def fromDoubles(data: List[Option[Double]]): Option[MeteoData] = data match {
@@ -101,11 +65,6 @@ object MeteoData {
     val constructor = typeOf[MeteoData].decl(termNames.CONSTRUCTOR).asMethod
     val paramCount = constructor.paramLists.flatten.size
     paramCount
-  }
-
-  def getKeys: List[String] = {
-    val constructor = typeOf[MeteoData].decl(termNames.CONSTRUCTOR).asMethod
-    constructor.paramLists.flatten.map(_.name.toString)
   }
 }
 

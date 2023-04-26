@@ -4,9 +4,9 @@ import cats.effect._
 import cats.implicits.toTraverseOps
 import db.DBService
 import fetch.FetchService
-import parse.{MeteoData, Parser}
+import parse.{AggregateKey, AggregateValue, Parser}
 import server.ValidateRoutes.{Aggregate, CityList, DateTimeRange, ValidDate}
-import io.circe.{Json, Printer}
+import io.circe.{Encoder, Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.server.Router
@@ -31,6 +31,7 @@ object Server extends IOApp {
       DBService.getInRange(from, to)
         .map(Parser.queryData(_, cities, aggregate))
         .flatMap(result => Ok(result.asJson.pretty))
+//        .flatMap(result => Ok("make json encoder"))
 
     // http://localhost:3000/fetch/date/20230423
     case GET -> Root / "fetch" / "date" / ValidDate(date) =>
@@ -64,7 +65,7 @@ object Server extends IOApp {
 
     // http://localhost:3000/help
     case GET -> Root / "help" =>
-      Ok(MeteoData.getKeys.asJson.pretty)
+      Ok(AggregateKey.getKeys.asJson.pretty)
   }
 
   private val httpApp = Router("/" -> appRoutes).orNotFound
