@@ -28,23 +28,21 @@ object AggregateValue {
 
   case class precipitationList(value: Map[LocalDateTime, Double]) extends AggregateValue
 
+  private def encodeDateTimeMap(map: Map[LocalDateTime, Double]): Json = {
+    map.map { case (dateTime, value) =>
+      Json.obj(dateFormatter.format(dateTime) -> Json.fromDoubleOrNull(value))
+    }.toList.asJson
+  }
+
   implicit val encodeAggregateValue: Encoder[AggregateValue] = Encoder.instance {
-    case tm: tempMax => Json.fromDoubleOrNull(tm.value)
-    case tml: tempMaxList => tml.value.map { case (dateTime, value) =>
-      Json.obj(dateFormatter.format(dateTime) -> Json.fromDoubleOrNull(value))
-    }.toList.asJson
-    case tmin: tempMin => Json.fromDoubleOrNull(tmin.value)
-    case tml: tempMinList => tml.value.map { case (dateTime, value) =>
-      Json.obj(dateFormatter.format(dateTime) -> Json.fromDoubleOrNull(value))
-    }.toList.asJson
-    case tavg: tempAvg => Json.fromDoubleOrNull(tavg.value)
-    case tml: tempAvgList => tml.value.map { case (dateTime, value) =>
-      Json.obj(dateFormatter.format(dateTime) -> Json.fromDoubleOrNull(value))
-    }.toList.asJson
-    case psum: precipitationSum => Json.fromDoubleOrNull(psum.value)
-    case plist: precipitationList => plist.value.map { case (dateTime, value) =>
-      Json.obj(dateFormatter.format(dateTime) -> Json.fromDoubleOrNull(value))
-    }.toList.asJson
+    case key: tempMax => Json.fromDoubleOrNull(key.value)
+    case key: tempMaxList => encodeDateTimeMap(key.value)
+    case key: tempMin => Json.fromDoubleOrNull(key.value)
+    case key: tempMinList => encodeDateTimeMap(key.value)
+    case key: tempAvg => Json.fromDoubleOrNull(key.value)
+    case key: tempAvgList => encodeDateTimeMap(key.value)
+    case key: precipitationSum => Json.fromDoubleOrNull(key.value)
+    case key: precipitationList => encodeDateTimeMap(key.value)
   }
 
   def getKeys: List[String] = {
