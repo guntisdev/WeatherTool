@@ -33,7 +33,7 @@ object Parser {
     } yield WeatherStationData(city, timestamp, meteoData, phenomena)
   }
 
-  private def aggregateLines(
+  def queryData(
     lines: List[String],
     cities: List[String],
     aggregator: AggregateKey,
@@ -43,48 +43,42 @@ object Parser {
       .filter(line => cities.contains(line.city))
       .groupBy(_.city)
 
-    aggregator match {
-      case AggregateKey.tempMax => weatherByCity.map { case (city, weatherData) => city ->
-        AggregateValue.tempMax(weatherData.flatMap(_.meteo.tempMax).max) }
-      case AggregateKey.tempMaxList => weatherByCity.map { case (city, weatherData) => city ->
-        AggregateValue.tempMaxList(weatherData.collect {
-          case wd if wd.meteo.tempMax.isDefined => wd.timestamp -> wd.meteo.tempMax.get
-        }.toMap) }
-
-      case AggregateKey.tempMin => weatherByCity.map { case (city, weatherData) => city ->
-        AggregateValue.tempMin(weatherData.flatMap(_.meteo.tempMin).min) }
-      case AggregateKey.tempMinList => weatherByCity.map { case (city, weatherData) => city ->
-        AggregateValue.tempMinList(weatherData.collect {
-          case wd if wd.meteo.tempMin.isDefined => wd.timestamp -> wd.meteo.tempMin.get
-        }.toMap)}
-
-      case AggregateKey.tempAvg => weatherByCity.map { case (city, weatherData) => city ->
-        AggregateValue.tempAvg({
-          val avgList = weatherData.flatMap(_.meteo.tempAvg)
-          avgList.sum / avgList.length
-        })}
-      case AggregateKey.tempAvgList => weatherByCity.map { case (city, weatherData) => city ->
-        AggregateValue.tempAvgList(weatherData.collect {
-          case wd if wd.meteo.tempAvg.isDefined => wd.timestamp -> wd.meteo.tempAvg.get
-        }.toMap)}
-
-      case AggregateKey.precipitationSum => weatherByCity.map { case (city, weatherData) => city ->
-        AggregateValue.precipitationSum(weatherData.flatMap(_.meteo.precipitation).sum)}
-      case AggregateKey.precipitationList => weatherByCity.map { case (city, weatherData) => city ->
-        AggregateValue.precipitationList(weatherData.collect {
-          case wd if wd.meteo.precipitation.isDefined => wd.timestamp -> wd.meteo.precipitation.get
-        }.toMap)
+    def aggregateValue(
+      selector: MeteoData => Option[Double],
+      aggregate: List[Double] => Double,
+      constructor: Double => AggregateValue
+    ): Map[String, AggregateValue] = {
+      weatherByCity.map { case (city, weatherData) =>
+        val values = weatherData.flatMap(wd => selector(wd.meteo))
+        city -> constructor(aggregate(values))
       }
-      //  TODO add here other aggregateParams
     }
-  }
 
-  // TODO move out
-  def queryData(
-     data: List[String],
-     cities: List[String],
-     aggregator: AggregateKey,
-   ): Map[String, AggregateValue] = {
-    aggregateLines(data, cities, aggregator)
+    def aggregateList(
+      selector: WeatherStationData => Option[(LocalDateTime, Double)],
+      constructor: Map[LocalDateTime, Double] => AggregateValue
+    ): Map[String, AggregateValue] = {
+      weatherByCity.map { case (city, weatherData) =>
+        val values = weatherData.flatMap(selector).toMap
+        city -> constructor(values)
+      }
+    }
+
+    val AggKey = AggregateKey
+    val AggVal = AggregateValue
+
+    aggregator match {
+      case AggKey.tempMax => aggregateValue(_.tempMax, _.max, AggVal.tempMax)
+      case AggKey.tempMaxList => aggregateList(wd => wd.meteo.tempMax.map(wd.timestamp -> _), AggVal.tempMaxList)
+
+      case AggKey.tempMin => aggregateValue(_.tempMin, _.min, AggVal.tempMin)
+      case AggKey.tempMinList => aggregateList(wd => wd.meteo.tempMin.map(wd.timestamp -> _), AggVal.tempMinList)
+
+      case AggKey.tempAvg => aggregateValue(_.tempAvg, values => values.sum / values.length, AggVal.tempAvg)
+      case AggKey.tempAvgList => aggregateList(wd => wd.meteo.tempAvg.map(wd.timestamp -> _), AggVal.tempAvgList)
+
+      case AggKey.precipitationSum => aggregateValue(_.precipitation, _.sum, AggVal.precipitationSum)
+      case AggKey.precipitationList => aggregateList(wd => wd.meteo.precipitation.map(wd.timestamp -> _), AggVal.precipitationList)
+    }
   }
 }
