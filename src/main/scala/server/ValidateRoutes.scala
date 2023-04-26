@@ -1,6 +1,6 @@
 package server
 
-import parse.{AggregateMeteo, Meteo}
+import parse.AggregateKey
 
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
@@ -36,8 +36,8 @@ object ValidateRoutes {
   }
 
   object Aggregate {
-    def unapply(str: String): Option[AggregateMeteo] = {
-      Meteo.stringToAggregateParam(str)
+    def unapply(str: String): Option[AggregateKey] = {
+      AggregateKey.stringToAggregateParam(str)
     }
   }
 }

@@ -18,8 +18,10 @@ libraryDependencies ++= Seq(
 
   "ch.qos.logback" % "logback-classic" % "1.2.9",
   "com.typesafe" % "config" % "1.4.1",
+  "org.scala-lang" % "scala-reflect" % "2.13.10",
 
-  "io.circe" %% "circe-core" % circeVersion,
+
+"io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-generic-extras" % circeVersion,
   "io.circe" %% "circe-optics" % circeVersion,

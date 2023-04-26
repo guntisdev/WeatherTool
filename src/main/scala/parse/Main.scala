@@ -2,6 +2,7 @@ package parse
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
+import io.circe.syntax.EncoderOps
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -16,8 +17,8 @@ object Main {
 
     for {
       lines <- db.DBService.getInRange(from, to)
-      parsed <- IO.pure(Parser.queryData(lines, List("Liepāja", "Rēzekne", "randomstr"), AggregateMeteo.tempAvg))
-      _ <- IO.println(parsed)
+      parsed <- IO.pure(Parser.queryData(lines, List("Liepāja", "Rēzekne", "randomstr"), AggregateKey.tempMax))
+      _ <- IO.println(parsed.asJson)
     } yield ()
   }
 
