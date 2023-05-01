@@ -36,12 +36,16 @@ object Server extends IOApp {
     // http://localhost:3000/fetch/date/20230423
     case GET -> Root / "fetch" / "date" / ValidDate(date) =>
       val result = for {
-        fetched <- FetchService.fetchFromDate(date)
-        (fetchErrors, successDownloads) = fetched.partitionMap(identity)
-        saved <- successDownloads.traverse { case (name, content) => DBService.save(name, content) }
-        (saveErrors, successSaves) = saved.partitionMap(identity)
+        fetchResultEither <- FetchService.fetchFromDate(date).attempt
+        fetchServiceError = fetchResultEither.left.toOption.map(e => s"FetchServiceError: ${e.getMessage}").toList
+        fetchResult = fetchResultEither.getOrElse(List.empty)
+        (fetchErrors, successDownloads) = fetchResult.partitionMap(identity)
+        saveResults <- successDownloads.traverse { case (name, content) => DBService.save(name, content) }
+        (saveErrors, successSaves) = saveResults.partitionMap(identity)
         successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
-        errors = fetchErrors.map(e => s"FetchError: ${e.getMessage}") ++ saveErrors.map(e => s"SaveError: ${e.getMessage}")
+        errors = fetchServiceError ++ fetchErrors.map(e => s"FetchError: ${e.getMessage}") ++ saveErrors.map(e => s"SaveError: ${e.getMessage}")
+        _ <- IO.println(s"errors: $errors")
+        _ <- IO.println(s"successes: $successes")
       } yield (successes, errors)
 
       result.flatMap { case (successes, errors) =>

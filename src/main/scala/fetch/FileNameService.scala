@@ -7,12 +7,6 @@ object FileNameService {
   private val interval = Duration.ofMinutes(30)
   private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
 
-  // TODO side effect
-  def generateLastNHours(hours: Int, now: LocalDateTime = LocalDateTime.now): List[String] = {
-    val roundNow = roundToInterval(now, false)
-    generate(roundNow.minusHours(hours), roundNow)
-  }
-
   def generateFromDate(date: LocalDate): List[String] = {
     val from = LocalDateTime.of(date.getYear, date.getMonth, date.getDayOfMonth, 0, 0)
     val to = LocalDateTime.of(date.getYear, date.getMonth, date.getDayOfMonth, 23, 59)
