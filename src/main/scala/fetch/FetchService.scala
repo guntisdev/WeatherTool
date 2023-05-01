@@ -12,31 +12,39 @@ import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.global
 
 object FetchService {
-  // TODO wrap config in IO
   private val config = ConfigFactory.load()
-  private val basicCredentials = BasicCredentials(config.getString("username"), config.getString("password"))
-  private val baseUrl = Uri.unsafeFromString(config.getString("url")) // 20220831_1330.csv
+  private def getIOString(path: String): IO[String] =
+    if (config.hasPath(path)) IO.pure(config.getString(path))
+    else IO.raiseError(new RuntimeException(s"Missing configuration: $path"))
+
+  private val basicCredentialsIO: IO[BasicCredentials] =
+    for {
+      username <- getIOString("username")
+      password <- getIOString("password")
+    } yield BasicCredentials(username, password)
+
+  private val baseUrlIO: IO[Uri] = getIOString("url").map(Uri.unsafeFromString) // 20220831_1330.csv
 
   private def makeRequest(client: Client[IO], url: Uri): IO[Either[Throwable, (String, String)]] = {
     val fileName = url.path.toString()
+
     for {
-      request <- Request[IO](Method.GET, url)
-        .withHeaders(Authorization(basicCredentials))
-        .pure[IO]
+      basicCredentials <- basicCredentialsIO
+      request = Request[IO](Method.GET, url).withHeaders(Authorization(basicCredentials))
       result <- client.expect[String](request).redeemWith(
         error => IO(Left(error))
-//          .flatTap(_ => IO.println(s"Request failed to url: $url with error: ${error.getMessage}"))
+        // .flatTap(_ => IO.println(s"Request failed to url: $url with error: ${error.getMessage}")),
         ,
         fileContent => IO(Right((fileName, fileContent)))
-//          .flatTap(_ => IO.println(s"Fetched: $fileName"))
+        // .flatTap(_ => IO.println(s"Fetched: $fileName"))
       )
     } yield result
   }
 
   private def fetchFiles(fileNames: List[String]): IO[List[Either[Throwable, (String, String)]]] = {
-    val urls = fileNames.map(baseUrl / _)
+    val IOUrls = baseUrlIO.map(baseUrl => fileNames.map(baseUrl / _))
     BlazeClientBuilder[IO](global).resource.use { client =>
-      urls.traverse(url => makeRequest(client, url))
+      IOUrls.flatMap(_.traverse(url => makeRequest(client, url)))
     }
   }
 
