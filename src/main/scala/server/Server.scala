@@ -4,14 +4,16 @@ import cats.effect._
 import cats.implicits.toTraverseOps
 import db.DBService
 import fetch.FetchService
-import parse.{AggregateKey, AggregateValue, Parser}
-import server.ValidateRoutes.{Aggregate, CityList, DateTimeRange, ValidDate}
+import parse.Parser
+import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, ValidDate}
 import io.circe.{Encoder, Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import io.circe.syntax._
+import parse.Aggregate.AggregateValueImplicits.aggregateValueEncoder
+import parse.Aggregate.{AggregateKey, UserQuery}
 
 
 object Server extends IOApp {
@@ -26,12 +28,11 @@ object Server extends IOApp {
 
   private val appRoutes = HttpRoutes.of[IO] {
 
-    // http://localhost:3000/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempAvg
-    case GET -> Root / "query" / DateTimeRange(from, to) / CityList(cities) / Aggregate(aggregate) =>
+    // http://localhost:3000/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempMax/max
+    case GET -> Root / "query" / DateTimeRange(from, to) / CityList(cities) / field / AggKey(key) =>
       DBService.getInRange(from, to)
-        .map(Parser.queryData(_, cities, aggregate))
+        .map(Parser.queryData(UserQuery(cities, field, key), _))
         .flatMap(result => Ok(result.asJson.pretty))
-//        .flatMap(result => Ok("make json encoder"))
 
     // http://localhost:3000/fetch/date/20230423
     case GET -> Root / "fetch" / "date" / ValidDate(date) =>
