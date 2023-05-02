@@ -1,6 +1,6 @@
 package server
 
-import parse.AggregateKey
+import parse.Aggregate.AggregateKey
 
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
@@ -35,9 +35,9 @@ object ValidateRoutes {
     }
   }
 
-  object Aggregate {
+  object AggKey {
     def unapply(str: String): Option[AggregateKey] = {
-      AggregateKey.stringToAggregateParam(str)
+      AggregateKey.fromString(str)
     }
   }
 }

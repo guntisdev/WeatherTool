@@ -7,64 +7,69 @@ import scala.reflect.runtime.universe._
 case class WeatherStationData(
                                city: String,
                                timestamp: LocalDateTime,
-                               meteo: MeteoData,
-                               phenomena: List[String],
+                               weather: WeatherData,
                              )
 
-case class MeteoData(
+case class WeatherData(
                       tempMax: Option[Double],
                       tempMin: Option[Double],
                       tempAvg: Option[Double],
                       precipitation: Option[Double],
-                      windSpeedAvg: Option[Double],
-                      windGustMax: Option[Double],
+                      windAvg: Option[Double],
+                      windMax: Option[Double],
                       visibilityMin: Option[Double],
                       visibilityAvg: Option[Double],
-                      snowThicknessAvg: Option[Double],
+                      snowAvg: Option[Double],
                       atmPressure: Option[Double],
                       dewPoint: Option[Double],
-                      airHumidity: Option[Double],
-                      sunshineDuration: Option[Double],
+                      humidity: Option[Double],
+                      sunDuration: Option[Double],
+                      phenomena: List[String],
                     )
 
-object MeteoData {
-  def fromDoubles(data: List[Option[Double]]): Option[MeteoData] = data match {
+object WeatherData {
+  def fromDoubles(data: List[Option[Double]], phenomena: List[String]): Option[WeatherData] = data match {
     case List(
     tempMax,
     tempMin,
     tempAvg,
     precipitation,
-    windSpeedAvg,
-    windGustMax,
+    windAvg,
+    windMax,
     visibilityMin,
     visibilityAvg,
-    snowThicknessAvg,
+    snowAvg,
     atmPressure,
     dewPoint,
-    airHumidity,
-    sunshineDuration
-    ) => Some(MeteoData(
+    humidity,
+    sunDuration
+    ) => Some(WeatherData(
       tempMax,
       tempMin,
       tempAvg,
       precipitation,
-      windSpeedAvg,
-      windGustMax,
+      windAvg,
+      windMax,
       visibilityMin,
       visibilityAvg,
-      snowThicknessAvg,
+      snowAvg,
       atmPressure,
       dewPoint,
-      airHumidity,
-      sunshineDuration,
+      humidity,
+      sunDuration,
+      phenomena,
     ))
     case _ => None
   }
 
-  def getCount: Int = {
-    val constructor = typeOf[MeteoData].decl(termNames.CONSTRUCTOR).asMethod
+  def getParamCount: Int = {
+    val constructor = typeOf[WeatherData].decl(termNames.CONSTRUCTOR).asMethod
     val paramCount = constructor.paramLists.flatten.size
     paramCount
+  }
+
+  def getDoubleParamCount: Int = {
+    getParamCount - 1 // minus one because 'phenomena' List[String] not Double
   }
 }
 
@@ -76,14 +81,14 @@ object MeteoData {
 //  "tempMin" -> "Stundas minimālā temperatūra",
 //  "tempAvg" -> "Stundas vidējā temperatūra",
 //  "precipitation" -> "Stundas nokrišņu daudzums",
-//  "windSpeedAvg" -> "Vidējais vēja ātrums novērojumu termiņā (10 min. vidējais)",
-//  "windGustMax" -> "Stundas maksimālās vēja brāzmas",
+//  "windAvg" -> "Vidējais vēja ātrums novērojumu termiņā (10 min. vidējais)",
+//  "windMax" -> "Stundas maksimālās vēja brāzmas",
 //  "visibilityMin" -> "Stundas minimālā redzamība",
 //  "visibilityAvg" -> "Stundas vidējā redzamība",
-//  "snowThicknessAvg" -> "Stundas vidējais sniega segas biezums",
+//  "snowAvg" -> "Stundas vidējais sniega segas biezums",
 //  "atmPressure" -> "Atmosfēras spiediens jūras līmenī novērojuma termiņā (milibāros)",
 //  "dewPoint" -> "Rasas punkta temperatūra novērojuma termiņā",
-//  "airHumidity" -> "Relatīvais gaisa mitrums novērojumu termiņā",
-//  "sunshineDuration" -> "Saules spīdēšanas ilgums",
-////  "weatherPhenomena" -> "Laika parādības",
+//  "humidity" -> "Relatīvais gaisa mitrums novērojumu termiņā",
+//  "sunDuration" -> "Saules spīdēšanas ilgums",
+////  "phenomena" -> "Laika parādības",
 //)
