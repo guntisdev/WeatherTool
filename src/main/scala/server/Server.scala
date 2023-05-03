@@ -4,7 +4,7 @@ import cats.effect._
 import cats.implicits.toTraverseOps
 import db.DBService
 import fetch.FetchService
-import parse.Parser
+import parse.{Parser, WeatherData}
 import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, ValidDate}
 import io.circe.{Encoder, Json, Printer}
 import org.http4s._
@@ -70,7 +70,16 @@ object Server extends IOApp {
 
     // http://localhost:3000/help
     case GET -> Root / "help" =>
-      Ok(AggregateKey.getKeys.asJson.pretty)
+      Ok(Json.obj(
+        "aggregate fields" -> WeatherData.getKeys.asJson,
+        "aggregate keys" -> AggregateKey.getKeys.asJson,
+        "example urls" -> List(
+          "http://localhost:3000/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempMax/max",
+          "http://localhost:3000/fetch/date/20230423",
+          "http://localhost:3000/show/all_dates",
+          "http://localhost:3000/show/date/20230423",
+        ).asJson,
+      ).pretty)
   }
 
   private val httpApp = Router("/" -> appRoutes).orNotFound
