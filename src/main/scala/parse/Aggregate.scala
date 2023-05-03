@@ -38,7 +38,7 @@ object Aggregate {
       val classSymbol = runtimeMirror.classSymbol(classOf[AggregateKey])
 
       // Get all case classes that extend the AggregateKey trait
-      val keys = classSymbol.knownDirectSubclasses.map(_.name.toString).toList
+      val keys = classSymbol.knownDirectSubclasses.map(_.name.toString.toLowerCase).toList
 
       keys
     }
