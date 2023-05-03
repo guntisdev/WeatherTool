@@ -12,7 +12,7 @@ import scala.util.Try
 
 object DBService {
   private val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-  private val dataPath = "/Users/guntissmaukstelis/sandbox/WeatherTool/data/"
+  private val dataPath = "./data"
 
   private def readFile(fileName: String): IO[List[String]] = {
     val file = new File(dataPath, fileName)
