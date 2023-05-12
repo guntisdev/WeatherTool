@@ -86,7 +86,7 @@ object Server extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO]
-      .bindHttp(3000, "localhost")
+      .bindHttp(8080, "0.0.0.0")
       .withHttpApp(httpApp)
       .serve
       .compile

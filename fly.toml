@@ -1,0 +1,13 @@
+# fly.toml app configuration file generated for weather-tool on 2023-05-12T22:54:40+03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "weather-tool"
+primary_region = "waw"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
