@@ -25,3 +25,4 @@ dependency-reduced-pom.xml
 logs/
 .DS_Store
 data/*
+!project/assembly.sbt

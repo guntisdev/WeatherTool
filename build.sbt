@@ -1,10 +1,11 @@
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / version := "0.1.1-SNAPSHOT"
 
 ThisBuild / scalaVersion := "2.13.10"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "WeatherTool"
+    name := "WeatherTool",
+    Compile / mainClass := Some("server.Server")
   )
 
 val http4sVersion = "0.23.16"
@@ -21,7 +22,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % "2.13.10",
 
 
-"io.circe" %% "circe-core" % circeVersion,
+  "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-generic-extras" % circeVersion,
   "io.circe" %% "circe-optics" % circeVersion,
