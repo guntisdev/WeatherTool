@@ -49,7 +49,6 @@ object FetchService {
   }
 
   def fetchSingleFile(fileName: String): IO[(String, String)] = {
-    println("start fetching")
     fetchFiles(List(fileName)).flatMap { results =>
       results.headOption match {
         case Some(Right(result)) => IO.pure(result)

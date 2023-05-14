@@ -25,6 +25,8 @@
 **/logs
 **/.DS_Store
 !**/project/assembly.sbt
+!**/web/dist/index.html
+!**/web/dist/bundle.js
 
 # flyctl launch added from .idea/.gitignore
 # Default ignored files
