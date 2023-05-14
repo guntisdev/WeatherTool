@@ -48,6 +48,17 @@ object FetchService {
     }
   }
 
+  def fetchSingleFile(fileName: String): IO[(String, String)] = {
+    println("start fetching")
+    fetchFiles(List(fileName)).flatMap { results =>
+      results.headOption match {
+        case Some(Right(result)) => IO.pure(result)
+        case Some(Left(err)) => IO.raiseError(err)
+        case None => IO.raiseError(new Exception("No file fetched"))
+      }
+    }
+  }
+
   def fetchInRange(from: LocalDateTime, to: LocalDateTime): IO[List[Either[Throwable, (String, String)]]] = {
     val fileNames = FileNameService.generate(from, to)
     fetchFiles(fileNames)

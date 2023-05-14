@@ -1,7 +1,9 @@
 package fetch
 
+import cats.effect._
+
 import java.time.format.DateTimeFormatter
-import java.time.{Duration, LocalDate, LocalDateTime}
+import java.time.{Duration, LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
 
 object FileNameService {
   private val interval = Duration.ofMinutes(30)
@@ -21,7 +23,18 @@ object FileNameService {
     time.plusMinutes(adjustment)
   }
 
-  // not sure either data are each 10 minutes or each 30 mins of hour
+  def generateCurrentHour(implicit clock: Clock[IO]): IO[String] = {
+    clock.realTime.map { duration =>
+      val instant = java.time.Instant.ofEpochMilli(duration.toMillis)
+      val zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Riga"))
+      val now = zonedDateTime.toLocalDateTime.withMinute(30)
+      val csvName = s"${formatter.format(now)}.csv"
+//      println("println", csvName)
+      csvName
+    }
+  }
+
+  // currently csv files are generated each 30 mins of hour
   def generate(startTime: LocalDateTime, endTime: LocalDateTime): List[String] = {
     val roundStartTime = roundToInterval(startTime, true)
     val roundEndTime = roundToInterval(endTime, false)

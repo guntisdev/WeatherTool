@@ -5,7 +5,7 @@ ThisBuild / scalaVersion := "2.13.10"
 lazy val root = (project in file("."))
   .settings(
     name := "WeatherTool",
-    Compile / mainClass := Some("server.Server")
+    Compile / mainClass := Some("server.Main")
   )
 
 val http4sVersion = "0.23.16"
