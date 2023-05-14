@@ -2,6 +2,7 @@ package server
 
 import cats.effect._
 import cats.effect.unsafe.implicits.global
+import cats.implicits.catsSyntaxApply
 import fetch.{FetchService, FileNameService}
 import fs2.Stream
 
@@ -33,9 +34,11 @@ object Scheduler {
 //  }
 
   def scheduleTask(task: IO[(String, String)]): Stream[IO, (String, String)] = {
-    Stream.eval(durationToNextHalfHour).flatMap { delay =>
-      (Stream.sleep[IO](delay) ++ Stream.awakeEvery[IO](1.hour)).evalMap(_ => task)
-    }
+    Stream.eval(durationToNextHalfHour).flatMap { delay => {
+      Stream.eval(IO.println(s"Scheduler started with delay: ${delay.toMinutes} min")) *>
+      (Stream.sleep[IO](delay) ++ Stream.awakeEvery[IO](1.hour))
+        .evalMap(_ => task)
+    }}
   }
 
   def main(args: Array[String]): Unit = {
