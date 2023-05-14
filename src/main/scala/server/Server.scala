@@ -6,7 +6,7 @@ import db.DBService
 import fetch.FetchService
 import parse.{Parser, WeatherData}
 import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, ValidDate}
-import io.circe.{Encoder, Json, Printer}
+import io.circe.{Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.server.Router
@@ -14,9 +14,10 @@ import org.http4s.server.blaze.BlazeServerBuilder
 import io.circe.syntax._
 import parse.Aggregate.AggregateValueImplicits.aggregateValueEncoder
 import parse.Aggregate.{AggregateKey, UserQuery}
+import fs2.Stream
 
 
-object Server extends IOApp {
+object Server {
 
   // Define the extension method `pretty` for Json
   implicit class JsonPrettyPrinter(json: Json) {
@@ -84,12 +85,9 @@ object Server extends IOApp {
 
   private val httpApp = Router("/" -> appRoutes).orNotFound
 
-  override def run(args: List[String]): IO[ExitCode] =
+  def run: Stream[IO, ExitCode] =
     BlazeServerBuilder[IO]
       .bindHttp(8080, "0.0.0.0")
       .withHttpApp(httpApp)
       .serve
-      .compile
-      .drain
-      .as(ExitCode.Success)
 }
