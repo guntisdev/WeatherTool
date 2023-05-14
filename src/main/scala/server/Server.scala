@@ -15,6 +15,7 @@ import io.circe.syntax._
 import parse.Aggregate.AggregateValueImplicits.aggregateValueEncoder
 import parse.Aggregate.{AggregateKey, UserQuery}
 import fs2.Stream
+import org.http4s.server.middleware.CORS
 import org.http4s.server.staticcontent.FileService
 
 
@@ -86,9 +87,11 @@ object Server {
     }
   }
 
+  val apiRoutesCors = CORS(apiRoutes)
+
   private val httpApp = Router(
     "/" -> staticcontent.fileService[IO](FileService.Config("./web/dist")),
-    "/api" -> apiRoutes
+    "/api" -> apiRoutesCors
   ).orNotFound
 
   def run: Stream[IO, ExitCode] =
