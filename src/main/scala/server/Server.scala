@@ -71,6 +71,10 @@ object Server {
         Ok(fileNames.asJson.pretty)
       )
 
+    // http://0.0.0.0:8080/api/show/file/20230423_12:30.csv
+    case GET -> Root / "show" / "file" / (fileName: String) =>
+      DBService.getFileContent(fileName).flatMap(Ok(_))
+
     // http://0.0.0.0:8080/api/help
     case GET -> Root / "help" => {
       val host = "weather-tool.fly.dev"
