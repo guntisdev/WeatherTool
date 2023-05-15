@@ -23,6 +23,15 @@
   color: #b318f0;
 }
 
+.sections {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    padding-left: 20px;
+    line-height: 70px;
+    text-align: left;
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
