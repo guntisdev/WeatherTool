@@ -74,4 +74,12 @@ object DBService {
     val dateStr: String = date.format(formatter)
     readFileNames(dataPath).map(_.filter(_.startsWith(dateStr)).sorted)
   }
+
+  def getFileContent(fileName: String): IO[String] = {
+    val file = new File(dataPath, fileName)
+    val sourceResource = Resource.fromAutoCloseable(IO(Source.fromFile(file)))
+    sourceResource.use(source => IO(source.getLines().mkString("<br/>\n"))).handleErrorWith { error =>
+      IO(println(s"Failed to read file: $error")) *> IO.pure("")
+    }
+  }
 }
