@@ -8,13 +8,14 @@ lazy val root = (project in file("."))
     Compile / mainClass := Some("server.Main")
   )
 
-val http4sVersion = "0.23.16"
+val http4sVersion = "0.23.18"
 val circeVersion = "0.14.1"
 
 libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-dsl" % http4sVersion,
-  "org.http4s" %% "http4s-blaze-server" % "0.23.9",
-  "org.http4s" %% "http4s-blaze-client" % "0.23.13",
+  "org.http4s" %% "http4s-server" % http4sVersion,
+  "org.http4s" %% "http4s-ember-server" % http4sVersion,
+  "org.http4s" %% "http4s-ember-client" % http4sVersion,
   "org.http4s" %% "http4s-circe" % http4sVersion,
 
   "ch.qos.logback" % "logback-classic" % "1.2.9",

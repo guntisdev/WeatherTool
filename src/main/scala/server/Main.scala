@@ -1,22 +1,23 @@
 package server
 import cats.effect._
+import cats.implicits.catsSyntaxTuple2Parallel
 import db.DBService
 import fetch.{FetchService, FileNameService}
-import fs2.Stream
 
 object Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     val fetchTask = FileNameService.generateCurrentHour.flatMap(FetchService.fetchSingleFile)
-    Stream(
-      Server.run,
-      Scheduler.scheduleTask(fetchTask)
-        .evalMap { case (name, content) =>
-          IO(println(s"fetched: $name")) *>
-            DBService.save(name, content).attempt.flatMap {
-              case Right(savedName) => IO(println(s"File saved: $savedName"))
-              case Left(err) => IO(println(s"Error: $err"))
-            }
-        }
-    ).parJoinUnbounded.compile.drain.as(ExitCode.Success)
+    val scheduler = Scheduler.scheduleTask(fetchTask)
+      .evalMap { case (name, content) =>
+        IO(println(s"fetched: $name")) *>
+          DBService.save(name, content).attempt.flatMap {
+            case Right(savedName) => IO(println(s"File saved: $savedName"))
+            case Left(err) => IO(println(s"Error: $err"))
+          }
+      }.compile.drain // Convert Stream[IO, Unit] to IO[Unit]
+
+    val server = Server.run // This is an IO[Server]
+
+    (server, scheduler).parMapN((_, _) => ExitCode.Success)
   }
 }
