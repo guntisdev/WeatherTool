@@ -2,6 +2,7 @@ package server
 
 import cats.effect._
 import cats.implicits.toTraverseOps
+import com.comcast.ip4s.IpLiteralSyntax
 import db.DBService
 import fetch.FetchService
 import parse.{Parser, WeatherData}
@@ -9,14 +10,18 @@ import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, ValidDate}
 import io.circe.{Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
+import org.http4s.implicits._
 import org.http4s.server.{Router, staticcontent}
-import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.server.middleware.CORS
+import org.http4s.server.middleware.CORSConfig
+import org.http4s.server.staticcontent.FileService
+import org.http4s.ember.server.EmberServerBuilder
 import io.circe.syntax._
 import parse.Aggregate.AggregateValueImplicits.aggregateValueEncoder
 import parse.Aggregate.{AggregateKey, UserQuery}
 import fs2.Stream
-import org.http4s.server.middleware.CORS
-import org.http4s.server.staticcontent.FileService
+
+import scala.concurrent.duration.DurationInt
 
 
 object Server {
@@ -91,16 +96,26 @@ object Server {
     }
   }
 
-  val apiRoutesCors = CORS(apiRoutes)
+  val corsConfig = CORSConfig.default
+    .withAnyOrigin(true)
+    .withAnyMethod(true)
+    .withAllowedMethods(Some(Set(Method.GET, Method.POST)))
+    .withAllowCredentials(false)
+    .withMaxAge(1.day)
+
+  val apiRoutesCors = CORS(apiRoutes, corsConfig)
 
   private val httpApp = Router(
     "/" -> staticcontent.fileService[IO](FileService.Config("./web/dist")),
     "/api" -> apiRoutesCors
   ).orNotFound
 
-  def run: Stream[IO, ExitCode] =
-    BlazeServerBuilder[IO]
-      .bindHttp(8080, "0.0.0.0")
-      .withHttpApp(httpApp)
-      .serve
+  def run: IO[ExitCode] =
+      EmberServerBuilder
+        .default[IO]
+        .withHost(ipv4"0.0.0.0")
+        .withPort(port"8080")
+        .withHttpApp(httpApp)
+        .build
+        .useForever
 }
