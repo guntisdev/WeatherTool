@@ -18,8 +18,8 @@ libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-circe" % http4sVersion,
 
   "ch.qos.logback" % "logback-classic" % "1.2.9",
-  "com.typesafe" % "config" % "1.4.1",
   "org.scala-lang" % "scala-reflect" % "2.13.10",
+  "com.github.pureconfig" %% "pureconfig" % "0.17.4",
 
 
   "io.circe" %% "circe-core" % circeVersion,

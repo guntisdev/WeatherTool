@@ -6,43 +6,45 @@ import org.http4s._
 import org.http4s.blaze.client.BlazeClientBuilder
 import org.http4s.client.Client
 import org.http4s.headers.Authorization
-import com.typesafe.config.ConfigFactory
+
+import pureconfig._
+import pureconfig.generic.auto._
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.global
 
+final case class WeatherServerConfig(
+    username: String,
+    password: String,
+    url: String,
+)
+
 object FetchService {
-  private val config = ConfigFactory.load()
-  private def getIOString(path: String): IO[String] =
-    if (config.hasPath(path)) IO.pure(config.getString(path))
-    else IO.raiseError(new RuntimeException(s"Missing configuration: $path"))
+  private val weatherServerConfig: WeatherServerConfig = ConfigSource.default.load[WeatherServerConfig] match {
+    case Right(config) => config
+    case Left(errors) => throw new RuntimeException(s"Unable to load config: $errors")
+  }
 
-  private val basicCredentialsIO: IO[BasicCredentials] =
-    for {
-      username <- getIOString("username")
-      password <- getIOString("password")
-    } yield BasicCredentials(username, password)
+  private val basicCredentials: BasicCredentials =
+    BasicCredentials(weatherServerConfig.username, weatherServerConfig.password)
 
-  private val baseUrlIO: IO[Uri] = getIOString("url").map(Uri.unsafeFromString) // 20220831_1330.csv
+  private val baseUrl: IO[Uri] = IO(Uri.unsafeFromString(weatherServerConfig.url))
 
   private def makeRequest(client: Client[IO], url: Uri): IO[Either[Throwable, (String, String)]] = {
     val fileName = url.path.toString()
+    val request = Request[IO](Method.GET, url).withHeaders(Authorization(basicCredentials))
 
-    for {
-      basicCredentials <- basicCredentialsIO
-      request = Request[IO](Method.GET, url).withHeaders(Authorization(basicCredentials))
-      result <- client.expect[String](request).redeemWith(
+    client.expect[String](request).redeemWith(
         error => IO(Left(error))
         // .flatTap(_ => IO.println(s"Request failed to url: $url with error: ${error.getMessage}")),
         ,
         fileContent => IO(Right((fileName, fileContent)))
         // .flatTap(_ => IO.println(s"Fetched: $fileName"))
       )
-    } yield result
   }
 
   private def fetchFiles(fileNames: List[String]): IO[List[Either[Throwable, (String, String)]]] = {
-    val IOUrls = baseUrlIO.map(baseUrl => fileNames.map(baseUrl / _))
+    val IOUrls = baseUrl.map(baseUrl => fileNames.map(baseUrl / _))
     BlazeClientBuilder[IO](global).resource.use { client =>
       IOUrls.flatMap(_.traverse(url => makeRequest(client, url)))
     }
