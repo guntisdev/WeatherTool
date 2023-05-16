@@ -4,13 +4,13 @@ import java.time.LocalDateTime
 import scala.reflect.runtime.universe._
 
 
-case class WeatherStationData(
+final case class WeatherStationData(
                                city: String,
                                timestamp: LocalDateTime,
                                weather: WeatherData,
                              )
 
-case class WeatherData(
+final case class WeatherData(
                       tempMax: Option[Double],
                       tempMin: Option[Double],
                       tempAvg: Option[Double],

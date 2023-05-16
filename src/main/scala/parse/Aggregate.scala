@@ -8,7 +8,7 @@ import parse.Parser.parseLine
 
 object Aggregate {
 
-  case class UserQuery(
+  final case class UserQuery(
     cities: List[String],
     field: String,
     key: AggregateKey
@@ -45,10 +45,10 @@ object Aggregate {
   }
 
   sealed trait AggregateValue
-  case class DoubleValue(value: Double) extends AggregateValue
-  case class ListOptionValue(list: List[Option[Double]]) extends AggregateValue
-  case class StringListList(list: List[List[String]]) extends AggregateValue
-  case class DistinctStringList(list: List[String]) extends AggregateValue
+  final case class DoubleValue(value: Double) extends AggregateValue
+  final case class ListOptionValue(list: List[Option[Double]]) extends AggregateValue
+  final case class StringListList(list: List[List[String]]) extends AggregateValue
+  final case class DistinctStringList(list: List[String]) extends AggregateValue
   object AggregateValue {
     def getKeys: List[String] = {
       val runtimeMirror = scala.reflect.runtime.currentMirror
