@@ -37,7 +37,7 @@ object Server {
         .map(Parser.queryData(UserQuery(cities, field, key), _))
         .flatMap(result => Ok(result.asJson.pretty))
 
-    // http://0.0.0.0:8080/api/fetch/date/20230423
+    // http://0.0.0.0:8080/api/fetch/date/20230514
     case GET -> Root / "fetch" / "date" / ValidDate(date) =>
       val result = for {
         fetchResultEither <- FetchService.fetchFromDate(date).attempt
