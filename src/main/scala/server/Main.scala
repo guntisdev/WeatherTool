@@ -6,6 +6,7 @@ import fetch.{FetchService, FileNameService}
 
 object Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
+    // TODO looks like fetchTask fails server if no csv on meteo server
     val fetchTask = FileNameService.generateCurrentHour.flatMap(FetchService.fetchSingleFile)
     val scheduler = Scheduler.scheduleTask(fetchTask)
       .evalMap { case (name, content) =>
