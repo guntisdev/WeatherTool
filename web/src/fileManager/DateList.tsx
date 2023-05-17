@@ -1,9 +1,10 @@
-import { Component, createResource, Setter } from "solid-js";
+import { Accessor, Component, createResource, Setter } from "solid-js";
 import { apiHost } from "../consts";
 
 import "../css/spinner.css";
+import { Calendar } from "./Calendar";
 
-export const DateList: Component<{setDate: Setter<string>;}> = (props) => {
+export const DateList: Component<{getDate: Accessor<Date>, setDate: Setter<Date>;}> = (props) => {
     const fetchDates = async () => {
         await new Promise(resolve => setTimeout(resolve, 500))
         const response = await fetch(`${apiHost}/api/show/all_dates`);
@@ -12,11 +13,6 @@ export const DateList: Component<{setDate: Setter<string>;}> = (props) => {
     }
 
     const [datesResource] = createResource(fetchDates);
-
-    const clickDate = (date: string) => {
-        console.log("setDate", date);
-        props.setDate(date);
-    }
 
     return (
         <div>
@@ -29,11 +25,18 @@ export const DateList: Component<{setDate: Setter<string>;}> = (props) => {
             { datesResource.error && (
                 <div>Error while loading dates: ${datesResource.error}</div>
             )}
+            { datesResource() && <Calendar
+                getSelectedDate={props.getDate}
+                setSelectedDate={props.setDate}
+                datesWithData={datesResource().map((str: string) => new Date(str))}
+            /> }
+            
+            {/* Backup date view */}
             { datesResource() && (
                 <ul>
-                    { (datesResource() as any).map((date: any) =>
+                    {/* { (datesResource() as any).map((date: any) =>
                         <li onClick={() => clickDate(date)}>{date}</li>
-                    )}
+                    )} */}
                 </ul>
             )}
         </div>
