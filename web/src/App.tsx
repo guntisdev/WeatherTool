@@ -10,7 +10,7 @@ console.log("api host:", import.meta.env.VITE_API_HOST);
 type Section = "aggregator" | "fileManager";
 
 const App: Component = () => {
-    const [getSection, setSection] = createSignal<Section>("fileManager");
+    const [getSection, setSection] = createSignal<Section>("aggregator");
 
     const section = () => getSection() === "aggregator" ? <Aggregator /> : <FileManager />;
 

@@ -17,7 +17,6 @@ export const Result: Component<{
     const [getTimestamp, setTimestamp] = createSignal<number>(0);
 
     const fetchQuery = async (timestamp: number) => {
-        console.log("query:", new Date(timestamp));
         if (cities() === "") return "ERROR: Select cities!";
         await new Promise(resolve => setTimeout(resolve, 500))
         const response = await fetch(`${apiHost}/api/query/${queryStart()}-${queryEnd()}/${cities()}/${props.getField()}/${props.getKey()}`);
