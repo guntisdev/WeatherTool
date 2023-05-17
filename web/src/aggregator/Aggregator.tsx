@@ -1,15 +1,18 @@
+import moment from "moment";
 import { createSignal } from "solid-js";
+
 import { Result } from "./Result";
 import { SelectAggregator } from "./SelectAggregator";
 import { SelectCity } from "./SelectCity";
 import { SelectTimeRange } from "./SelectTimeRange";
 
-const dayAgoMs = Date.now() - 24 * 60 * 60 * 1000;
+const nowRounded = new Date(new Date().setMinutes(30));
+const dayAgo = moment(nowRounded).subtract(1, "days").subtract(30, "minutes").toDate();
 
 export function Aggregator() {
     const [getCities, setCities] = createSignal<Set<string>>(new Set([]));
-    const [getStart, setStart] = createSignal(new Date(dayAgoMs));
-    const [getEnd, setEnd] = createSignal(new Date());
+    const [getStart, setStart] = createSignal(dayAgo);
+    const [getEnd, setEnd] = createSignal(nowRounded);
     const [getField, setField] = createSignal("tempMax");
     const [getKey, setKey] = createSignal("max");
 
