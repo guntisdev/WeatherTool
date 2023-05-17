@@ -51,7 +51,8 @@ object Server {
         (fetchErrors, successDownloads) = fetchResult.partitionMap(identity)
         saveResults <- successDownloads.traverse { case (name, content) => DBService.save(name, content) }
         (saveErrors, successSaves) = saveResults.partitionMap(identity)
-        successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
+//        successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
+        successes = successSaves
         errors = fetchServiceError ++ fetchErrors.map(e => s"FetchError: ${e.getMessage}") ++ saveErrors.map(e => s"SaveError: ${e.getMessage}")
         _ <- IO.println(s"errors: $errors")
         _ <- IO.println(s"successes: $successes")

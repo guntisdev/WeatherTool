@@ -1,6 +1,7 @@
 import { createSignal } from "solid-js";
 import "../css/FileManager.css"
 import { DateList } from "./DateList";
+import { FetchFiles } from "./FetchFiles";
 import { FileContent } from "./FileContent";
 import { FileNameList } from "./FileNameList";
 
@@ -13,6 +14,7 @@ export function FileManager() {
             <h2>File manager</h2>
             <div class="container">
                 <div class="column">
+                    <FetchFiles />
                     <DateList setDate={setDate} />
                 </div>
                 <div class="column">
