@@ -1,16 +1,16 @@
+import moment from "moment";
 import { Accessor, Component, createResource, Setter } from "solid-js";
 import { apiHost } from "../consts";
 
 import "../css/spinner.css";
 
 export const FileNameList: Component<{
-    getDate: Accessor<string>,
+    getDate: Accessor<Date>,
     setFileName: Setter<string>,
 }> = (props) => {
-    const fetchFileNames = async (date: string) => {
-        if (props.getDate() === "") return;
+    const fetchFileNames = async (fetchDate: Date) => {
         await new Promise(resolve => setTimeout(resolve, 500))
-        const response = await fetch(`${apiHost}/api/show/date/${date.replace(/-/g, "")}`);
+        const response = await fetch(`${apiHost}/api/show/date/${moment(fetchDate).format("YYYYMMDD")}`);
         const json = await response.json();
         return json;
     }
@@ -27,7 +27,7 @@ export const FileNameList: Component<{
             { fileNameResource.loading && (
                 <div>
                     <span class="spinner"></span>
-                    <span style={{ "padding-left": "16px" }}>loading {props.getDate()}</span>
+                    <span style={{ "padding-left": "16px" }}>loading {moment(props.getDate()).format("YYYYMMDD")}</span>
                 </div>
             )}
             { fileNameResource.error && (
