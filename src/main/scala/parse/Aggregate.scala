@@ -73,8 +73,12 @@ object Aggregate {
       case DoubleValue(value) if !value.isNaN => Json.fromDouble(value).get
       case _ => Json.Null
     }
-    implicit val listOptionValueEncoder: Encoder[ListOptionValue] = deriveEncoder[ListOptionValue]
-    implicit val stringListListEncoder: Encoder[StringListList] = deriveEncoder[StringListList]
+    implicit val listOptionValueEncoder: Encoder[ListOptionValue] = Encoder.instance { loValue =>
+      Json.arr(loValue.list.map(_.asJson): _*)
+    }
+    implicit val stringListListEncoder: Encoder[StringListList] = Encoder.instance { sllValue =>
+      Json.arr(sllValue.list.map(_.asJson): _*)
+    }
     implicit val distinctStringListEncoder: Encoder[DistinctStringList] = deriveEncoder[DistinctStringList]
   }
 
