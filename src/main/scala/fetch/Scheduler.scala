@@ -32,7 +32,7 @@ object Scheduler {
 //    }
 //  }
 
-  def scheduleTask(task: IO[(String, String)]): Stream[IO, (String, String)] = {
+  def scheduleTask(task: IO[Either[Throwable, (String, String)]]): Stream[IO, Either[Throwable, (String, String)]] = {
     Stream.eval(durationToNextHalfHour).flatMap { delay => {
       Stream.eval(IO.println(s"Scheduler started with delay: ${delay.toMinutes} min")) *>
       (Stream.sleep[IO](delay) ++ Stream.awakeEvery[IO](1.hour))
