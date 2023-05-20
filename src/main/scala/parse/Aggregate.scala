@@ -4,7 +4,7 @@ import cats.implicits.{catsSyntaxOptionId, toFoldableOps}
 import io.circe.generic.semiauto.deriveEncoder
 import io.circe.syntax.EncoderOps
 import io.circe.{Encoder, Json}
-import parse.Parser.parseLine
+import java.time.LocalDateTime
 
 object Aggregate {
 
@@ -46,7 +46,7 @@ object Aggregate {
 
   sealed trait AggregateValue
   final case class DoubleValue(value: Double) extends AggregateValue
-  final case class ListOptionValue(list: List[Option[Double]]) extends AggregateValue
+  final case class TimeDoubleList(list: List[(LocalDateTime, Option[Double])]) extends AggregateValue
   final case class StringListList(list: List[List[String]]) extends AggregateValue
   final case class DistinctStringList(list: List[String]) extends AggregateValue
   object AggregateValue {
@@ -64,7 +64,7 @@ object Aggregate {
   object AggregateValueImplicits {
     implicit val aggregateValueEncoder: Encoder[AggregateValue] = Encoder.instance {
       case doubleValue: DoubleValue => doubleValue.asJson
-      case listOptionValue: ListOptionValue => listOptionValue.asJson
+      case timeDoubleList: TimeDoubleList => timeDoubleList.asJson
       case stringListList: StringListList => stringListList.asJson
       case distinctStringList: DistinctStringList => distinctStringList.asJson
     }
@@ -73,7 +73,7 @@ object Aggregate {
       case DoubleValue(value) if !value.isNaN => Json.fromDouble(value).get
       case _ => Json.Null
     }
-    implicit val listOptionValueEncoder: Encoder[ListOptionValue] = Encoder.instance { loValue =>
+    implicit val listOptionValueEncoder: Encoder[TimeDoubleList] = Encoder.instance { loValue =>
       Json.arr(loValue.list.map(_.asJson): _*)
     }
     implicit val stringListListEncoder: Encoder[StringListList] = Encoder.instance { sllValue =>
@@ -103,7 +103,8 @@ object Aggregate {
 
   def aggregateDoubleValues(
     AggKey: AggregateKey,
-    values: List[Option[Double]]
+    values: List[Option[Double]],
+    timestamps: List[LocalDateTime],
   ): Option[AggregateValue] = {
     val flatValues = values.flatten
     AggKey match {
@@ -111,7 +112,7 @@ object Aggregate {
       case AggregateKey.Max => flatValues.maximumOption.map(DoubleValue)
       case AggregateKey.Avg => flatValues.reduceOption(_ + _).map(sum => DoubleValue(sum / flatValues.length))
       case AggregateKey.Sum => flatValues.sum.some.map(DoubleValue)
-      case AggregateKey.List => ListOptionValue(values).some
+      case AggregateKey.List => TimeDoubleList(timestamps.zip(values)).some
       case AggregateKey.Distinct => None
     }
   }

@@ -12,7 +12,7 @@ object Parser {
 
     def parseTimestamp(timestampStr: String): Option[LocalDateTime] = {
       val formatter = DateTimeFormatter.ofPattern("yyyydd.MM HH:mm")
-      // TODO figure out what to do with hardcoded year. Proly fetched data should be also modified to inlcude year
+      // TODO figure out what to do with hardcoded year. Proly fetched data should be also modified to include year
       Try(LocalDateTime.parse(s"2023${timestampStr.trim}", formatter)).toEither match {
         case Right(timestamp) => Some(timestamp)
         case Left(_) => None
@@ -49,7 +49,7 @@ object Parser {
         }
         case field => {
           val doubleList = extractDoubleFieldValues(field, weatherStationData.map(_.weather))
-          (city -> aggregateDoubleValues(userQuery.key, doubleList))
+          (city -> aggregateDoubleValues(userQuery.key, doubleList, weatherStationData.map(_.timestamp)))
 
         }
       }
