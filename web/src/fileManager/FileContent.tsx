@@ -1,5 +1,6 @@
 import { Accessor, Component, createResource, JSXElement } from "solid-js";
 import { apiHost } from "../consts";
+import { PrettifyCSV } from "./PrettifyCSV";
 
 export const FileContent: Component<{getFileName: Accessor<string>}> = (props) => {
     const fetchFileContent = async (fileName: string) => {
@@ -11,6 +12,7 @@ export const FileContent: Component<{getFileName: Accessor<string>}> = (props) =
     }
 
     const [contentResource] = createResource(props.getFileName, fetchFileContent);
+    const lines = () => contentResource()?.split("<br/>") ?? ["empty..."];
     
     return (
         <div>
@@ -24,15 +26,8 @@ export const FileContent: Component<{getFileName: Accessor<string>}> = (props) =
                 <div>Error while loading file content: ${contentResource.error}</div>
             )}
             { contentResource() && (
-                <div>{splitLines(contentResource())}</div>
+                <PrettifyCSV lines={lines} />
             )}
         </div>
     )
-}
-
-function splitLines(str?: string): JSXElement {
-    const lines = str?.split("<br/>") ?? ["empty..."]
-    return lines.map(line =>
-        <div>{line}</div>
-    );
 }
