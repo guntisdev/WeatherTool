@@ -1,9 +1,8 @@
-package server
+package fetch
 
 import cats.effect._
 import cats.effect.unsafe.implicits.global
 import cats.implicits.catsSyntaxApply
-import fetch.{FetchService, FileNameService}
 import fs2.Stream
 
 import java.time.{Duration, LocalTime}
