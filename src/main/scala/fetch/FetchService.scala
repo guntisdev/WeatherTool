@@ -50,14 +50,17 @@ object FetchService {
     }
   }
 
-  def fetchSingleFile(fileName: String): IO[(String, String)] = {
-    fetchFiles(List(fileName)).flatMap { results =>
+  def fetchSingleFile(fileName: String): IO[Either[Throwable, (String, String)]] = {
+    fetchFiles(List(fileName)).map { results =>
       results.headOption match {
-        case Some(Right(result)) => IO.pure(result)
-        case Some(Left(err)) => IO.raiseError(err)
-        case None => IO.raiseError(new Exception("No file fetched"))
+        case Some(Right(result)) =>
+          IO.println(s"fetched: $fileName").as(Right(result))
+        case Some(Left(err)) =>
+          IO.println(s"failed fetch: $fileName with error: ${err.getMessage}").as(Left(err))
+        case None =>
+          IO.println(s"failed fetch: $fileName").as(Left(new Exception("No file fetched")))
       }
-    }
+    }.flatten
   }
 
   def fetchInRange(from: LocalDateTime, to: LocalDateTime): IO[List[Either[Throwable, (String, String)]]] = {

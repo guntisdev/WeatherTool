@@ -18,11 +18,17 @@ class FileFetchScheduler(dbService: DBService, log: Logger[IO]) {
   def run: Stream[IO, Unit] = {
     val fetchTask = FileNameService.generateCurrentHour.flatMap(FetchService.fetchSingleFile)
     Scheduler.scheduleTask(fetchTask)
-      .evalMap { case (name, content) =>
-        log.info(s"fetched: $name") *>
+      .evalMap {
+        case Left(fetchErr) =>
+          log.error(s"Fetch error: $fetchErr")
+        case Right((name, content)) =>
+
           dbService.save(name, content).attempt.flatMap {
-            case Right(savedName) => log.info(s"saved: $savedName")
             case Left(err) => log.error(s"error: $err")
+            case Right(saveResult) => saveResult match {
+              case Left(err) => log.error(s"error: $err")
+              case Right(savedName) => log.info(s"saved: $savedName")
+            }
           }
       }
   }
