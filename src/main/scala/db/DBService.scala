@@ -2,6 +2,8 @@ package db
 
 import cats.effect.{IO, Resource}
 import cats.implicits.toTraverseOps
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.io.File
 import java.nio.file.{Files, Paths}
@@ -11,6 +13,12 @@ import scala.io.Source
 import scala.util.Try
 
 object DBService {
+  def of: IO[DBService] = {
+    Slf4jLogger.create[IO].map(logger => new DBService(logger))
+  }
+}
+
+class DBService(log: Logger[IO]) {
   private val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
   private val dataPath = "./data"
 

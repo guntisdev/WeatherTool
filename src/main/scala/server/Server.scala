@@ -38,9 +38,9 @@ object Server {
 
     // http://0.0.0.0:8080/api/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempMax/max
     case GET -> Root / "query" / DateTimeRange(from, to) / CityList(cities) / field / AggKey(key) =>
-      DBService.getInRange(from, to)
+      DBService.of.flatMap(_.getInRange(from, to)
         .map(Parser.queryData(UserQuery(cities, field, key), _))
-        .flatMap(result => Ok(result.asJson.pretty))
+        .flatMap(result => Ok(result.asJson.pretty)))
 
     // http://0.0.0.0:8080/api/fetch/date/20230514
     case GET -> Root / "fetch" / "date" / ValidDate(date) =>
@@ -49,7 +49,8 @@ object Server {
         fetchServiceError = fetchResultEither.left.toOption.map(e => s"FetchServiceError: ${e.getMessage}").toList
         fetchResult = fetchResultEither.getOrElse(List.empty)
         (fetchErrors, successDownloads) = fetchResult.partitionMap(identity)
-        saveResults <- successDownloads.traverse { case (name, content) => DBService.save(name, content) }
+        dbService <- DBService.of
+        saveResults <- successDownloads.traverse { case (name, content) => dbService.save(name, content) }
         (saveErrors, successSaves) = saveResults.partitionMap(identity)
 //        successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
         successes = successSaves
@@ -67,19 +68,19 @@ object Server {
 
     // http://0.0.0.0:8080/api/show/all_dates
     case GET -> Root / "show" / "all_dates" =>
-      DBService.getDates().flatMap(dates =>
+      DBService.of.flatMap(_.getDates().flatMap(dates =>
         Ok(dates.asJson.pretty)
-      )
+      ))
 
     // http://0.0.0.0:8080/api/show/date/20230423
     case GET -> Root / "show" / "date" / ValidDate(date) =>
-      DBService.getDateFileNames(date).flatMap(fileNames =>
+      DBService.of.flatMap(_.getDateFileNames(date).flatMap(fileNames =>
         Ok(fileNames.asJson.pretty)
-      )
+      ))
 
     // http://0.0.0.0:8080/api/show/file/20230423_12:30.csv
     case GET -> Root / "show" / "file" / (fileName: String) =>
-      DBService.getFileContent(fileName).flatMap(Ok(_))
+      DBService.of.flatMap(_.getFileContent(fileName).flatMap(Ok(_)))
 
     // http://0.0.0.0:8080/api/help
     case GET -> Root / "help" => {

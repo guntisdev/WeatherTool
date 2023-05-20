@@ -5,7 +5,7 @@ import cats.effect.unsafe.implicits.global
 import cats.implicits.toTraverseOps
 import db.DBService
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDateTime
 
 object Main {
   def run: IO[Unit] = {
@@ -17,7 +17,8 @@ object Main {
       fetchServiceError = fetchResultEither.left.toOption.map(e => s"FetchServiceError: ${e.getMessage}").toList
       fetchResult = fetchResultEither.getOrElse(List.empty)
       (fetchErrors, successDownloads) = fetchResult.partitionMap(identity)
-      saveResults <- successDownloads.traverse { case (name, content) => DBService.save(name, content) }
+      dbService <- DBService.of
+      saveResults <- successDownloads.traverse { case (name, content) => dbService.save(name, content) }
       (saveErrors, successSaves) = saveResults.partitionMap(identity)
       successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
       errors = fetchServiceError ++ fetchErrors.map(e => s"FetchError: ${e.getMessage}") ++ saveErrors.map(e => s"SaveError: ${e.getMessage}")
