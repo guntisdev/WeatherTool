@@ -59,10 +59,10 @@ class DBService(log: Logger[IO]) {
     IO(Files.writeString(path, content))
       .redeemWith(
         error => IO(Left(error))
-//          .flatTap(_ => IO.println(s"Write file '$fileName' failed with error: ${error.getMessage}"))
+//          .flatTap(_ => log.error(s"Write file '$fileName' failed with error: ${error.getMessage}"))
         ,
         _ => IO(Right(fileName))
-//          .flatTap(_ => IO.println(s"write: $fileName"))
+//          .flatTap(_ => log.info(s"write: $fileName"))
       )
   }
 

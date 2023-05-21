@@ -6,7 +6,8 @@ import org.http4s._
 import org.http4s.client.Client
 import org.http4s.headers.Authorization
 import org.http4s.ember.client.EmberClientBuilder
-
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pureconfig._
 import pureconfig.generic.auto._
 
@@ -20,6 +21,12 @@ final case class WeatherServerConfig(
 )
 
 object FetchService {
+  def of: IO[FetchService] = {
+    Slf4jLogger.create[IO].map(logger => new FetchService(logger))
+  }
+}
+
+class FetchService(log: Logger[IO]) {
   private val weatherServerConfig: WeatherServerConfig = ConfigSource.default.load[WeatherServerConfig] match {
     case Right(config) => config
     case Left(errors) => throw new RuntimeException(s"Unable to load config: $errors")
@@ -36,10 +43,10 @@ object FetchService {
 
     client.expect[String](request).redeemWith(
         error => IO(Left(error))
-        // .flatTap(_ => IO.println(s"Request failed to url: $url with error: ${error.getMessage}")),
+//         .flatTap(_ => log.error(s"Request failed to url: $url with error: ${error.getMessage}"))
         ,
         fileContent => IO(Right((fileName, fileContent)))
-        // .flatTap(_ => IO.println(s"Fetched: $fileName"))
+//         .flatTap(_ => log.info(s"Fetched: $fileName"))
       )
   }
 
@@ -54,11 +61,11 @@ object FetchService {
     fetchFiles(List(fileName)).map { results =>
       results.headOption match {
         case Some(Right(result)) =>
-          IO.println(s"fetched: $fileName").as(Right(result))
+          log.info(s"fetched: $fileName").as(Right(result))
         case Some(Left(err)) =>
-          IO.println(s"failed fetch: $fileName with error: ${err.getMessage}").as(Left(err))
+          log.error(s"failed fetch: $fileName with error: ${err.getMessage}").as(Left(err))
         case None =>
-          IO.println(s"failed fetch: $fileName").as(Left(new Exception("No file fetched")))
+          log.error(s"failed fetch: $fileName").as(Left(new Exception("No file fetched")))
       }
     }.flatten
   }
