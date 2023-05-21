@@ -22,10 +22,11 @@ class DBService(log: Logger[IO]) {
   private val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
   private val dataPath = "./data"
 
-  private def readFile(fileName: String): IO[List[String]] = {
+  // takes only first 34 lines of data as rest after 'Zosēni' is duplicated
+  def readFile(fileName: String): IO[List[String]] = {
     val file = new File(dataPath, fileName)
     val sourceResource = Resource.fromAutoCloseable(IO(Source.fromFile(file)))
-    sourceResource.use(source => IO(source.getLines().toList)).handleErrorWith(_ => IO.pure(List.empty))
+    sourceResource.use(source => IO(source.getLines().take(34).toList)).handleErrorWith(_ => IO.pure(List.empty))
   }
 
   private def readFileNames(path: String): IO[List[String]] =
@@ -81,13 +82,5 @@ class DBService(log: Logger[IO]) {
     val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     val dateStr: String = date.format(formatter)
     readFileNames(dataPath).map(_.filter(_.startsWith(dateStr)).sorted)
-  }
-
-  def getFileContent(fileName: String): IO[String] = {
-    val file = new File(dataPath, fileName)
-    val sourceResource = Resource.fromAutoCloseable(IO(Source.fromFile(file)))
-    sourceResource.use(source => IO(source.getLines().mkString("<br/>\n"))).handleErrorWith { error =>
-      IO(println(s"Failed to read file: $error")) *> IO.pure("")
-    }
   }
 }

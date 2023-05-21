@@ -19,7 +19,7 @@ import org.http4s.ember.server.EmberServerBuilder
 import io.circe.syntax._
 import parse.Aggregate.AggregateValueImplicits.aggregateValueEncoder
 import parse.Aggregate.{AggregateKey, UserQuery}
-import fs2.Stream
+import org.http4s.circe.jsonEncoder
 
 import scala.concurrent.duration.DurationInt
 
@@ -80,7 +80,7 @@ object Server {
 
     // http://0.0.0.0:8080/api/show/file/20230423_12:30.csv
     case GET -> Root / "show" / "file" / (fileName: String) =>
-      DBService.of.flatMap(_.getFileContent(fileName).flatMap(Ok(_)))
+      DBService.of.flatMap(_.readFile(fileName).flatMap(content => Ok(content.asJson)))
 
     // http://0.0.0.0:8080/api/help
     case GET -> Root / "help" => {
