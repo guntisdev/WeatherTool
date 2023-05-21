@@ -7,12 +7,12 @@ export const FileContent: Component<{getFileName: Accessor<string>}> = (props) =
         if (fileName === "") return;
         await new Promise(resolve => setTimeout(resolve, 500))
         const response = await fetch(`${apiHost}/api/show/file/${fileName}`);
-        const text = await response.text();
+        const text = await response.json();
         return text;
     }
 
     const [contentResource] = createResource(props.getFileName, fetchFileContent);
-    const lines = () => contentResource()?.split("<br/>") ?? ["empty..."];
+    const lines = () => contentResource();
     
     return (
         <div>

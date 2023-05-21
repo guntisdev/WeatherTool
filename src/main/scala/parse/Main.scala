@@ -15,9 +15,10 @@ object Main {
     println("================ start parser")
 
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    val from = LocalDateTime.parse("20230512_2200", formatter)
-    val to = LocalDateTime.parse("20230514_1230", formatter)
-    val userQuery = UserQuery(List("Rīga"), "tempAvg", AggregateKey.List)
+    val from = LocalDateTime.parse("20230515_0905", formatter)
+    val to = LocalDateTime.parse("20230516_0942", formatter)
+    val userQuery = UserQuery(List("Bauska", "Dagda", "Daugavgrīva", "Rīga"), "precipitation", AggregateKey.Sum)
+//    val userQuery = UserQuery(List("Daugavgrīva"), "precipitation", AggregateKey.List)
 
     for {
       dbService <- DBService.of

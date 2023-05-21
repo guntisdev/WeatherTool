@@ -112,7 +112,7 @@ object Aggregate {
       case AggregateKey.Max => flatValues.maximumOption.map(DoubleValue)
       case AggregateKey.Avg => flatValues.reduceOption(_ + _).map(sum => DoubleValue(sum / flatValues.length))
       case AggregateKey.Sum => flatValues.sum.some.map(DoubleValue)
-      case AggregateKey.List => TimeDoubleList(timestamps.zip(values)).some
+      case AggregateKey.List => TimeDoubleList(timestamps.zip(values).sorted).some
       case AggregateKey.Distinct => None
     }
   }
