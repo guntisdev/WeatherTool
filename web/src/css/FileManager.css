@@ -1,6 +1,6 @@
 .container {
     display: flex;
-    height: 100vh; /* Adjust to desired height */
+    min-height: 100vh;
   }
 
   .column {
