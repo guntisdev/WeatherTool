@@ -101,6 +101,10 @@ object Aggregate {
       case _ => List.empty
     }
 
+  implicit class RoundDecimal(val d: Double) extends AnyVal {
+    def roundDecimal: Double = BigDecimal(d).setScale(1, BigDecimal.RoundingMode.HALF_UP).toDouble
+  }
+
   def aggregateDoubleValues(
     AggKey: AggregateKey,
     values: List[Option[Double]],
@@ -108,10 +112,10 @@ object Aggregate {
   ): Option[AggregateValue] = {
     val flatValues = values.flatten
     AggKey match {
-      case AggregateKey.Min => flatValues.minimumOption.map(DoubleValue)
-      case AggregateKey.Max => flatValues.maximumOption.map(DoubleValue)
-      case AggregateKey.Avg => flatValues.reduceOption(_ + _).map(sum => DoubleValue(sum / flatValues.length))
-      case AggregateKey.Sum => flatValues.sum.some.map(DoubleValue)
+      case AggregateKey.Min => flatValues.minimumOption.map(value => DoubleValue(value.roundDecimal))
+      case AggregateKey.Max => flatValues.maximumOption.map(value => DoubleValue(value.roundDecimal))
+      case AggregateKey.Avg => flatValues.reduceOption(_ + _).map(sum => DoubleValue((sum / flatValues.length).roundDecimal))
+      case AggregateKey.Sum => flatValues.sum.some.map(value => DoubleValue(value.roundDecimal))
       case AggregateKey.List => TimeDoubleList(timestamps.zip(values).sorted).some
       case AggregateKey.Distinct => None
     }
