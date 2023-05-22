@@ -29,8 +29,8 @@ object ValidateRoutes {
   object CityList {
     def unapply(str: String): Option[List[String]] = {
       str.split(",").toList match {
-        case list => Some(list)
         case Nil => None
+        case list => Some(list)
       }
     }
   }
