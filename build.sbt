@@ -28,4 +28,7 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic-extras" % circeVersion,
   "io.circe" %% "circe-optics" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
+
+  "org.scalatest" %% "scalatest" % "3.2.16" % Test,
+  "org.scalamock" %% "scalamock" % "5.2.0" % Test
 )
