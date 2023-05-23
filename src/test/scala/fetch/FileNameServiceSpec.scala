@@ -16,7 +16,7 @@ class FileNameServiceSpec extends AnyFunSuite {
       "20230517_0330.csv",
     )
 
-    val actualFileNames = FileNameService.generate(startTime, endTime)
+    val actualFileNames = new FileNameService().generate(startTime, endTime)
 
     assert(actualFileNames == expectedFileNames)
   }
@@ -28,7 +28,7 @@ class FileNameServiceSpec extends AnyFunSuite {
       .map(hour => if(hour < 10) "0"+hour else ""+hour)
       .map(str => s"20230517_${str}30.csv")
 
-    val actualFileNames = FileNameService.generateFromDate(date)
+    val actualFileNames = new FileNameService().generateFromDate(date)
 
     assert(actualFileNames == expectedFileNames)
   }

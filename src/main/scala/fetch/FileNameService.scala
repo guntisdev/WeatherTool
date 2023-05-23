@@ -5,7 +5,11 @@ import cats.effect._
 import java.time.format.DateTimeFormatter
 import java.time.{Duration, LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
 
-object FileNameService {
+trait FileNameServiceTrait {
+  def generateCurrentHour(implicit clock: Clock[IO]): IO[String]
+}
+
+class FileNameService extends FileNameServiceTrait {
   private val interval = Duration.ofMinutes(30)
   private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
 
@@ -23,7 +27,7 @@ object FileNameService {
     time.plusMinutes(adjustment)
   }
 
-  def generateCurrentHour(implicit clock: Clock[IO]): IO[String] = {
+  override def generateCurrentHour(implicit clock: Clock[IO]): IO[String] = {
     clock.realTime.map { duration =>
       val instant = java.time.Instant.ofEpochMilli(duration.toMillis)
       val zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Riga"))

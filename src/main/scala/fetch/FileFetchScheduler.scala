@@ -11,16 +11,15 @@ object FileFetchScheduler {
   def of(dbService: DBService, fetch: FetchService): IO[FileFetchScheduler] = {
     Scheduler.of.flatMap { scheduler =>
       Slf4jLogger.create[IO].map {
-        new FileFetchScheduler(dbService, fetch, scheduler, _)
+        new FileFetchScheduler(dbService, fetch, new FileNameService(), scheduler, _)
       }
     }
   }
 }
 
-class FileFetchScheduler(dbService: DBService, fetch: FetchService, scheduler: Scheduler, log: Logger[IO]) {
+class FileFetchScheduler(dbService: DBService, fetch: FetchService, fileNameService: FileNameService, scheduler: Scheduler, log: Logger[IO]) {
   def run: Stream[IO, Unit] = {
-    val fetchTask = FileNameService.generateCurrentHour.flatMap(fetch.fetchSingleFile)
-
+    val fetchTask = fileNameService.generateCurrentHour.flatMap(fetch.fetchSingleFile)
     scheduler.scheduleTask(fetchTask)
       .evalMap {
         case Left(fetchErr) =>

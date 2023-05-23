@@ -6,7 +6,6 @@ import cats.implicits.catsSyntaxApply
 import fs2.Stream
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import server.Server
 
 import java.time.{Duration, LocalTime}
 import scala.concurrent.duration._
@@ -57,7 +56,7 @@ class Scheduler(log: Logger[IO]) {
 //    run.compile.drain.unsafeRunSync()
     for {
       fetch <- FetchService.of
-      fetchTask = FileNameService.generateCurrentHour.flatMap(fetch.fetchSingleFile)
+      fetchTask = new FileNameService().generateCurrentHour.flatMap(fetch.fetchSingleFile)
     } yield scheduleTask(fetchTask).compile.drain.unsafeRunSync()
   }
 }
