@@ -22,11 +22,11 @@ final case class WeatherServerConfig(
 
 object FetchService {
   def of: IO[FetchService] = {
-    Slf4jLogger.create[IO].map(logger => new FetchService(logger))
+    Slf4jLogger.create[IO].map(logger => new FetchService(new FileNameService, logger))
   }
 }
 
-class FetchService(log: Logger[IO]) {
+class FetchService(fileNameService: FileNameService, log: Logger[IO]) {
   private val weatherServerConfig: WeatherServerConfig = ConfigSource.default.load[WeatherServerConfig] match {
     case Right(config) => config
     case Left(errors) => throw new RuntimeException(s"Unable to load config: $errors")
@@ -71,12 +71,12 @@ class FetchService(log: Logger[IO]) {
   }
 
   def fetchInRange(from: LocalDateTime, to: LocalDateTime): IO[List[Either[Throwable, (String, String)]]] = {
-    val fileNames = FileNameService.generate(from, to)
+    val fileNames = fileNameService.generate(from, to)
     fetchFiles(fileNames)
   }
 
   def fetchFromDate(date: LocalDate): IO[List[Either[Throwable, (String, String)]]] = {
-    val fileNames = FileNameService.generateFromDate(date)
+    val fileNames = fileNameService.generateFromDate(date)
     fetchFiles(fileNames)
   }
 }

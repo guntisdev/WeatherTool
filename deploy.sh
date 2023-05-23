@@ -4,4 +4,8 @@ cd web
 npm run build
 cd ..
 
-sbt assembly && fly deploy
+if sbt test; then
+  sbt assembly && fly deploy
+else
+  echo "Tests failed, skipping deploy!"
+fi
