@@ -1,23 +1,23 @@
 package fetch
 
 import cats.effect.IO
-import db.DBService
+import db.{DBService, DataServiceTrait}
 import fs2.Stream
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 
 object FileFetchScheduler {
-  def of(dbService: DBService, fetch: FetchServiceTrait): IO[FileFetchScheduler] = {
+  def of(dataService: DataServiceTrait, fetch: FetchServiceTrait): IO[FileFetchScheduler] = {
     Scheduler.of.flatMap { scheduler =>
       Slf4jLogger.create[IO].map {
-        new FileFetchScheduler(dbService, fetch, new FileNameService(), scheduler, _)
+        new FileFetchScheduler(dataService, fetch, new FileNameService(), scheduler, _)
       }
     }
   }
 }
 
-class FileFetchScheduler(dbService: DBService, fetch: FetchServiceTrait, fileNameService: FileNameService, scheduler: Scheduler, log: Logger[IO]) {
+class FileFetchScheduler(dataService: DataServiceTrait, fetch: FetchServiceTrait, fileNameService: FileNameService, scheduler: Scheduler, log: Logger[IO]) {
   def run: Stream[IO, Unit] = {
     val fetchTask = fileNameService.generateCurrentHour.flatMap(fetch.fetchSingleFile)
     scheduler.scheduleTask(fetchTask)
@@ -25,7 +25,7 @@ class FileFetchScheduler(dbService: DBService, fetch: FetchServiceTrait, fileNam
         case Left(fetchErr) =>
           log.error(s"Fetch error: $fetchErr")
         case Right((name, content)) =>
-          dbService.save(name, content).attempt.flatMap {
+          dataService.save(name, content).attempt.flatMap {
             case Left(err) => log.error(s"error: $err")
             case Right(saveResult) => saveResult match {
               case Left(err) => log.error(s"error: $err")

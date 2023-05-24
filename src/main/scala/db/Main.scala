@@ -27,7 +27,7 @@ object Main {
     for {
       log <- Slf4jLogger.create[IO]
       dbService <- DBService.of
-      dates <- dbService.getDates()
+      dates <- dbService.getDates
       _ <- log.info(s"$dates")
     } yield ()
   }
@@ -41,9 +41,17 @@ object Main {
     } yield ()
   }
 
+  private def testDataService: IO[Unit] = {
+    for {
+      dbService <- DBService.of
+      dataService <- DataService.of(dbService)
+    } yield ()
+  }
+
   def main(args: Array[String]): Unit = {
     //    testGetInRange.unsafeRunSync()
     //    testGetDates.unsafeRunSync()
-    testGetDate.unsafeRunSync()
+    //    testGetDate.unsafeRunSync()
+    testDataService.unsafeRunSync()
   }
 }
