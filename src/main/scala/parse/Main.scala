@@ -23,7 +23,7 @@ object Main {
       log <- Slf4jLogger.create[IO]
       dbService <- DBService.of
       lines <- dbService.getInRange(from, to)
-      parsed <- IO.pure(Parser.queryData(userQuery, lines))
+      parsed <- IO(Parser.queryData(userQuery, lines))
       _ <- log.info(parsed.asJson.toString)
     } yield ()
   }

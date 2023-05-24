@@ -42,11 +42,9 @@ class FetchService(fileNameService: FileNameService, log: Logger[IO]) {
     val request = Request[IO](Method.GET, url).withHeaders(Authorization(basicCredentials))
 
     client.expect[String](request).redeemWith(
-        error => IO(Left(error))
-//         .flatTap(_ => log.error(s"Request failed to url: $url with error: ${error.getMessage}"))
+        error => IO(Left(error)) // <* log.error(s"Request failed to url: $url with error: ${error.getMessage}")
         ,
-        fileContent => IO(Right((fileName, fileContent)))
-//         .flatTap(_ => log.info(s"Fetched: $fileName"))
+        fileContent => IO(Right((fileName, fileContent))) // <* log.info(s"Fetched: $fileName")
       )
   }
 

@@ -21,17 +21,17 @@ object DBService {
 class DBService(log: Logger[IO]) {
   private val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
   private val dataPath = "./data"
+  private val nonDuplicatedLines = 34 // takes only first 34 lines of data as rest after 'Zosēni' is duplicated
 
-  // takes only first 34 lines of data as rest after 'Zosēni' is duplicated
   def readFile(fileName: String): IO[List[String]] = {
     val file = new File(dataPath, fileName)
     val sourceResource = Resource.fromAutoCloseable(IO(Source.fromFile(file)))
-    sourceResource.use(source => IO(source.getLines().take(34).toList)).handleErrorWith(_ => IO.pure(List.empty))
+    sourceResource.use(source => IO(source.getLines().take(nonDuplicatedLines).toList)).handleError(_ => List.empty)
   }
 
   private def readFileNames(path: String): IO[List[String]] =
     IO(new File(path).listFiles.toList.map(_.getName))
-      .handleErrorWith(_ => IO.pure(List.empty))
+      .handleError(_ => List.empty)
 
   private def inRange(fileName: String, from: LocalDateTime, to: LocalDateTime): Boolean = {
     def fileToDateTime(fileName: String): Option[LocalDateTime] = {
@@ -58,11 +58,9 @@ class DBService(log: Logger[IO]) {
     val path = Paths.get(s"$dataPath/$fileName")
     IO(Files.writeString(path, content))
       .redeemWith(
-        error => IO(Left(error))
-//          .flatTap(_ => log.error(s"Write file '$fileName' failed with error: ${error.getMessage}"))
+        error => IO(Left(error)) // <* log.error(s"Write file '$fileName' failed with error: ${error.getMessage}")
         ,
-        _ => IO(Right(fileName))
-//          .flatTap(_ => log.info(s"write: $fileName"))
+        _ => IO(Right(fileName)) // <* log.info(s"write: $fileName")
       )
   }
 
@@ -71,10 +69,10 @@ class DBService(log: Logger[IO]) {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     for {
       fileNames <- readFileNames(dataPath)
-      datesStr <- IO.pure(fileNames.map(_.take(8)).distinct) // take yyyyMMdd
-      dates <- IO.pure(datesStr.flatMap(str => {
-        Try(LocalDate.parse(str, formatter)).toOption
-      }))
+      datesStr <- IO(fileNames.map(_.take(8)).distinct) // take yyyyMMdd
+      dates <- datesStr.traverse { str =>
+        IO(LocalDate.parse(str, formatter)).option
+      }.map(_.flatten)
     } yield dates.sorted
   }
 
