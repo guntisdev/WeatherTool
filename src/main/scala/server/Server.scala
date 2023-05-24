@@ -3,7 +3,7 @@ package server
 import cats.effect._
 import cats.implicits.toTraverseOps
 import com.comcast.ip4s.IpLiteralSyntax
-import db.DBService
+import db.DataService
 import fetch.FetchServiceTrait
 import parse.{Parser, WeatherData}
 import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, ValidDate}
@@ -22,18 +22,19 @@ import parse.Aggregate.{AggregateKey, UserQuery}
 import org.http4s.circe.jsonEncoder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+
 import scala.concurrent.duration.DurationInt
 
 
 object Server {
-  def of(dbService: DBService, fetch: FetchServiceTrait): IO[Server] = {
+  def of(dataService: DataService, fetch: FetchServiceTrait): IO[Server] = {
     Slf4jLogger.create[IO].map {
-      new Server(dbService, fetch, _)
+      new Server(dataService, fetch, _)
     }
   }
 }
 
-class Server(dbService: DBService, fetch: FetchServiceTrait, log: Logger[IO]) {
+class Server(dataService: DataService, fetch: FetchServiceTrait, log: Logger[IO]) {
 
   // Define the extension method `pretty` for Json
   implicit class JsonPrettyPrinter(json: Json) {
@@ -47,7 +48,7 @@ class Server(dbService: DBService, fetch: FetchServiceTrait, log: Logger[IO]) {
 
     // http://0.0.0.0:8080/api/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempMax/max
     case GET -> Root / "query" / DateTimeRange(from, to) / CityList(cities) / field / AggKey(key) =>
-      dbService.getInRange(from, to)
+      dataService.getInRange(from, to)
         .map(Parser.queryData(UserQuery(cities, field, key), _))
         .flatMap(result => Ok(result.asJson.pretty))
 
@@ -58,7 +59,7 @@ class Server(dbService: DBService, fetch: FetchServiceTrait, log: Logger[IO]) {
         fetchServiceError = fetchResultEither.left.toOption.map(e => s"FetchServiceError: ${e.getMessage}").toList
         fetchResult = fetchResultEither.getOrElse(List.empty)
         (fetchErrors, successDownloads) = fetchResult.partitionMap(identity)
-        saveResults <- successDownloads.traverse { case (name, content) => dbService.save(name, content) }
+        saveResults <- successDownloads.traverse { case (name, content) => dataService.save(name, content) }
         (saveErrors, successSaves) = saveResults.partitionMap(identity)
 //        successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
         successes = successSaves
@@ -76,19 +77,24 @@ class Server(dbService: DBService, fetch: FetchServiceTrait, log: Logger[IO]) {
 
     // http://0.0.0.0:8080/api/show/all_dates
     case GET -> Root / "show" / "all_dates" =>
-     dbService.getDates().flatMap(dates =>
+      dataService.getDates.flatMap(dates =>
         Ok(dates.asJson.pretty)
       )
 
     // http://0.0.0.0:8080/api/show/date/20230423
     case GET -> Root / "show" / "date" / ValidDate(date) =>
-      dbService.getDateFileNames(date).flatMap(fileNames =>
+      dataService.getDateFileNames(date).flatMap(fileNames =>
         Ok(fileNames.asJson.pretty)
       )
 
     // http://0.0.0.0:8080/api/show/file/20230423_12:30.csv
     case GET -> Root / "show" / "file" / (fileName: String) =>
-      dbService.readFile(fileName).flatMap(content => Ok(content.asJson))
+      dataService.readFile(fileName).flatMap(content => Ok(content.asJson))
+
+    // http://0.0.0.0:8080/api/getLast24hours
+    case GET -> Root / "getLast24hours" => {
+      dataService.getLast24Hours.flatMap(content => Ok(content.asJson.pretty))
+    }
 
     // http://0.0.0.0:8080/api/help
     case GET -> Root / "help" => {

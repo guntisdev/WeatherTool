@@ -18,16 +18,10 @@ object DBService {
   }
 }
 
-class DBService(log: Logger[IO]) {
+class DBService(log: Logger[IO]) extends DataServiceTrait {
   private val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
   private val dataPath = "./data"
   private val nonDuplicatedLines = 34 // takes only first 34 lines of data as rest after 'Zosēni' is duplicated
-
-  def readFile(fileName: String): IO[List[String]] = {
-    val file = new File(dataPath, fileName)
-    val sourceResource = Resource.fromAutoCloseable(IO(Source.fromFile(file)))
-    sourceResource.use(source => IO(source.getLines().take(nonDuplicatedLines).toList)).handleError(_ => List.empty)
-  }
 
   private def readFileNames(path: String): IO[List[String]] =
     IO(new File(path).listFiles.toList.map(_.getName))
@@ -46,14 +40,6 @@ class DBService(log: Logger[IO]) {
     }
   }
 
-  def getInRange(from: LocalDateTime, to: LocalDateTime): IO[List[String]] = {
-    for {
-      fileNames <- readFileNames(dataPath)
-        .map (_.filter (inRange (_, from, to)))
-      fileLines <- fileNames.traverse(readFile)
-    } yield fileLines.flatten
-  }
-
   def save(fileName: String, content: String): IO[Either[Throwable, String]] = {
     val path = Paths.get(s"$dataPath/$fileName")
     IO(Files.writeString(path, content))
@@ -64,8 +50,22 @@ class DBService(log: Logger[IO]) {
       )
   }
 
+  def readFile(fileName: String): IO[List[String]] = {
+    val file = new File(dataPath, fileName)
+    val sourceResource = Resource.fromAutoCloseable(IO(Source.fromFile(file)))
+    sourceResource.use(source => IO(source.getLines().take(nonDuplicatedLines).toList)).handleError(_ => List.empty)
+  }
+
+  def getInRange(from: LocalDateTime, to: LocalDateTime): IO[List[String]] = {
+    for {
+      fileNames <- readFileNames(dataPath)
+        .map (_.filter (inRange (_, from, to)))
+      fileLines <- fileNames.traverse(readFile)
+    } yield fileLines.flatten
+  }
+
   // dates in which we have saved data
-  def getDates(): IO[List[LocalDate]] = {
+  def getDates: IO[List[LocalDate]] = {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     for {
       fileNames <- readFileNames(dataPath)
