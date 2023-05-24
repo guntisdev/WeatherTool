@@ -4,7 +4,7 @@ import cats.effect._
 import cats.implicits.toTraverseOps
 import com.comcast.ip4s.IpLiteralSyntax
 import db.DBService
-import fetch.FetchService
+import fetch.FetchServiceTrait
 import parse.{Parser, WeatherData}
 import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, ValidDate}
 import io.circe.{Json, Printer}
@@ -26,14 +26,14 @@ import scala.concurrent.duration.DurationInt
 
 
 object Server {
-  def of(dbService: DBService, fetch: FetchService): IO[Server] = {
+  def of(dbService: DBService, fetch: FetchServiceTrait): IO[Server] = {
     Slf4jLogger.create[IO].map {
       new Server(dbService, fetch, _)
     }
   }
 }
 
-class Server(dbService: DBService, fetch: FetchService, log: Logger[IO]) {
+class Server(dbService: DBService, fetch: FetchServiceTrait, log: Logger[IO]) {
 
   // Define the extension method `pretty` for Json
   implicit class JsonPrettyPrinter(json: Json) {

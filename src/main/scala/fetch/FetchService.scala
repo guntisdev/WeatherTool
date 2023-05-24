@@ -20,13 +20,19 @@ final case class WeatherServerConfig(
     url: String,
 )
 
+trait FetchServiceTrait {
+  def fetchSingleFile(fileName: String): IO[Either[Throwable, (String, String)]]
+  def fetchInRange(from: LocalDateTime, to: LocalDateTime): IO[List[Either[Throwable, (String, String)]]]
+  def fetchFromDate(date: LocalDate): IO[List[Either[Throwable, (String, String)]]]
+}
+
 object FetchService {
   def of: IO[FetchService] = {
     Slf4jLogger.create[IO].map(logger => new FetchService(new FileNameService, logger))
   }
 }
 
-class FetchService(fileNameService: FileNameService, log: Logger[IO]) {
+class FetchService(fileNameService: FileNameService, log: Logger[IO]) extends FetchServiceTrait {
   private val weatherServerConfig: WeatherServerConfig = ConfigSource.default.load[WeatherServerConfig] match {
     case Right(config) => config
     case Left(errors) => throw new RuntimeException(s"Unable to load config: $errors")
@@ -38,7 +44,7 @@ class FetchService(fileNameService: FileNameService, log: Logger[IO]) {
   private val baseUrl: IO[Uri] = IO(Uri.unsafeFromString(weatherServerConfig.url))
 
   private def makeRequest(client: Client[IO], url: Uri): IO[Either[Throwable, (String, String)]] = {
-    val fileName = url.path.toString()
+    val fileName = url.path.toString().tail
     val request = Request[IO](Method.GET, url).withHeaders(Authorization(basicCredentials))
 
     client.expect[String](request).redeemWith(
