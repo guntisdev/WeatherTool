@@ -5,11 +5,8 @@ import cats.effect._
 import java.time.format.DateTimeFormatter
 import java.time.{Duration, LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
 
-trait FileNameServiceTrait {
-  def generateCurrentHour(implicit clock: Clock[IO]): IO[String]
-}
 
-class FileNameService extends FileNameServiceTrait {
+class FileNameService {
   private val interval = Duration.ofMinutes(30)
   private val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
 
@@ -27,14 +24,27 @@ class FileNameService extends FileNameServiceTrait {
     time.plusMinutes(adjustment)
   }
 
-  override def generateCurrentHour(implicit clock: Clock[IO]): IO[String] = {
+  def generateCurrentHour(implicit clock: Clock[IO]): IO[String] = {
     clock.realTime.map { duration =>
       val instant = java.time.Instant.ofEpochMilli(duration.toMillis)
       val zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Riga"))
       val now = zonedDateTime.toLocalDateTime.withMinute(30)
       val csvName = s"${formatter.format(now)}.csv"
-//      println("println", csvName)
       csvName
+    }
+  }
+
+  def generateLast24Hours(implicit clock: Clock[IO]): IO[List[String]] = {
+    clock.realTime.map { duration =>
+      val instant = java.time.Instant.ofEpochMilli(duration.toMillis)
+      val zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.of("Europe/Riga"))
+      val now = zonedDateTime.toLocalDateTime.withMinute(30)
+      val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
+
+      (0 until 24).toList.map { hour =>
+        val previousHour = now.minusHours(hour)
+        s"${formatter.format(previousHour)}.csv"
+      }
     }
   }
 

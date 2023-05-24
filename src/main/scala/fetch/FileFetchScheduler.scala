@@ -8,7 +8,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 
 object FileFetchScheduler {
-  def of(dbService: DBService, fetch: FetchService): IO[FileFetchScheduler] = {
+  def of(dbService: DBService, fetch: FetchServiceTrait): IO[FileFetchScheduler] = {
     Scheduler.of.flatMap { scheduler =>
       Slf4jLogger.create[IO].map {
         new FileFetchScheduler(dbService, fetch, new FileNameService(), scheduler, _)
@@ -17,7 +17,7 @@ object FileFetchScheduler {
   }
 }
 
-class FileFetchScheduler(dbService: DBService, fetch: FetchService, fileNameService: FileNameService, scheduler: Scheduler, log: Logger[IO]) {
+class FileFetchScheduler(dbService: DBService, fetch: FetchServiceTrait, fileNameService: FileNameService, scheduler: Scheduler, log: Logger[IO]) {
   def run: Stream[IO, Unit] = {
     val fetchTask = fileNameService.generateCurrentHour.flatMap(fetch.fetchSingleFile)
     scheduler.scheduleTask(fetchTask)
