@@ -2,7 +2,7 @@ package server
 import cats.effect._
 import cats.implicits.catsSyntaxTuple2Parallel
 import db.{DBService, DataService}
-import fetch.{FetchService, FileFetchScheduler, StatefulFetchService}
+import fetch.{FetchService, FileFetchScheduler}
 
 object Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
@@ -10,10 +10,9 @@ object Main extends IOApp {
       dbService <- DBService.of
       dataService <- DataService.of(dbService)
       fetch <- FetchService.of
-      statefulFetch <- StatefulFetchService.of(fetch)
-      fileFetchScheduler <- FileFetchScheduler.of(dataService, statefulFetch)
+      fileFetchScheduler <- FileFetchScheduler.of(dataService, fetch)
       schedulerTask = fileFetchScheduler.run.compile.drain
-      server <- Server.of(dataService, statefulFetch)
+      server <- Server.of(dataService, fetch)
       serverTask = server.run
       exitCode <- (serverTask, schedulerTask).parMapN((_, _) => ExitCode.Success)
     } yield exitCode
