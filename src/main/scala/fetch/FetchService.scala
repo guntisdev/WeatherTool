@@ -12,7 +12,6 @@ import pureconfig._
 import pureconfig.generic.auto._
 
 import java.time.{LocalDate, LocalDateTime}
-import scala.concurrent.ExecutionContext.global
 
 final case class WeatherServerConfig(
     username: String,
