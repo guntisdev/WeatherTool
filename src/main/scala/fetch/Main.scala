@@ -33,9 +33,8 @@ object Main {
   def run: IO[Unit] = {
     for {
       fetch <- FetchService.of
-      statefulFetch <- StatefulFetchService.of(fetch)
-      fetchResultEither <- statefulFetch.fetchSingleFile("20230524_0030.csv").attempt
-      fetchResultEither <- statefulFetch.fetchSingleFile("20230522_0130.csv").attempt
+      fetchResultEither <- fetch.fetchSingleFile("20230524_0030.csv").attempt
+      fetchResultEither <- fetch.fetchSingleFile("20230522_0130.csv").attempt
       fetchServiceError = fetchResultEither.left.toOption.map(e => s"FetchServiceError: ${e.getMessage}").toList
       fetchResult = fetchResultEither.flatMap(res => res.flatMap(aaa => {
         println(s"fffffff: ${aaa._1}")
