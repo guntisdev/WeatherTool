@@ -53,8 +53,6 @@ object Aggregate {
     def getKeys: List[String] = {
       val runtimeMirror = scala.reflect.runtime.currentMirror
       val classSymbol = runtimeMirror.classSymbol(classOf[AggregateValue])
-
-      // Get all case classes that extend the AggregateValue trait
       val keys = classSymbol.knownDirectSubclasses.map(_.name.toString).toList
 
       keys
@@ -97,7 +95,6 @@ object Aggregate {
       case "dewPoint" => weatherData.map(_.dewPoint)
       case "humidity" => weatherData.map(_.humidity)
       case "sunDuration" => weatherData.map(_.sunDuration)
-//      case "phenomena" => weatherData.map(_..phenomena)
       case _ => List.empty
     }
 
