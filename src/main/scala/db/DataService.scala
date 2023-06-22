@@ -9,7 +9,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 
 trait DataServiceTrait {
-  def save(fileName: String, content: String): IO[Either[Throwable, String]]
+  def save(fileName: String, content: String): IO[String]
   def readFile(fileName: String): IO[List[String]]
   def getInRange(from: LocalDateTime, to: LocalDateTime): IO[List[String]]
   def getDates: IO[List[LocalDate]]
@@ -46,14 +46,15 @@ class DataService private(
     }
   }
 
-  def save(fileName: String, content: String): IO[Either[Throwable, String]] = {
-    dbService.save(fileName, content).flatMap {
-      case Right(savedFileName) =>
+  def save(fileName: String, content: String): IO[String] = {
+    dbService.save(fileName, content).redeemWith(
+      error => IO.raiseError(error),
+      savedFileName => {
         state.update(st => st.updated(savedFileName, content.split("\n").toList)) *>
-          filterState *>
-          logState.as(Right(savedFileName))
-      case e@Left(_) => IO.pure(e)
-    }
+            filterState *>
+            logState.as(savedFileName)
+      }
+    ).onError(error => log.info(s"errr... $error"))
   }
 
   def readFile(fileName: String): IO[List[String]] = dbService.readFile(fileName)

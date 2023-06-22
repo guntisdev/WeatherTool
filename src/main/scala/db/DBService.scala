@@ -40,14 +40,14 @@ class DBService(log: Logger[IO]) extends DataServiceTrait {
     }
   }
 
-  def save(fileName: String, content: String): IO[Either[Throwable, String]] = {
+  def save(fileName: String, content: String): IO[String] = {
     val path = Paths.get(s"$dataPath/$fileName")
     IO(Files.writeString(path, content))
-      .redeemWith(
-        error => IO(Left(error)) // <* log.error(s"Write file '$fileName' failed with error: ${error.getMessage}")
-        ,
-        _ => IO(Right(fileName)) // <* log.info(s"write: $fileName")
-      )
+      .attempt
+      .flatMap {
+        case Left(error) => log.error(s"Write file '$fileName' failed with error: ${error.getMessage}") *> IO.raiseError(error)
+        case Right(_) => log.info(s"write: $fileName").as(fileName)
+      }
   }
 
   def readFile(fileName: String): IO[List[String]] = {

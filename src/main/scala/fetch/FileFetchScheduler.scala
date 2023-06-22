@@ -27,10 +27,7 @@ class FileFetchScheduler(dataService: DataServiceTrait, fetch: FetchService, fil
         case Right((name, content)) =>
           dataService.save(name, content).attempt.flatMap {
             case Left(err) => log.error(s"error: $err")
-            case Right(saveResult) => saveResult match {
-              case Left(err) => log.error(s"error: $err")
-              case Right(savedName) => log.info(s"saved: $savedName")
-            }
+            case Right(savedName) => log.info(s"saved: $savedName")
           }
       }
   }
