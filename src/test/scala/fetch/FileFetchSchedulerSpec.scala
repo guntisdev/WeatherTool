@@ -20,8 +20,8 @@ class FileFetchSchedulerSpec extends AsyncWordSpec with Matchers with IOSuite {
         refScheduler <- Ref.of[IO, Option[Either[Throwable, (String, String)]]](None)
         log <- Slf4jLogger.create[IO]
         dbService = new DBService(log) {
-          override def save(fileName: String, content: String): IO[Either[Throwable, String]] = {
-            refDb.set(Some(fileName)).as(Right(fileName))
+          override def save(fileName: String, content: String): IO[String] = {
+            refDb.set(Some(fileName)).as(fileName)
           }
         }
         fileNameService = new FileNameService {
