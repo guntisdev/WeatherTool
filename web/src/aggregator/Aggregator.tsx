@@ -2,8 +2,9 @@ import moment from "moment";
 import { createSignal } from "solid-js";
 
 import { Result } from "./Result";
-import { SelectAggregator } from "./SelectAggregator";
 import { SelectCity } from "./SelectCity";
+import { SelectField } from "./SelectField";
+import { SelectKey } from "./SelectKey";
 import { SelectTimeRange } from "./SelectTimeRange";
 
 const nowRounded = new Date(new Date().setMinutes(30));
@@ -33,12 +34,8 @@ export function Aggregator() {
                         />
                     </div>
                     <div>
-                        <SelectAggregator
-                            getField={getField}
-                            setField={setField}
-                            getKey={getKey}
-                            setKey={setKey}
-                        />
+                        <SelectField getField={getField} setField={setField} />
+                        <SelectKey getKey={getKey} setKey={setKey} />
                     </div>
                 </div>
                 <div class="column">
