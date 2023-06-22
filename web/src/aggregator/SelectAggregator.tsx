@@ -9,7 +9,7 @@ export const SelectAggregator: Component<{
 }> = (props) => {
     return (
         <div>
-            <h3>Select aggregator</h3>
+            <h3>Select field</h3>
             <select onChange={(e) => props.setField(e.target.value)}>
                 { weatherField.map(field =>
                     <option
@@ -18,6 +18,7 @@ export const SelectAggregator: Component<{
                     >{field}</option>
                 )}
             </select>
+            <h3>Select aggregator</h3>
             <ul>
                 { aggregateKey.map(key => 
                     <label><li><input

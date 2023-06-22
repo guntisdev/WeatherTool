@@ -9,3 +9,14 @@
     padding: 10px;
     text-align: center;
 }
+
+.resultTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.resultTitle h3 {
+  margin: 0;
+}
