@@ -9,6 +9,8 @@ import java.io.File
 import java.nio.file.{Files, Paths}
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executors
+import scala.concurrent.ExecutionContext
 import scala.io.Source
 import scala.util.Try
 
@@ -24,7 +26,7 @@ class DBService(log: Logger[IO]) extends DataServiceTrait {
   private val nonDuplicatedLines = 34 // takes only first 34 lines of data as rest after 'Zosēni' is duplicated
 
   private def readFileNames(path: String): IO[List[String]] =
-    IO(new File(path).listFiles.toList.map(_.getName))
+    IO.blocking(new File(path).listFiles.toList.map(_.getName))
       .handleError(_ => List.empty)
 
   private def inRange(fileName: String, from: LocalDateTime, to: LocalDateTime): Boolean = {
@@ -52,8 +54,11 @@ class DBService(log: Logger[IO]) extends DataServiceTrait {
 
   def readFile(fileName: String): IO[List[String]] = {
     val file = new File(dataPath, fileName)
-    val sourceResource = Resource.fromAutoCloseable(IO(Source.fromFile(file)))
-    sourceResource.use(source => IO(source.getLines().take(nonDuplicatedLines).toList)).handleError(_ => List.empty)
+    val sourceResource = Resource.fromAutoCloseable(IO.blocking(Source.fromFile(file)))
+
+    sourceResource
+      .use(source => IO.blocking(source.getLines().take(nonDuplicatedLines).toList))
+      .handleError(_ => List.empty)
   }
 
   def getInRange(from: LocalDateTime, to: LocalDateTime): IO[List[String]] = {
