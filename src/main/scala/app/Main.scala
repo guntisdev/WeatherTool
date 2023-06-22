@@ -9,7 +9,6 @@ import server.Server
 object Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     for {
-      // TODO run in separate thread
       dbService <- DBService.of
       dataService <- DataService.of(dbService)
 
