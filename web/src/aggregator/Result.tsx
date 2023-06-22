@@ -1,9 +1,11 @@
 import moment from "moment";
 import { Accessor, Component, createResource, createSignal } from "solid-js";
-import { apiHost } from "../consts";
+
+import { apiHost, ResultKeyVal, resultOrder, ResultOrderKeys } from "../consts";
 import { CityChart } from "./CityChart";
 
 import "../css/Result.css"
+import { SelectOrder } from "./SelectOrder";
 
 export const Result: Component<{
     getCities: Accessor<Set<string>>,
@@ -12,7 +14,8 @@ export const Result: Component<{
     getField: Accessor<string>,
     getKey: Accessor<string>,
 }> = (props) => {
-    const cities = () => [...props.getCities()].join(",")
+    const cities = () => [...props.getCities()].join(",");
+    const citiesStr = () => [...props.getCities()].join(", ");
     const startStr = () => moment(props.getStart()).format("YYYY/MM/DD, HH:mm");
     const endStr = () => moment(props.getEnd()).format("YYYY/MM/DD, HH:mm");
     const queryStart = () => moment(props.getStart()).format("YYYYMMDD_HHmm");
@@ -28,16 +31,25 @@ export const Result: Component<{
     }
 
     const [queryResource] = createResource(getTimestamp, fetchQuery);
+    const [getOrderKey, setOrderKey] = createSignal<ResultOrderKeys>("A -> Z");
 
     return (
         <div>
             <h3>Aggregate by:</h3>
-            <input type="button" value="Query Data" onClick={() => setTimestamp(Date.now())} />
-            <p>cities: { cities() }</p>
+            <input
+                type="button"
+                class="primary"
+                value="Query Data"
+                onClick={() => setTimestamp(Date.now())}
+            />
+            <p>cities: { citiesStr() }</p>
             <p>time range: { startStr() } - { endStr() }</p>
             <p>weather field: { props.getField() }</p>
             <p>aggregation field: { props.getKey() }</p>
-            <h3>Result:</h3>
+            <div class="resultTitle">
+                <h3>Result:</h3>
+                <SelectOrder getter={getOrderKey} setter={setOrderKey} />
+            </div>
             { queryResource.loading && (
                 <div>
                     <span class="spinner"></span>
@@ -53,7 +65,8 @@ export const Result: Component<{
             { queryResource() && (
                 <div class="result-container">
                     { Object.entries(queryResource())
-                        .sort((a, b) => (a[0] as string) > (b[0] as string) ? 1 : -1)
+                        .map(keyVal => [...keyVal] as ResultKeyVal)
+                        .sort((a, b) => resultOrder[getOrderKey()](a, b))
                         .map(cityData => <ExportCity city={cityData[0]} value={cityData[1]} />)
                     }</div>
             )}

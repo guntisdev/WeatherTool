@@ -11,3 +11,15 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.primary {
+  background-color: #ffcc66;
+  border: none;
+  font-weight: bold;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.primary:hover {
+  background-color: #ffb92d;
+}
