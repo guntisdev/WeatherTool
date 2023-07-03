@@ -1,0 +1,14 @@
+.timeRangeTitle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0;
+}
+
+.timeRangeTitle h4 {
+    margin: 0;
+}
+
+.timeRangeTitle div {
+    font-size: 11px;
+}

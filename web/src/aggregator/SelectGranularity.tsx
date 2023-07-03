@@ -8,7 +8,7 @@ export const SelectGranularity: Component<{
 }> = ({ getGranularity, setGranularity }) => {
     return (
         <div>
-            <h3>Select granularity</h3>
+            <h4>Select granularity</h4>
             <select onChange={(e) => setGranularity(e.target.value)}>
                 { aggregateGranularity.map(granularity =>
                     <option
