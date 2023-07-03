@@ -6,7 +6,7 @@ import com.comcast.ip4s.IpLiteralSyntax
 import db.DataService
 import fetch.FetchService
 import parse.{Parser, WeatherData}
-import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, ValidDate}
+import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, Granularity, ValidDate}
 import io.circe.{Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
@@ -23,6 +23,7 @@ import org.http4s.circe.jsonEncoder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
+import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.DurationInt
 
 
@@ -47,9 +48,9 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
   private val apiRoutes = HttpRoutes.of[IO] {
 
     // http://0.0.0.0:8080/api/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempMax/max
-    case GET -> Root / "query" / DateTimeRange(from, to) / CityList(cities) / field / AggKey(key) =>
+    case GET -> Root / "query" / DateTimeRange(from, to) / Granularity(granularity) / CityList(cities) / field / AggKey(key) =>
       dataService.getInRange(from, to)
-        .map(Parser.queryData(UserQuery(cities, field, key), _))
+        .map(Parser.queryData(UserQuery(cities, field, key, granularity), _))
         .flatMap(result => Ok(result.asJson.pretty))
 
     // http://0.0.0.0:8080/api/fetch/date/20230514

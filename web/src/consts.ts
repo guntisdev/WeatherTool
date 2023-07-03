@@ -6,6 +6,8 @@ export const weatherField = ["tempMax", "tempMin", "tempAvg", "precipitation", "
 
 export const aggregateKey = ["min", "max", "avg", "sum", "list", "distinct"];
 
+export const aggregateGranularity = ["hour", "day", "month", "year"];
+
 export type ResultKeyVal = [key: string, value: number | Array<any>];
 
 export const resultOrder = {

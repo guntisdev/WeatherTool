@@ -4,6 +4,7 @@ import { createSignal } from "solid-js";
 import { Result } from "./Result";
 import { SelectCity } from "./SelectCity";
 import { SelectField } from "./SelectField";
+import { SelectGranularity } from "./SelectGranularity";
 import { SelectKey } from "./SelectKey";
 import { SelectTimeRange } from "./SelectTimeRange";
 
@@ -16,6 +17,7 @@ export function Aggregator() {
     const [getEnd, setEnd] = createSignal(nowRounded);
     const [getField, setField] = createSignal("tempMax");
     const [getKey, setKey] = createSignal("max");
+    const [getGranularity, setGranularity] = createSignal("hour");
 
     return (
         <div class="aggregator">
@@ -36,6 +38,7 @@ export function Aggregator() {
                     <div>
                         <SelectField getField={getField} setField={setField} />
                         <SelectKey getKey={getKey} setKey={setKey} />
+                        <SelectGranularity getGranularity={getGranularity} setGranularity={setGranularity} />
                     </div>
                 </div>
                 <div class="column">
@@ -45,6 +48,7 @@ export function Aggregator() {
                         getEnd={getEnd}
                         getField={getField}
                         getKey={getKey}
+                        getGranularity={getGranularity}
                     />
                 </div>
             </div>

@@ -4,14 +4,18 @@ import cats.implicits.{catsSyntaxOptionId, toFoldableOps}
 import io.circe.generic.semiauto.deriveEncoder
 import io.circe.syntax.EncoderOps
 import io.circe.{Encoder, Json}
+
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 object Aggregate {
 
   final case class UserQuery(
     cities: List[String],
     field: String,
-    key: AggregateKey
+    key: AggregateKey,
+    granularity: ChronoUnit,
   )
 
   sealed trait AggregateKey
@@ -46,7 +50,7 @@ object Aggregate {
 
   sealed trait AggregateValue
   final case class DoubleValue(value: Double) extends AggregateValue
-  final case class TimeDoubleList(list: List[(LocalDateTime, Option[Double])]) extends AggregateValue
+  final case class TimeDoubleList(list: List[(String, Option[Double])]) extends AggregateValue
   final case class StringListList(list: List[List[String]]) extends AggregateValue
   final case class DistinctStringList(list: List[String]) extends AggregateValue
   object AggregateValue {
@@ -80,21 +84,46 @@ object Aggregate {
     implicit val distinctStringListEncoder: Encoder[DistinctStringList] = deriveEncoder[DistinctStringList]
   }
 
-  def extractDoubleFieldValues(field: String, weatherData: List[WeatherData]): List[Option[Double]] =
+  private def convertDateTime(granularity: ChronoUnit)(data: (LocalDateTime, _)): String = {
+    val dateTime = data._1
+    granularity match {
+      case ChronoUnit.DAYS => dateTime.toLocalDate.toString
+      case ChronoUnit.MONTHS => dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM"))
+      case ChronoUnit.YEARS => dateTime.format(DateTimeFormatter.ofPattern("yyyy"))
+      case _ => dateTime.withMinute(0).toString
+    }
+  }
+
+  private def groupByGranularity(
+     list: List[(LocalDateTime, Option[Double])],
+     granularity: ChronoUnit,
+     aggregateKey: AggregateKey,
+  ): List[(String, Option[Double])] = {
+    list
+      .groupBy(convertDateTime(granularity))
+      .toList
+      .map { case(dateTime, groupedList) => (dateTime, flattenField(aggregateKey, groupedList)) }
+  }
+
+  def aggregateByField(
+    field: String,
+    granularity: ChronoUnit,
+    data: List[WeatherStationData],
+  ): List[(String, Option[Double])] =
     field match {
-      case "tempMax" => weatherData.map(_.tempMax)
-      case "tempMin" => weatherData.map(_.tempMin)
-      case "tempAvg" => weatherData.map(_.tempAvg)
-      case "precipitation" => weatherData.map(_.precipitation)
-      case "windAvg" => weatherData.map(_.windAvg)
-      case "windMax" => weatherData.map(_.windMax)
-      case "visibilityMin" => weatherData.map(_.visibilityMin)
-      case "visibilityAvg" => weatherData.map(_.visibilityAvg)
-      case "snowAvg" => weatherData.map(_.snowAvg)
-      case "atmPressire" => weatherData.map(_.atmPressure)
-      case "dewPoint" => weatherData.map(_.dewPoint)
-      case "humidity" => weatherData.map(_.humidity)
-      case "sunDuration" => weatherData.map(_.sunDuration)
+      case "tempMax" => groupByGranularity(data.map(d => (d.timestamp, d.weather.tempMax)), granularity, AggregateKey.Max)
+      case "tempMin" => groupByGranularity(data.map(d => (d.timestamp, d.weather.tempMin)), granularity, AggregateKey.Min)
+      case "tempAvg" => groupByGranularity(data.map(d => (d.timestamp, d.weather.tempAvg)), granularity, AggregateKey.Avg)
+      case "precipitation" => groupByGranularity(data.map(d => (d.timestamp, d.weather.precipitation)), granularity, AggregateKey.Sum)
+      case "windAvg" => groupByGranularity(data.map(d => (d.timestamp, d.weather.windAvg)), granularity, AggregateKey.Avg)
+      case "windMax" => groupByGranularity(data.map(d => (d.timestamp, d.weather.windMax)), granularity, AggregateKey.Max)
+      case "visibilityMin" => groupByGranularity(data.map(d => (d.timestamp, d.weather.visibilityMin)), granularity, AggregateKey.Min)
+      case "visibilityAvg" => groupByGranularity(data.map(d => (d.timestamp, d.weather.visibilityAvg)), granularity, AggregateKey.Avg)
+      case "snowAvg" => groupByGranularity(data.map(d => (d.timestamp, d.weather.snowAvg)), granularity, AggregateKey.Avg)
+      case "atmPressure" => groupByGranularity(data.map(d => (d.timestamp, d.weather.atmPressure)), granularity, AggregateKey.Avg)
+      case "dewPoint" => groupByGranularity(data.map(d => (d.timestamp, d.weather.dewPoint)), granularity, AggregateKey.Avg)
+      case "humidity" => groupByGranularity(data.map(d => (d.timestamp, d.weather.humidity)), granularity, AggregateKey.Avg)
+      case "sunDuration" => groupByGranularity(data.map(d => (d.timestamp, d.weather.sunDuration)), granularity, AggregateKey.Sum)
       case _ => List.empty
     }
 
@@ -102,18 +131,31 @@ object Aggregate {
     def roundDecimal: Double = BigDecimal(d).setScale(1, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
 
+  private def flattenField(
+   AggKey: AggregateKey,
+   values: List[(LocalDateTime, Option[Double])],
+  ): Option[Double] = {
+    val flatValues = values.flatMap(_._2)
+    AggKey match {
+      case AggregateKey.Min => flatValues.minimumOption
+      case AggregateKey.Max => flatValues.maximumOption
+      case AggregateKey.Avg => flatValues.reduceOption(_ + _).map(_ / flatValues.length)
+      case AggregateKey.Sum => flatValues.sum.some
+      case _ => None
+    }
+  }
+
   def aggregateDoubleValues(
     AggKey: AggregateKey,
-    values: List[Option[Double]],
-    timestamps: List[LocalDateTime],
+    values: List[(String, Option[Double])],
   ): Option[AggregateValue] = {
-    val flatValues = values.flatten
+    val flatValues = values.flatMap(_._2)
     AggKey match {
       case AggregateKey.Min => flatValues.minimumOption.map(value => DoubleValue(value.roundDecimal))
       case AggregateKey.Max => flatValues.maximumOption.map(value => DoubleValue(value.roundDecimal))
       case AggregateKey.Avg => flatValues.reduceOption(_ + _).map(sum => DoubleValue((sum / flatValues.length).roundDecimal))
       case AggregateKey.Sum => flatValues.sum.some.map(value => DoubleValue(value.roundDecimal))
-      case AggregateKey.List => TimeDoubleList(timestamps.zip(values).sorted).some
+      case AggregateKey.List => TimeDoubleList(values.sorted).some
       case AggregateKey.Distinct => None
     }
   }

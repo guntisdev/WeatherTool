@@ -5,11 +5,25 @@ import moment from "moment";
 // Register the controllers, elements, scales, and plugins we'll be using
 Chart.register(LineController, LinearScale, PointElement, LineElement, Title, CategoryScale);
 
+function formatDateString(str: string): string {
+  const date = moment(new Date(str));
+  switch (str.length) {
+    // year: 2023
+    case 4: return date.format("yyyy");
+    // year-month: 2023-06
+    case 7: return date.format("yyyy-MM");
+    // year-month-day: 2023-06-23
+    case 10: return date.format("yyyy-MM-DD");
+    // year-month-day hour:minute 2023-06-23T23:59
+    default: return date.format("HH:mm");
+  }
+}
+
 export const CityChart: Component<{ data: [string, number | null][] }> = (props) => {
   const [canvas, setCanvas] = createSignal<HTMLCanvasElement>();
   let chart: Chart;
   const data: [string, number | null][] = props.data.map(([dateStr, value]) => [
-    moment(new Date(dateStr)).format("HH:mm"),
+    formatDateString(dateStr),
     value,
   ]);
 

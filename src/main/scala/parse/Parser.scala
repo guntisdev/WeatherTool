@@ -1,9 +1,10 @@
 package parse
 
-import parse.Aggregate.{AggregateValue, UserQuery, aggregateDoubleValues, aggregatePhenomenaValues, extractDoubleFieldValues}
+import parse.Aggregate.{AggregateValue, UserQuery, aggregateDoubleValues, aggregatePhenomenaValues, aggregateByField}
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import scala.util.Try
 
 object Parser {
@@ -48,8 +49,8 @@ object Parser {
           (city -> aggregatePhenomenaValues(userQuery.key, phenomenaList))
         }
         case field => {
-          val doubleList = extractDoubleFieldValues(field, weatherStationData.map(_.weather))
-          (city -> aggregateDoubleValues(userQuery.key, doubleList, weatherStationData.map(_.timestamp)))
+          val doubleList = aggregateByField(field, userQuery.granularity, weatherStationData)
+          (city -> aggregateDoubleValues(userQuery.key, doubleList))
 
         }
       }
