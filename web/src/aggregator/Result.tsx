@@ -12,6 +12,7 @@ export const Result: Component<{
     getEnd: Accessor<Date>,
     getField: Accessor<string>,
     getKey: Accessor<string>,
+    getGranularity: Accessor<string>,
 }> = (props) => {
     const cities = () => [...props.getCities()].join(",");
     const queryStart = () => moment(props.getStart()).format("YYYYMMDD_HHmm");
@@ -21,7 +22,7 @@ export const Result: Component<{
     const fetchQuery = async (timestamp: number) => {
         if (cities() === "") return new Error("ERROR: Select cities!");
         await new Promise(resolve => setTimeout(resolve, 500))
-        const response = await fetch(`${apiHost}/api/query/${queryStart()}-${queryEnd()}/${cities()}/${props.getField()}/${props.getKey()}`);
+        const response = await fetch(`${apiHost}/api/query/${queryStart()}-${queryEnd()}/${props.getGranularity()}/${cities()}/${props.getField()}/${props.getKey()}`);
         const json = await response.json();
         return json;
     }

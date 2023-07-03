@@ -4,6 +4,7 @@ import parse.Aggregate.AggregateKey
 
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import scala.util.Try
 
 object ValidateRoutes {
@@ -38,6 +39,18 @@ object ValidateRoutes {
   object AggKey {
     def unapply(str: String): Option[AggregateKey] = {
       AggregateKey.fromString(str)
+    }
+  }
+
+  object Granularity {
+    def unapply(str: String): Option[ChronoUnit] = {
+      str match {
+        case "hour" => Some(ChronoUnit.HOURS)
+        case "day" => Some(ChronoUnit.DAYS)
+        case "month" => Some(ChronoUnit.MONTHS)
+        case "year" => Some(ChronoUnit.YEARS)
+        case _ => None
+      }
     }
   }
 }
