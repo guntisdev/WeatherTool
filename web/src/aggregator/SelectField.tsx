@@ -8,7 +8,7 @@ export const SelectField: Component<{
 }> = (props) => {
     return (
         <div>
-            <h3>Select field</h3>
+            <h4>Select field</h4>
             <select onChange={(e) => props.setField(e.target.value)}>
                 { weatherField.map(field =>
                     <option

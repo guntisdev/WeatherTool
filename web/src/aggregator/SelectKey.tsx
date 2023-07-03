@@ -8,7 +8,7 @@ export const SelectKey: Component<{
 }> = (props) => {
     return (
         <div>
-            <h3>Select key</h3>
+            <h4>Select key</h4>
             <ul>
                 { aggregateKey.map(key => 
                     <label><li><input
