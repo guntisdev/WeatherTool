@@ -1,14 +1,15 @@
 import { Component } from "solid-js";
 import { CityChart } from "./CityChart";
+import { DataQuery } from "../helpers";
 
-export const CityResult: Component<{ city: string, value: any }> = ({ city, value }) => {
+export const CityResult: Component<{ city: string, query: DataQuery, result: any }> = ({ city, query, result }) => {
     return (
         <div class="result-item">
             <h4>{ city }</h4>
             {
-                isDateNumber(value)
-                ? <CityChart data={value}/>
-                : value
+                isDateNumber(result)
+                    ? <CityChart city={city} data={result} query={query}/>
+                    : result
             }
         </div>
     );

@@ -4,7 +4,8 @@ import { Accessor, Component, createResource, createSignal } from "solid-js";
 import "../css/Result.css"
 import { apiHost, ResultKeyVal, resultOrder, ResultOrderKeys } from "../consts";
 import { SelectOrder } from "./SelectOrder";
-import { CityResult } from "./CityResult";
+import { CityResult } from "./chart/CityResult";
+import { isDataQuery } from "./helpers";
 
 export const Result: Component<{
     getCities: Accessor<Set<string>>,
@@ -54,12 +55,17 @@ export const Result: Component<{
             { queryResource() && queryResource() instanceof Error &&
                 <div>{ queryResource().message }</div>
             }
-            { queryResource() && (
+            { queryResource() && queryResource().result && isDataQuery(queryResource().query) && (
                 <div class="result-container">
-                    { Object.entries(queryResource())
+                    { Object.entries(queryResource().result)
                         .map(keyVal => [...keyVal] as ResultKeyVal)
                         .sort((a, b) => resultOrder[getOrderKey()](a, b))
-                        .map(cityData => <CityResult city={cityData[0]} value={cityData[1]} />)
+                        .map(cityData =>
+                            <CityResult
+                                city={cityData[0]}
+                                query={queryResource().query}
+                                result={cityData[1]}
+                            />)
                     }</div>
             )}
         </div>
