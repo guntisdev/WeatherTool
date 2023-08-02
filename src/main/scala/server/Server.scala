@@ -5,7 +5,7 @@ import cats.implicits.toTraverseOps
 import com.comcast.ip4s.IpLiteralSyntax
 import db.DataService
 import fetch.FetchService
-import parse.{Parser, WeatherData}
+import parse.{Aggregate, Parser, WeatherData}
 import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, Granularity, ValidDate}
 import io.circe.{Json, Printer}
 import org.http4s._
@@ -16,8 +16,10 @@ import org.http4s.server.middleware.CORS
 import org.http4s.server.middleware.CORSConfig
 import org.http4s.server.staticcontent.FileService
 import org.http4s.ember.server.EmberServerBuilder
+import io.circe.generic.auto._
 import io.circe.syntax._
 import parse.Aggregate.AggregateValueImplicits.aggregateValueEncoder
+import parse.Aggregate.userQueryEncoder
 import parse.Aggregate.{AggregateKey, UserQuery}
 import org.http4s.circe.jsonEncoder
 import org.typelevel.log4cats.Logger
@@ -45,13 +47,18 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
     }
   }
 
+  private case class ResponseWrapper(result: Map[String, Option[Aggregate.AggregateValue]], query: UserQuery)
+
   private val apiRoutes = HttpRoutes.of[IO] {
 
     // http://0.0.0.0:8080/api/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempMax/max
     case GET -> Root / "query" / DateTimeRange(from, to) / Granularity(granularity) / CityList(cities) / field / AggKey(key) =>
+      val userQuery = UserQuery(cities, field, key, granularity)
+
       dataService.getInRange(from, to)
-        .map(Parser.queryData(UserQuery(cities, field, key, granularity), _))
-        .flatMap(result => Ok(result.asJson.pretty))
+        .map(Parser.queryData(userQuery, _))
+        .map(result => ResponseWrapper(result, userQuery))
+        .flatMap(responseWrapper => Ok(responseWrapper.asJson.pretty))
 
     // http://0.0.0.0:8080/api/fetch/date/20230514
     case GET -> Root / "fetch" / "date" / ValidDate(date) =>

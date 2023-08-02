@@ -16,7 +16,7 @@ export function Aggregator() {
     const [getStart, setStart] = createSignal(dayAgo);
     const [getEnd, setEnd] = createSignal(nowRounded);
     const [getField, setField] = createSignal("tempMax");
-    const [getKey, setKey] = createSignal("max");
+    const [getKey, setKey] = createSignal("list");
     const [getGranularity, setGranularity] = createSignal("hour");
 
     return (

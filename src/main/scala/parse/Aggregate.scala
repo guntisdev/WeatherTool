@@ -18,6 +18,15 @@ object Aggregate {
     granularity: ChronoUnit,
   )
 
+  implicit val userQueryEncoder: Encoder[UserQuery] = new Encoder[UserQuery] {
+    override def apply(userQuery: UserQuery): Json = Json.obj(
+      "cities" -> Json.fromValues(userQuery.cities.map(Json.fromString)),
+      "field" -> Json.fromString(userQuery.field),
+      "key" -> Json.fromString(userQuery.key.toString),
+      "granularity" -> Json.fromString(userQuery.granularity.toString)
+    )
+  }
+
   sealed trait AggregateKey
   object AggregateKey {
     case object Min extends AggregateKey
