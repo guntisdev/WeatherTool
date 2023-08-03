@@ -10,7 +10,7 @@ import {
     Title,
 } from "chart.js";
 
-// Register the controllers, elements, scales, and plugins we'll be using
+// Register chart elements which will be used
 Chart.register(
     BarElement,
     BarController,
@@ -22,9 +22,7 @@ Chart.register(
     CategoryScale,
 );
 
-// Chart.defaults.backgroundColor = "#FF0000";
-
-const barChartData = ["precipitation", "sunDuration"];
+const barChartData = ["precipitation", "sunDuration", "snowAvg"];
 
 export function createCustomChart(
     ctx: CanvasRenderingContext2D,

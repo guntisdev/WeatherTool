@@ -24,7 +24,7 @@ export const CityChart: Component<{
     const values = data.map(item => item[1]);
     
     onMount(() => {
-        const ctx = getCanvas()!.getContext('2d')!;
+        const ctx = getCanvas()!.getContext("2d")!;
         chart = createCustomChart(
             ctx,
             false,
