@@ -1,7 +1,7 @@
 import moment from "moment";
 import { createSignal } from "solid-js";
+import { QueryResult } from "./result/QueryResult";
 
-import { Result } from "./Result";
 import { SelectCity } from "./SelectCity";
 import { SelectField } from "./SelectField";
 import { SelectGranularity } from "./SelectGranularity";
@@ -16,7 +16,7 @@ export function Aggregator() {
     const [getStart, setStart] = createSignal(dayAgo);
     const [getEnd, setEnd] = createSignal(nowRounded);
     const [getField, setField] = createSignal("tempMax");
-    const [getKey, setKey] = createSignal("list");
+    const [getKey, setKey] = createSignal("max");
     const [getGranularity, setGranularity] = createSignal("hour");
 
     return (
@@ -42,7 +42,7 @@ export function Aggregator() {
                     </div>
                 </div>
                 <div class="column">
-                    <Result
+                    <QueryResult
                         getCities={getCities}
                         getStart={getStart}
                         getEnd={getEnd}

@@ -7,12 +7,19 @@ import { FileManager } from './fileManager/FileManager';
 console.log("env:", import.meta.env.MODE);
 console.log("api host:", import.meta.env.VITE_API_HOST);
 
-type Section = "aggregator" | "fileManager";
+type Section = "aggregator" | "mapView" | "fileManager";
 
 const App: Component = () => {
     const [getSection, setSection] = createSignal<Section>("aggregator");
 
-    const section = () => getSection() === "aggregator" ? <Aggregator /> : <FileManager />;
+    const section = () => {
+        switch(getSection()) {
+            case "fileManager": return <FileManager />;
+            case "aggregator":
+            default: 
+                return <Aggregator />;
+        }
+    }
 
     return (
         <div class={styles.App}>

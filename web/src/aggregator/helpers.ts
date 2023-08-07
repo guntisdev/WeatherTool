@@ -14,11 +14,28 @@ export function formatDateString(str: string): string {
     }
 }
 
+export interface QueryResult {
+    query: DataQuery;
+    result: {[key: string]: any};
+}
+
 export interface DataQuery {
-  cities: string[];
-  field: string;
-  granularity: string;
-  key: string;
+    cities: string[];
+    field: string;
+    granularity: string;
+    key: string;
+}
+
+export function isQueryResult(variable: any): variable is QueryResult {
+    return variable
+        && variable.query
+        && isDataQuery(variable.query)
+        && variable.result
+        && (
+            typeof variable.result === "object"
+            && !Array.isArray(variable.result)
+            && variable.result !== null
+        );
 }
 
 export function isDataQuery(variable: any): variable is DataQuery {
