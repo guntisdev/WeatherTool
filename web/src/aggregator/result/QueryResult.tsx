@@ -1,13 +1,12 @@
 import moment from "moment";
 import { Accessor, Component, createResource, createSignal } from "solid-js";
 
-import "../css/Result.css"
-import { apiHost, ResultKeyVal, resultOrder, ResultOrderKeys } from "../consts";
-import { SelectOrder } from "./SelectOrder";
-import { CityResult } from "./chart/CityResult";
-import { isDataQuery } from "./helpers";
+import "../../css/Result.css"
+import { apiHost } from "../../consts";
+import { isQueryResult } from "../helpers";
+import { Result } from "./Result";
 
-export const Result: Component<{
+export const QueryResult: Component<{
     getCities: Accessor<Set<string>>,
     getStart: Accessor<Date>,
     getEnd: Accessor<Date>,
@@ -29,7 +28,6 @@ export const Result: Component<{
     }
 
     const [queryResource] = createResource(getTimestamp, fetchQuery);
-    const [getOrderKey, setOrderKey] = createSignal<ResultOrderKeys>("A -> Z");
 
     return (
         <div>
@@ -39,10 +37,6 @@ export const Result: Component<{
                 value="Query Data"
                 onClick={() => setTimestamp(Date.now())}
             />
-            <div class="resultTitle">
-                <h3>Result:</h3>
-                <SelectOrder getter={getOrderKey} setter={setOrderKey} />
-            </div>
             { queryResource.loading && (
                 <div>
                     <span class="spinner"></span>
@@ -55,19 +49,9 @@ export const Result: Component<{
             { queryResource() && queryResource() instanceof Error &&
                 <div>{ queryResource().message }</div>
             }
-            { queryResource() && queryResource().result && isDataQuery(queryResource().query) && (
-                <div class="result-container">
-                    { Object.entries(queryResource().result)
-                        .map(keyVal => [...keyVal] as ResultKeyVal)
-                        .sort((a, b) => resultOrder[getOrderKey()](a, b))
-                        .map(cityData =>
-                            <CityResult
-                                city={cityData[0]}
-                                query={queryResource().query}
-                                result={cityData[1]}
-                            />)
-                    }</div>
-            )}
+            { queryResource() && isQueryResult( queryResource() ) &&
+                <Result result={queryResource} />
+            }
         </div>
     );
 }
