@@ -20,13 +20,15 @@ export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => 
         direction: createSignal(""),
         speed: createSignal(""),
         gusts: createSignal(""),
+        roundValues: createSignal(false),
     }
 
-    function getWindData(): [string, string, string] {
+    function getWindData(): [string, string, string, boolean] {
         return [
             windSignals.direction[0](),
             windSignals.speed[0](),
             windSignals.gusts[0](),
+            windSignals.roundValues[0](),
         ];
     }
 
@@ -35,7 +37,12 @@ export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => 
         const img = new Image();
         img.onload = () => {
             setImg(img);
-            drawOnMap(ctx, [img, arrowImg], lastCoords, getWindData());
+            drawOnMap(
+                ctx,
+                [img, arrowImg],
+                lastCoords,
+                getWindData(),
+            );
         };
         img.src = mapUrl;
     });
@@ -49,7 +56,12 @@ export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => 
                 typeof value === "number" ? value : -99,
             ]);
             lastCoords = coordsAndData;
-        drawOnMap(ctx, [getImg(), arrowImg], coordsAndData, getWindData());
+        drawOnMap(
+            ctx,
+            [getImg(),arrowImg],
+            coordsAndData,
+            getWindData(),
+        );
     });
 
     return (
@@ -64,10 +76,11 @@ function drawOnMap(
     ctx: CanvasRenderingContext2D,
     imgArr: [HTMLImageElement, HTMLImageElement],
     coords: [string, {x: number, y: number }, number][],
-    windData: [string, string, string],
+    windData: [string, string, string, boolean],
 ): void {
     const size = 80;
 
+    const [windDirection, windSpeed, windGusts, roundValues] = windData;
     const [bgImg, arrowImg] = imgArr;
 
     // bg
@@ -87,7 +100,9 @@ function drawOnMap(
     ctx.fillStyle = "#000000";
     coords.forEach(([, {x, y}, value]) => {
         ctx.rect(x, y, size, size);
-        ctx.fillText(`${value}`, x + size/2, y + size/2);
+        const numericValue = roundValues ? Math.round(value) : value;
+        const stringValue = numericValue.toString().replace(".", ",");
+        ctx.fillText(stringValue, x + size/2, y + size/2);
     });
 
     // wind values
@@ -97,19 +112,19 @@ function drawOnMap(
     ctx.fillStyle = "#FFFFFF";
     const boxMiddleX = 1675;
 
-    const directionWidth = ctx.measureText(windData[0]).width;
-    ctx.fillText(windData[0], boxMiddleX - directionWidth / 2 + 30, 370);
-    const angleInDegrees = getAngleFromString(windData[0]);
+    const directionWidth = ctx.measureText(windDirection).width;
+    ctx.fillText(windDirection, boxMiddleX - directionWidth / 2 + 30, 370);
+    const angleInDegrees = getAngleFromString(windDirection);
     drawRotatedImage(ctx, arrowImg, boxMiddleX - directionWidth / 2 - 30, 370, angleInDegrees);
 
-    const speedWidth = ctx.measureText(windData[1]).width;
-    ctx.fillText(windData[1], boxMiddleX - speedWidth / 2 - 30, 575);
+    const speedWidth = ctx.measureText(windSpeed).width;
+    ctx.fillText(windSpeed, boxMiddleX - speedWidth / 2 - 30, 575);
     ctx.font = "bold 25px Rubik";
     ctx.fillText("M/S", boxMiddleX + speedWidth / 2 - 22, 590);
 
     ctx.font = "bold 45px Rubik";
-    const gustsWidth = ctx.measureText(windData[2]).width;
-    ctx.fillText(windData[2], boxMiddleX - gustsWidth / 2 - 30, 790);
+    const gustsWidth = ctx.measureText(windGusts).width;
+    ctx.fillText(windGusts, boxMiddleX - gustsWidth / 2 - 30, 790);
     ctx.font = "bold 25px Rubik";
     ctx.fillText("M/S", boxMiddleX + gustsWidth / 2 - 22, 805);
 }
