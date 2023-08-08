@@ -42,7 +42,7 @@ export const Result: Component<{
                     <SelectOrder getter={getOrderKey} setter={setOrderKey} />
                 </span>
             </div>
-            <div class="result-container">
+            <div class={getResultView() === "text" ? "result-container" : ""}>
                 { getResultView() === "text"
                     ? cityData().map(([city, data]) =>
                         <CityResult
