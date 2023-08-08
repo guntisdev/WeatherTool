@@ -5,13 +5,16 @@ import { cityCoords } from "./cityCoords";
 import { drawRotatedImage, getAngleFromString } from "./windAngles";
 import { WindInputs, WindSignals } from "./WindInputs";
 
-const arrowImg = new Image();
-arrowImg.src = "src/assets/arrow.webp";
+import mapUrl from "../../assets/map_1920x1080.webp";
+import arrowUrl from "../../assets/arrow.webp";
 
 export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => {
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>();
     const [getImg, setImg] = createSignal(new Image());
     let lastCoords: [string, {x: number, y: number }, number][] = [];
+
+    const arrowImg = new Image();
+    arrowImg.src = arrowUrl;
 
     const windSignals: WindSignals = {
         direction: createSignal(""),
@@ -32,9 +35,9 @@ export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => 
         const img = new Image();
         img.onload = () => {
             setImg(img);
-            drawOnMap(ctx, img, lastCoords, getWindData());
+            drawOnMap(ctx, [img, arrowImg], lastCoords, getWindData());
         };
-        img.src = "src/assets/map_1920x1080.webp";
+        img.src = mapUrl;
     });
 
     createEffect(() => {
@@ -46,7 +49,7 @@ export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => 
                 typeof value === "number" ? value : -99,
             ]);
             lastCoords = coordsAndData;
-        drawOnMap(ctx, getImg(), coordsAndData, getWindData());
+        drawOnMap(ctx, [getImg(), arrowImg], coordsAndData, getWindData());
     });
 
     return (
@@ -59,14 +62,16 @@ export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => 
 
 function drawOnMap(
     ctx: CanvasRenderingContext2D,
-    img: HTMLImageElement,
+    imgArr: [HTMLImageElement, HTMLImageElement],
     coords: [string, {x: number, y: number }, number][],
     windData: [string, string, string],
 ): void {
     const size = 80;
 
+    const [bgImg, arrowImg] = imgArr;
+
     // bg
-    ctx.drawImage(img, 0, 0);
+    ctx.drawImage(bgImg, 0, 0);
 
     // city boxes
     ctx.fillStyle = "#FFFFFF";
