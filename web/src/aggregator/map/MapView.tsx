@@ -81,7 +81,7 @@ function drawOnMap(
     ctx.fill();
 
     // weather values
-    ctx.font = "bold 30px Arial";
+    ctx.font = "bold 30px Rubik";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#000000";
@@ -91,7 +91,7 @@ function drawOnMap(
     });
 
     // wind values
-    ctx.font = "bold 45px Arial";
+    ctx.font = "bold 45px Rubik";
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.fillStyle = "#FFFFFF";
@@ -104,12 +104,12 @@ function drawOnMap(
 
     const speedWidth = ctx.measureText(windData[1]).width;
     ctx.fillText(windData[1], boxMiddleX - speedWidth / 2 - 30, 575);
-    ctx.font = "bold 25px Arial";
+    ctx.font = "bold 25px Rubik";
     ctx.fillText("M/S", boxMiddleX + speedWidth / 2 - 22, 590);
 
-    ctx.font = "bold 45px Arial";
+    ctx.font = "bold 45px Rubik";
     const gustsWidth = ctx.measureText(windData[2]).width;
     ctx.fillText(windData[2], boxMiddleX - gustsWidth / 2 - 30, 790);
-    ctx.font = "bold 25px Arial";
+    ctx.font = "bold 25px Rubik";
     ctx.fillText("M/S", boxMiddleX + gustsWidth / 2 - 22, 805);
 }

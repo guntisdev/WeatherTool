@@ -1,10 +1,12 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Rubik', sans-serif;
 }
 
 code {
@@ -12,12 +14,20 @@ code {
     monospace;
 }
 
+@font-face {
+  font-family: 'Rubik';
+  src: url('../assets/Rubik-Medium.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .primary {
   background-color: #ffcc66;
   border: none;
-  font-weight: bold;
   padding: 5px 10px;
   cursor: pointer;
+  font-family: 'Rubik', sans-serif;
 }
 
 .primary:hover {
