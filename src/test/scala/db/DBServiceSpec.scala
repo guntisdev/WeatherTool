@@ -34,6 +34,27 @@ class DBServiceSpec extends AnyFunSuite with Matchers {
     lines.length shouldBe 2142
   }
 
+  test("getDatesByMonths should return filtered dates") {
+    val monthFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+    val monthList = List(
+      LocalDate.parse("20230401", monthFormatter),
+      LocalDate.parse("20230501", monthFormatter),
+      LocalDate.parse("20230601", monthFormatter),
+    )
+    val dbService = DBService.of.unsafeRunSync()
+    val dates = dbService.getDatesByMonths(monthList).unsafeRunSync()
+
+    dates should not be empty
+
+    val exportFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val validPrefixes = Set("2023-04", "2023-05", "2023-06")
+    val invalidDates = dates
+      .map(_.format(exportFormatter))
+      .filterNot(date => validPrefixes.exists(prefix => date.startsWith(prefix)))
+
+    invalidDates shouldBe empty
+  }
+
   test("DBService.save should return correct result") {
     val dbService = DBService.of.unsafeRunSync()
     val fileName = "testFile.txt"

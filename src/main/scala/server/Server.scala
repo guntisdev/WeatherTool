@@ -6,7 +6,7 @@ import com.comcast.ip4s.IpLiteralSyntax
 import db.DataService
 import fetch.FetchService
 import parse.{Aggregate, Parser, WeatherData}
-import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, Granularity, ValidDate}
+import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, Granularity, ValidDate, ValidateMonths}
 import io.circe.{Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
@@ -86,6 +86,12 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
     // http://0.0.0.0:8080/api/show/all_dates
     case GET -> Root / "show" / "all_dates" =>
       dataService.getDates.flatMap(dates =>
+        Ok(dates.asJson.pretty)
+      )
+
+    // http://0.0.0.0:8080/api/show/months/202304,202305,202306
+    case GET -> Root / "show" / "months" / ValidateMonths(monthList) =>
+      dataService.getDatesByMonths(monthList).flatMap(dates =>
         Ok(dates.asJson.pretty)
       )
 

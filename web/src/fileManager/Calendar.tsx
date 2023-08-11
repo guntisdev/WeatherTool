@@ -1,24 +1,31 @@
 import moment from "moment";
-import { Accessor, Component, createSignal, Setter } from "solid-js";
+import { Accessor, Component, Setter } from "solid-js";
 
 import "../css/calendar.css";
 
 export const Calendar: Component<{
     getSelectedDate: Accessor<Date>,
     setSelectedDate: Setter<Date>,
-    datesWithData: Date[],
-}> = ({getSelectedDate, setSelectedDate, datesWithData}) => {
-    const dateStrArr = () => datesWithData.map(d => d.toDateString());
+    setCurrentMonth: Setter<Date>,
+    datesWithData: () => Date[],
+}> = ({getSelectedDate, setSelectedDate, setCurrentMonth, datesWithData}) => {
+    const dateStrArr = () => datesWithData().map(d => d.toDateString());
+
+    function changeMonths(delta: number): void {
+        const newDate = moment(getSelectedDate()).add(delta, "months").toDate();
+        setCurrentMonth(newDate);
+        setSelectedDate(newDate);
+    }
 
     return (
         <div>
             <h3>Calendar</h3>
             <div class="calendar-top">
-                <button onClick={() => setSelectedDate(moment(getSelectedDate()).subtract(1, "months").toDate()) }>&lt;&lt;</button>
+                <button onClick={() => changeMonths(-1) }>&lt;&lt;</button>
                 <div class="calendar-year-month">
                     {moment(getSelectedDate()).format("YYYY, MMM")}
                 </div>
-                <button onclick={() => setSelectedDate(moment(getSelectedDate()).add(1, "months").toDate())}>&gt;&gt;</button>
+                <button onclick={() => changeMonths(1)}>&gt;&gt;</button>
             </div>
             <div class="calendar">
                 { getPaddedMonth(getSelectedDate()).map(d => {

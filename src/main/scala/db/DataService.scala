@@ -63,6 +63,8 @@ class DataService private(
 
   def getDates: IO[List[LocalDate]] = dbService.getDates
 
+  def getDatesByMonths(monthList: List[LocalDate]): IO[List[LocalDate]] = dbService.getDatesByMonths(monthList)
+
   def getDateFileNames(date: LocalDate): IO[List[String]] = dbService.getDateFileNames(date)
 
   // TODO implement getting full data from state
