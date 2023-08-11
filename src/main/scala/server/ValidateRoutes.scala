@@ -27,6 +27,21 @@ object ValidateRoutes {
     }
   }
 
+  object ValidateMonths {
+    def unapply(str: String): Option[List[LocalDate]] = {
+      val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+      val monthList = str
+        .split(",")
+        .toList
+        .flatMap(str => Try(LocalDate.parse(str + "01", formatter)).toOption)
+
+      monthList match {
+        case Nil => None
+        case list => Some(list)
+      }
+    }
+  }
+
   object CityList {
     def unapply(str: String): Option[List[String]] = {
       str.split(",").toList match {

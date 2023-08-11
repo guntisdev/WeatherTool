@@ -81,6 +81,20 @@ class DBService(log: Logger[IO]) extends DataServiceTrait {
     } yield dates.sorted
   }
 
+  def getDatesByMonths(monthList: List[LocalDate]): IO[List[LocalDate]] = {
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+    val monthFormatter = DateTimeFormatter.ofPattern("yyyyMM")
+    val monthStrList = monthList.map(_.format(monthFormatter))
+    for {
+      fileNames <- readFileNames(dataPath)
+      datesStr <- IO(fileNames.map(_.take(8)).distinct) // take yyyyMMdd
+      filteredDatesStr = datesStr.filter(date => monthStrList.contains(date.take(6)))
+      dates <- filteredDatesStr.traverse { str =>
+        IO(LocalDate.parse(str, dateFormatter)).option
+      }.map(_.flatten)
+    } yield dates.sorted
+  }
+
   def getDateFileNames(date: LocalDate): IO[List[String]] = {
     val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     val dateStr: String = date.format(formatter)
