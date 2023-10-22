@@ -14,13 +14,13 @@ import scala.concurrent.ExecutionContext
 import scala.io.Source
 import scala.util.Try
 
-object DBService {
-  def of: IO[DBService] = {
-    Slf4jLogger.create[IO].map(logger => new DBService(logger))
+object FileService {
+  def of: IO[FileService] = {
+    Slf4jLogger.create[IO].map(logger => new FileService(logger))
   }
 }
 
-class DBService(log: Logger[IO]) extends DataServiceTrait {
+class FileService(log: Logger[IO]) extends DataServiceTrait {
   private val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
   private val dataPath = "./data"
   private val nonDuplicatedLines = 34 // takes only first 34 lines of data as rest after 'Zosēni' is duplicated

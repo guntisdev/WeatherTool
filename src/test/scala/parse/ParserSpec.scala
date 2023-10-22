@@ -1,7 +1,7 @@
 package parse
 
 import cats.effect.unsafe.implicits.global
-import db.DBService
+import db.FileService
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import parse.Aggregate.{AggregateKey, DoubleValue, TimeDoubleList, UserQuery}
@@ -19,9 +19,9 @@ class ParserSpec extends AnyFunSuite with Matchers {
     val to = LocalDateTime.parse("20230516_0942", formatter)
     val userQuery = UserQuery(List("Bauska", "Dagda", "Daugavgrīva", "Rīga"), "precipitation", AggregateKey.Sum, ChronoUnit.HOURS)
 
-    val dbService = DBService.of.unsafeRunSync()
+    val fileService = FileService.of.unsafeRunSync()
 
-    val lines = dbService.getInRange(from, to).unsafeRunSync()
+    val lines = fileService.getInRange(from, to).unsafeRunSync()
     val parsed = Parser.queryData(userQuery, lines)
 
     parsed shouldBe HashMap(
@@ -38,9 +38,9 @@ class ParserSpec extends AnyFunSuite with Matchers {
     val to = LocalDateTime.parse("20230516_0800", formatter)
     val userQuery = UserQuery(List("Rīga"), "precipitation", AggregateKey.List, ChronoUnit.HOURS)
 
-    val dbService = DBService.of.unsafeRunSync()
+    val fileService = FileService.of.unsafeRunSync()
 
-    val lines = dbService.getInRange(from, to).unsafeRunSync()
+    val lines = fileService.getInRange(from, to).unsafeRunSync()
     val parsed = Parser.queryData(userQuery, lines)
 
     parsed shouldBe HashMap(
