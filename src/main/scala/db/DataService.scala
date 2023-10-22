@@ -17,20 +17,20 @@ trait DataServiceTrait {
 }
 
 object DataService {
-  def of(dbService: DBService): IO[DataService] = {
+  def of(fileService: FileService): IO[DataService] = {
     for {
       log <- Slf4jLogger.create[IO]
       fileNameService = new FileNameService()
       fileNames <- fileNameService.generateLast24Hours
-      contents <- fileNames.traverse(fileName => dbService.readFile(fileName)
+      contents <- fileNames.traverse(fileName => fileService.readFile(fileName)
         .map(content => (fileName, content)))
       state = contents.toMap
       stateRef <- Ref.of[IO, Map[String, List[String]]](state)
-    } yield new DataService(dbService, new FileNameService(), log, stateRef)
+    } yield new DataService(fileService, new FileNameService(), log, stateRef)
   }
 }
 class DataService private(
-                           dbService: DBService,
+                           fileService: FileService,
                            fileNameService: FileNameService,
                            log: Logger[IO],
                            private val state: Ref[IO, Map[String, List[String]]]
@@ -47,7 +47,7 @@ class DataService private(
   }
 
   def save(fileName: String, content: String): IO[String] = {
-    dbService.save(fileName, content).redeemWith(
+    fileService.save(fileName, content).redeemWith(
       error => IO.raiseError(error),
       savedFileName => {
         state.update(st => st.updated(savedFileName, content.split("\n").toList)) *>
@@ -57,15 +57,15 @@ class DataService private(
     ).onError(error => log.info(s"errr... $error"))
   }
 
-  def readFile(fileName: String): IO[List[String]] = dbService.readFile(fileName)
+  def readFile(fileName: String): IO[List[String]] = fileService.readFile(fileName)
 
-  def getInRange(from: LocalDateTime, to: LocalDateTime): IO[List[String]] = dbService.getInRange(from, to)
+  def getInRange(from: LocalDateTime, to: LocalDateTime): IO[List[String]] = fileService.getInRange(from, to)
 
-  def getDates: IO[List[LocalDate]] = dbService.getDates
+  def getDates: IO[List[LocalDate]] = fileService.getDates
 
-  def getDatesByMonths(monthList: List[LocalDate]): IO[List[LocalDate]] = dbService.getDatesByMonths(monthList)
+  def getDatesByMonths(monthList: List[LocalDate]): IO[List[LocalDate]] = fileService.getDatesByMonths(monthList)
 
-  def getDateFileNames(date: LocalDate): IO[List[String]] = dbService.getDateFileNames(date)
+  def getDateFileNames(date: LocalDate): IO[List[String]] = fileService.getDateFileNames(date)
 
   // TODO implement getting full data from state
   def getLast24Hours: IO[List[String]] = {

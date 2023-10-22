@@ -9,12 +9,12 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime}
 
 
-class DBServiceSpec extends AnyFunSuite with Matchers {
+class FileServiceSpec extends AnyFunSuite with Matchers {
   private val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
 
   test("getDateFileNames should return correct file names") {
-    val dbService = DBService.of.unsafeRunSync()
-    val datesList = dbService.getDateFileNames(LocalDate.of(2023, 5, 15))
+    val fileService = FileService.of.unsafeRunSync()
+    val datesList = fileService.getDateFileNames(LocalDate.of(2023, 5, 15))
       .unsafeRunSync()
 
     val expectedFileNames = (0 to 23).toList
@@ -28,8 +28,8 @@ class DBServiceSpec extends AnyFunSuite with Matchers {
     val from = LocalDateTime.parse("20230513_2200", dateFormatter)
     val to = LocalDateTime.parse("20230516_1230", dateFormatter)
 
-    val dbService = DBService.of.unsafeRunSync()
-    val lines = dbService.getInRange(from, to).unsafeRunSync()
+    val fileService = FileService.of.unsafeRunSync()
+    val lines = fileService.getInRange(from, to).unsafeRunSync()
 
     lines.length shouldBe 2142
   }
@@ -41,8 +41,8 @@ class DBServiceSpec extends AnyFunSuite with Matchers {
       LocalDate.parse("20230501", monthFormatter),
       LocalDate.parse("20230601", monthFormatter),
     )
-    val dbService = DBService.of.unsafeRunSync()
-    val dates = dbService.getDatesByMonths(monthList).unsafeRunSync()
+    val fileService = FileService.of.unsafeRunSync()
+    val dates = fileService.getDatesByMonths(monthList).unsafeRunSync()
 
     dates should not be empty
 
@@ -56,19 +56,19 @@ class DBServiceSpec extends AnyFunSuite with Matchers {
   }
 
   test("DBService.save should return correct result") {
-    val dbService = DBService.of.unsafeRunSync()
+    val fileService = FileService.of.unsafeRunSync()
     val fileName = "testFile.txt"
     val fileContent = "test content..."
 
-    dbService.save(fileName, fileContent).unsafeRunSync() shouldEqual fileName
+    fileService.save(fileName, fileContent).unsafeRunSync() shouldEqual fileName
   }
 
   test("DBService.save returns error on invalid file name") {
-    val dbService = DBService.of.unsafeRunSync()
+    val fileService = FileService.of.unsafeRunSync()
     val fileName = "/invalid/file/name"
     val fileContent = "test content..."
 
-    val result = dbService.save(fileName, fileContent).attempt.unsafeRunSync()
+    val result = fileService.save(fileName, fileContent).attempt.unsafeRunSync()
 
     result match {
       case Left(e) =>

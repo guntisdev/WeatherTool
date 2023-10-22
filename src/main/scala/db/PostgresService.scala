@@ -2,24 +2,22 @@ package db
 
 import cats.data.NonEmptyList
 import cats.effect._
-import cats.effect.unsafe.implicits.global
 import doobie._
 import doobie.implicits._
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 import doobie.postgres.implicits._
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-case class SqlContent(value: String)
+object PostgresService {
+  def of(transactor: Transactor[IO]): IO[PostgresService] = {
+    Slf4jLogger.create[IO].map(logger => new PostgresService(transactor, logger))
+  }
+}
 
-object Postgres {
-  def transactor[F[_]: Async]: Transactor[F] = Transactor.fromDriverManager[F](
-    "org.postgresql.Driver",
-    "jdbc:postgresql://localhost:5432/weather-tool",
-    "postgres",
-    "mysecretpassword"
-  )
-
+class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
   def getResourceContent(path: String): IO[String] = {
     val streamResource = Resource.make(IO(getClass.getResourceAsStream(path))) { stream =>
       IO(stream.close()).handleErrorWith(_ => IO.unit)
@@ -30,23 +28,16 @@ object Postgres {
     }
   }
 
-//  def findUserById(userId: Int)(implicit xa: Transactor[IO]): IO[Option[User]] = {
-//    sql"SELECT id, name FROM users WHERE id = $userId"
-//      .query[User]
-//      .option
-//      .transact(xa)
-//  }
-
-  def createWeatherTable(implicit xa: Transactor[IO]): IO[Int] = {
+  def createWeatherTable(): IO[Int] = {
     for {
       createTableSql <- getResourceContent("/db/create_weather_table.sql")
-      result <- Update0(createTableSql, None).run.transact(xa)
+      result <- Update0(createTableSql, None).run.transact(transactor)
     } yield result
   }
 
   implicit val doubleOptionMeta: Meta[Option[Double]] = Meta[Double].imap(Option(_))(_.getOrElse(Double.NaN))
 
-  def insertInWeatherTable(xa: Transactor[IO]): IO[Int] = {
+  def insertInWeatherTable(): IO[Int] = {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
     val dateTime = LocalDateTime.parse("20230516_1500", formatter)
 
@@ -59,11 +50,11 @@ object Postgres {
       insertTableSql <- getResourceContent("/db/insert_weather_table.sql")
       result <- Update[(ZonedDateTime, String, Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], List[String])](
         insertTableSql
-      ).run((zonedTime, "Rīga", Some(20.2), Some(8.8), Some(15.6), None, None, None, None, None, None, None, None, None, None, List("hail", "rain"))).transact(xa)
+      ).run((zonedTime, "Rīga", Some(20.2), Some(8.8), Some(15.6), None, None, None, None, None, None, None, None, None, None, List("hail", "rain"))).transact(transactor)
     } yield result
   }
 
-  def selectWeatherTable(xa: Transactor[IO]): IO[List[(String, Option[Double])]] = {
+  def selectWeatherTable(): IO[List[(String, Option[Double])]] = {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
     val rigaZone = ZoneId.of("Europe/Riga")
     val from = LocalDateTime.parse("20230516_0100", formatter).atZone(rigaZone)
@@ -76,8 +67,7 @@ object Postgres {
       fr"""
         SELECT
           city,
-          MIN(""" ++ Fragment.const(columnName) ++
-        fr""") AS tempMin
+          MIN(""" ++ Fragment.const(columnName) ++ fr""") AS tempMin
         FROM weather
         WHERE
           """ ++ Fragments.in(fr"city", citiesNel) ++ fr"""
@@ -89,24 +79,13 @@ object Postgres {
     baseQuery
       .query[(String, Option[Double])]
       .to[List]
-      .transact(xa)
+      .transact(transactor)
   }
 
-  def dropWeatherTable(implicit xa: Transactor[IO]): IO[Int] = {
+  def dropWeatherTable(): IO[Int] = {
     for {
       dropTableSql <- getResourceContent("/db/drop_weather_table.sql")
-      result <- Update0(dropTableSql, None).run.transact(xa)
+      result <- Update0(dropTableSql, None).run.transact(transactor)
     } yield result
-  }
-
-  def main(args: Array[String]): Unit = {
-    val xa = transactor[IO]
-
-//    val result = createWeatherTable(xa).unsafeRunSync()
-//    val result = insertInWeatherTable(xa).unsafeRunSync()
-    val result = selectWeatherTable(xa).unsafeRunSync()
-//    val result = dropWeatherTable(xa).unsafeRunSync()
-
-    println(s"result: $result")
   }
 }
