@@ -2,14 +2,16 @@ package db
 
 import cats.data.NonEmptyList
 import cats.effect._
+import cats.implicits.{catsSyntaxParallelTraverse1, toFoldableOps}
 import doobie._
 import doobie.implicits._
 
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.{LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
 import doobie.postgres.implicits._
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import parse.{Parser, WeatherStationData}
 
 object PostgresService {
   def of(transactor: Transactor[IO]): IO[PostgresService] = {
@@ -17,7 +19,52 @@ object PostgresService {
   }
 }
 
-class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
+class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataServiceTrait {
+  private val rigaZone = ZoneId.of("Europe/Riga")
+  // in pgAdmin run: ```SET TIMEZONE = 'Europe/Riga';```
+
+  def save(fileName: String, content: String): IO[String] = {
+    val strLines = content.split(System.lineSeparator()).toList
+    val weatherStationData = strLines.flatMap(Parser.parseLine)
+    insertInWeatherTable(weatherStationData)
+      .attempt
+      .flatMap {
+        case Left(error) => log.error(s"Write db '$fileName' failed with error: ${error.getMessage}") *> IO.raiseError(error)
+        case Right(rowCount) => log.info(s"write rows: $rowCount file: $fileName").as(fileName)
+    }
+  }
+
+  def getDatesByMonths(monthList: List[LocalDate]): IO[List[LocalDate]] = {
+    val monthYearPairs = monthList.map { localDate =>
+      val month = localDate.atStartOfDay.atZone(rigaZone).getMonthValue
+      val year = localDate.atStartOfDay.atZone(rigaZone).getYear
+      (month, year)
+    }
+
+    val whereClauses = monthYearPairs.map {
+      case (month, year) => fr"(EXTRACT(MONTH FROM dateTime) = $month AND EXTRACT(YEAR FROM dateTime) = $year)"
+    }
+
+    val combinedWhereClause = whereClauses.intercalate(fr" OR ")
+
+    (
+      fr"""
+        SELECT DISTINCT DATE(dateTime)
+        FROM weather
+        WHERE """ ++ combinedWhereClause
+    )
+      .query[LocalDate]
+      .to[List]
+      .transact(transactor)
+  }
+
+  def readFile(fileName: String): IO[List[String]] = ???
+
+  def getInRange(from: LocalDateTime, to: LocalDateTime): IO[List[String]] = ???
+
+  def getDates: IO[List[LocalDate]] = ???
+
+  def getDateFileNames(date: LocalDate): IO[List[String]] = ???
   def getResourceContent(path: String): IO[String] = {
     val streamResource = Resource.make(IO(getClass.getResourceAsStream(path))) { stream =>
       IO(stream.close()).handleErrorWith(_ => IO.unit)
@@ -37,26 +84,22 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
 
   implicit val doubleOptionMeta: Meta[Option[Double]] = Meta[Double].imap(Option(_))(_.getOrElse(Double.NaN))
 
-  def insertInWeatherTable(): IO[Int] = {
-    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    val dateTime = LocalDateTime.parse("20230516_1500", formatter)
-
-    val rigaZone = ZoneId.of("Europe/Riga")
-    val zonedTime: ZonedDateTime = dateTime.atZone(rigaZone)
-
-    // in pgAdmin run: ```SET TIMEZONE = 'Europe/Riga';```
-
-    for {
-      insertTableSql <- getResourceContent("/db/insert_weather_table.sql")
-      result <- Update[(ZonedDateTime, String, Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], List[String])](
-        insertTableSql
-      ).run((zonedTime, "Rīga", Some(20.2), Some(8.8), Some(15.6), None, None, None, None, None, None, None, None, None, None, List("hail", "rain"))).transact(transactor)
-    } yield result
+  def insertInWeatherTable(data: List[WeatherStationData]): IO[Int] = {
+    data.parTraverse(line => {
+      val zonedTime: ZonedDateTime = line.timestamp.atZone(rigaZone)
+      val w = line.weather
+      for {
+        insertTableSql <- getResourceContent("/db/insert_weather_table.sql")
+        result <- Update[(ZonedDateTime, String, Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], List[String])](
+          insertTableSql
+        ).run((zonedTime, line.city, w.tempMax, w.tempMin, w.tempAvg, w.precipitation, w.windAvg, w.windMax, w.visibilityMin, w.visibilityAvg, w.snowAvg, w.atmPressure, w.dewPoint, w.humidity, w.sunDuration, w.phenomena))
+          .transact(transactor)
+      } yield result
+    }).map(_.sum)
   }
 
   def selectWeatherTable(): IO[List[(String, Option[Double])]] = {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    val rigaZone = ZoneId.of("Europe/Riga")
     val from = LocalDateTime.parse("20230516_0100", formatter).atZone(rigaZone)
     val to = LocalDateTime.parse("20230516_1500", formatter).atZone(rigaZone)
     val citiesNel = NonEmptyList.of("Rīga", "Rēzekne")
