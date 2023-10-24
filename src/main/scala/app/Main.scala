@@ -2,25 +2,16 @@ package app
 
 import cats.effect._
 import cats.implicits.catsSyntaxTuple2Parallel
-import db.Main.transactor
-import db.{DataService, FileService, PostgresService}
-import doobie.Transactor
+import db.{DBConnection, DataService, FileService, PostgresService}
 import fetch.{FetchService, FileFetchScheduler}
 import server.Server
 
 object Main extends IOApp {
-
-  def transactor[F[_] : Async]: Transactor[F] = Transactor.fromDriverManager[F](
-    "org.postgresql.Driver",
-    "jdbc:postgresql://localhost:5432/weather-tool",
-    "postgres",
-    "mysecretpassword"
-  )
   def run(args: List[String]): IO[ExitCode] = {
-    val xa = transactor[IO]
-
     for {
-      postgresService <- PostgresService.of(xa)
+      transactor <- DBConnection.transactor[IO]
+      postgresService <- PostgresService.of(transactor)
+      _ <- postgresService.createWeatherTable // create table if it does not exists
       fileService <- FileService.of
       dataService <- DataService.of(fileService, postgresService)
 

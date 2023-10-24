@@ -75,7 +75,7 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
     }
   }
 
-  def createWeatherTable(): IO[Int] = {
+  def createWeatherTable: IO[Int] = {
     for {
       createTableSql <- getResourceContent("/db/create_weather_table.sql")
       result <- Update0(createTableSql, None).run.transact(transactor)
