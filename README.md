@@ -45,3 +45,9 @@ docker run --name local-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5
 docker stop local-postgres
 docker start local-postgres
 ```
+
+## Fly Postgres
+```
+fly machines list --app <app-name>
+fly machines start <machine-id> --app <app-name>
+```

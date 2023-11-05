@@ -1,5 +1,5 @@
 src/main/resources/application.conf
-src/main/resources/postgres.conf
+src/main/resources/postgres2.conf
 
 target/
 project/target/

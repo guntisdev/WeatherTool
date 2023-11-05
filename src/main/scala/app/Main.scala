@@ -8,12 +8,15 @@ import server.Server
 
 object Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
+    println(System.getenv("DATABASE_URL"))
+
     for {
-      transactor <- DBConnection.transactor[IO]
-      postgresService <- PostgresService.of(transactor)
-      _ <- postgresService.createWeatherTable // create table if it does not exists
+//      transactor <- DBConnection.transactor[IO]
+//      postgresService <- PostgresService.of(transactor)
+//      _ <- postgresService.createWeatherTable // create table if it does not exists
       fileService <- FileService.of
-      dataService <- DataService.of(fileService, postgresService)
+//      dataService <- DataService.of(fileService, postgresService)
+      dataService <- DataService.of(fileService)
 
       fetch <- FetchService.of
       fileFetchScheduler <- FileFetchScheduler.of(dataService, fetch)
