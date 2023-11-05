@@ -15,18 +15,19 @@ object Main {
     )
 
   def main(args: Array[String]): Unit = {
-    val xa = transactor[IO]
-    val result = for {
-      postgresService <- PostgresService.of(xa)
-      re <- postgresService.selectWeatherTable
-    } yield re
+//    val xa = transactor[IO]
+//    val result = for {
+//      postgresService <- PostgresService.of(xa)
+//      re <- postgresService.selectWeatherTable
+//    } yield re
 
+    println(System.getenv("DATABASE_URL"))
 
-//    val result = createWeatherTable(xa).unsafeRunSync()
+    //    val result = createWeatherTable(xa).unsafeRunSync()
 //    val result = insertInWeatherTable(xa).unsafeRunSync()
 //    val result = selectWeatherTable(xa).unsafeRunSync()
 //    val result = dropWeatherTable(xa).unsafeRunSync()
 
-    println(s"result: ${result.unsafeRunSync()}")
+//    println(s"result: ${result.unsafeRunSync()}")
   }
 }

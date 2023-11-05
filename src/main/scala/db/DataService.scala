@@ -20,7 +20,10 @@ trait DataServiceTrait {
 }
 
 object DataService {
-  def of(fileService: FileService, postgresService: PostgresService): IO[DataService] = {
+  def of(
+    fileService: FileService,
+//    postgresService: PostgresService
+  ): IO[DataService] = {
     for {
       log <- Slf4jLogger.create[IO]
       fileNameService = new FileNameService()
@@ -29,12 +32,13 @@ object DataService {
         .map(content => (fileName, content)))
       state = contents.toMap
       stateRef <- Ref.of[IO, Map[String, List[String]]](state)
-    } yield new DataService(fileService, postgresService, new FileNameService(), log, stateRef)
+//    } yield new DataService(fileService, postgresService, new FileNameService(), log, stateRef)
+    } yield new DataService(fileService, new FileNameService(), log, stateRef)
   }
 }
 class DataService private(
                            fileService: FileService,
-                           postgresService: PostgresService,
+//                           postgresService: PostgresService,
                            fileNameService: FileNameService,
                            log: Logger[IO],
                            private val state: Ref[IO, Map[String, List[String]]]
@@ -52,7 +56,7 @@ class DataService private(
 
   def save(fileName: String, content: String): IO[String] = {
     // TODO remove unsafeRunSync
-    postgresService.save(fileName, content).unsafeRunSync()
+//    postgresService.save(fileName, content).unsafeRunSync()
 
     // TODO delete this
     fileService.save(fileName, content).redeemWith(
@@ -72,8 +76,8 @@ class DataService private(
   def getDates: IO[List[LocalDate]] = fileService.getDates
 
   def getDatesByMonths(monthList: List[LocalDate]): IO[List[LocalDate]] = {
-//    fileService.getDatesByMonths(monthList)
-    postgresService.getDatesByMonths(monthList)
+    fileService.getDatesByMonths(monthList)
+//    postgresService.getDatesByMonths(monthList)
   }
 
   def getDateFileNames(date: LocalDate): IO[List[String]] = fileService.getDateFileNames(date)
