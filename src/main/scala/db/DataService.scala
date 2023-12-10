@@ -58,10 +58,17 @@ class DataService private(
 
   def save(fileName: String, content: String): IO[String] = {
     // TODO replace unsafeRunSync to redeemWith
-    postgresService.save(fileName, content).unsafeRunSync()
+//    postgresService.save(fileName, content).unsafeRunSync()
+//    postgresService.save(fileName, content)
+
+    for {
+      result <- fileService.save(fileName, content)
+      _ <- postgresService.save(fileName, content)
+    } yield result
 
     // TODO delete this
-    fileService.save(fileName, content)
+//    fileService.save(fileName, content)
+
 //    fileService.save(fileName, content).redeemWith(
 //      error => IO.raiseError(error),
 //      savedFileName => {

@@ -41,6 +41,7 @@ npm run dev
 ```
 SELECT * FROM public.weather WHERE datetime > '2023-12-9T00:00:00+00'::timestamptz;
 DELETE FROM public.weather
+SET TIMEZONE = 'Europe/Riga';
 ```
 
 ## Docker
@@ -53,6 +54,8 @@ docker start local-postgres
 
 ## Fly Postgres
 ```
-fly machines list --app <app-name>
-fly machines start <machine-id> --app <app-name>
+fly machines list --app weather-tool-db
+fly machines start <machine-id> --app weather-tool-db
+
+fly proxy 15432:5432 -a weather-tool-db // map to local port for pgAdmin
 ```
