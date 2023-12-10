@@ -37,6 +37,11 @@ npm run dev
 - Shell script
 - Fly.io
 
+## Database
+```
+SELECT * FROM public.weather WHERE datetime > '2023-12-9T00:00:00+00'::timestamptz;
+DELETE FROM public.weather
+```
 
 ## Docker
 ```

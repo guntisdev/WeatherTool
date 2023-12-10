@@ -6,24 +6,26 @@ import pureconfig._
 import pureconfig.generic.auto._
 import pureconfig.error.ConfigReaderFailures
 
+import java.net.URI
 import scala.util.Try
 
 case class PostgresConfig(url: String, username: String, password: String)
 
 object DBConnection {
   private def getDatabaseUrl: String =
-    sys.env.getOrElse("DATABASE_URL",
-      "postgres://postgres:mysecretpassword@localhost:5432/weather-tool")
+    sys.env.getOrElse("DATABASE_URL", "postgres://postgres:mysecretpassword@localhost:5432/weather-tool")
 
   private def parseUrl(url: String): Either[String, PostgresConfig] = {
     Try {
-      val uri = new java.net.URI(if (url.startsWith("jdbc:")) url.substring(5) else url)
-      val userInfo = uri.getUserInfo.split(":")
-      val username = userInfo(0)
-      val password = userInfo(1)
-      val dbUrl = s"jdbc:postgresql://${uri.getHost}:${uri.getPort}${uri.getPath}"
+      val raw = URI.create(url)
 
-      println(s"u: $username, p: $password, u: $url")
+      val name = raw.getPath.substring(1)
+      println("")
+      val dbUrl = s"jdbc:postgresql://${raw.getHost}:${raw.getPort}${raw.getPath}?${raw.getQuery}"
+      val username = raw.getUserInfo.split(":")(0)
+      val password = raw.getUserInfo.split(":")(1)
+
+      println(s"n: $name u: $username, p: $password, url: $url")
 
       PostgresConfig(dbUrl, username, password)
     }.toEither.left.map(_.getMessage)
