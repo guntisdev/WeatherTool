@@ -106,9 +106,9 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
       dataService.readFile(fileName).flatMap(content => Ok(content.asJson))
 
     // http://0.0.0.0:8080/api/getLast24hours
-    case GET -> Root / "getLast24hours" => {
-      dataService.getLast24Hours.flatMap(content => Ok(content.asJson.pretty))
-    }
+//    case GET -> Root / "getLast24hours" => {
+//      dataService.getLast24Hours.flatMap(content => Ok(content.asJson.pretty))
+//    }
 
     // http://0.0.0.0:8080/api/help
     case GET -> Root / "help" => {
