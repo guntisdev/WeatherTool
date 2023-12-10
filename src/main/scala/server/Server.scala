@@ -67,6 +67,7 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
         fetchServiceError = fetchResultEither.left.toOption.map(e => s"FetchServiceError: ${e.getMessage}").toList
         fetchResult = fetchResultEither.getOrElse(List.empty)
         (fetchErrors, successDownloads) = fetchResult.partitionMap(identity)
+        _ <- log.info(s"FETCHED SUCCESSFULLY files: ${successDownloads.size}")
         saveResults <- successDownloads.traverse { case (name, content) => dataService.save(name, content).attempt }
         (saveErrors, successSaves) = saveResults.partitionMap(identity)
 //        successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")

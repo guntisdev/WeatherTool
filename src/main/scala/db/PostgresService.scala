@@ -85,17 +85,19 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
   implicit val doubleOptionMeta: Meta[Option[Double]] = Meta[Double].imap(Option(_))(_.getOrElse(Double.NaN))
 
   def insertInWeatherTable(data: List[WeatherStationData]): IO[Int] = {
-    data.parTraverse(line => {
-      val zonedTime: ZonedDateTime = line.timestamp.atZone(rigaZone)
-      val w = line.weather
-      for {
-        insertTableSql <- getResourceContent("/db/insert_weather_table.sql")
-        result <- Update[(ZonedDateTime, String, Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], List[String])](
-          insertTableSql
-        ).run((zonedTime, line.city, w.tempMax, w.tempMin, w.tempAvg, w.precipitation, w.windAvg, w.windMax, w.visibilityMin, w.visibilityAvg, w.snowAvg, w.atmPressure, w.dewPoint, w.humidity, w.sunDuration, w.phenomena))
+//    IO.blocking {
+      getResourceContent("/db/insert_weather_table.sql").flatMap { insertTableSql =>
+        val insertData = data.map(line => {
+          val zonedTime: ZonedDateTime = line.timestamp.atZone(rigaZone)
+          val w = line.weather
+          (zonedTime, line.city, w.tempMax, w.tempMin, w.tempAvg, w.precipitation, w.windAvg, w.windMax, w.visibilityMin, w.visibilityAvg, w.snowAvg, w.atmPressure, w.dewPoint, w.humidity, w.sunDuration, w.phenomena)
+        })
+
+        Update[(ZonedDateTime, String, Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], List[String])](insertTableSql)
+          .updateMany(insertData)
           .transact(transactor)
-      } yield result
-    }).map(_.sum)
+      }
+//    }.flatten
   }
 
   def selectWeatherTable(): IO[List[(String, Option[Double])]] = {
