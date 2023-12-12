@@ -65,8 +65,9 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
   def getDates: IO[List[LocalDate]] = ???
 
   def getDateTimeEntries(dateTime: LocalDateTime): IO[List[String]] = {
-      fr"""
-        SELECT datetime || ';' || city || ';' || COALESCE(tempmax::text, '' ) || ';' || COALESCE(tempmin::text, '' ) || ';' || COALESCE(tempavg::text, '' ) || ';' || COALESCE(precipitation::text, '' ) || ';' || COALESCE(windavg::text, '' ) || ';' || COALESCE(windmax::text, '' ) || ';' || COALESCE(tempmax::text, '' ) || ';' || COALESCE(visibilitymin::text, '' ) || ';' || COALESCE(visibilityavg::text, '' ) || ';' || COALESCE(snowavg::text, '' ) || ';' || COALESCE(atmpressure::text, '' ) || ';' || COALESCE(dewpoint::text, '' ) || ';' || COALESCE(humidity::text, '' ) || ';' || COALESCE(sunduration::text, '' )  || ';' || COALESCE(phenomena::text, '' )
+    val columnNames = List("City; TempMax; TempMin; TempAvg; Precipitation; WindAvg; WindMax; VisibilityMin; VisibilityAvg; SnowAvg; AtmPressure; DewPoint; Humidity; SunDuration; Phenomena")
+    val result = fr"""
+        SELECT city || ';' || COALESCE(tempmax::text, '' ) || ';' || COALESCE(tempmin::text, '' ) || ';' || COALESCE(tempavg::text, '' ) || ';' || COALESCE(precipitation::text, '' ) || ';' || COALESCE(windavg::text, '' ) || ';' || COALESCE(windmax::text, '' ) || ';' || COALESCE(tempmax::text, '' ) || ';' || COALESCE(visibilitymin::text, '' ) || ';' || COALESCE(visibilityavg::text, '' ) || ';' || COALESCE(snowavg::text, '' ) || ';' || COALESCE(atmpressure::text, '' ) || ';' || COALESCE(dewpoint::text, '' ) || ';' || COALESCE(humidity::text, '' ) || ';' || COALESCE(sunduration::text, '' )  || ';' || array_to_string(phenomena, ', ')
         FROM weather
         WHERE dateTime = $dateTime
         ORDER BY city
@@ -74,6 +75,8 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
         .query[String]
         .to[List]
         .transact(transactor)
+
+    result.map(columnNames ++ _)
   }
 
   def getDateFileNames(date: LocalDate): IO[List[String]] = {
@@ -93,11 +96,13 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
       .query[OffsetDateTime]
       .to[List]
       .transact(transactor)
-      .map { dateTimes => {
-          dateTimes.map(_.format(formatter))
-        }
+      .map { dateTimes =>
+        dateTimes.map(dateTime =>
+          dateTime.atZoneSameInstant(rigaZone).format(formatter)
+        )
       }
   }
+
   def getResourceContent(path: String): IO[String] = {
     val streamResource = Resource.make(IO(getClass.getResourceAsStream(path))) { stream =>
       IO(stream.close()).handleErrorWith(_ => IO.unit)
