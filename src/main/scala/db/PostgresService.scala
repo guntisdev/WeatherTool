@@ -7,7 +7,7 @@ import doobie._
 import doobie.implicits._
 
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.{LocalDate, LocalDateTime, OffsetDateTime, ZoneId, ZonedDateTime}
 import doobie.postgres.implicits._
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -64,7 +64,40 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
 
   def getDates: IO[List[LocalDate]] = ???
 
-  def getDateFileNames(date: LocalDate): IO[List[String]] = ???
+  def getDateTimeEntries(dateTime: LocalDateTime): IO[List[String]] = {
+      fr"""
+        SELECT datetime || ';' || city || ';' || COALESCE(tempmax::text, '' ) || ';' || COALESCE(tempmin::text, '' ) || ';' || COALESCE(tempavg::text, '' ) || ';' || COALESCE(precipitation::text, '' ) || ';' || COALESCE(windavg::text, '' ) || ';' || COALESCE(windmax::text, '' ) || ';' || COALESCE(tempmax::text, '' ) || ';' || COALESCE(visibilitymin::text, '' ) || ';' || COALESCE(visibilityavg::text, '' ) || ';' || COALESCE(snowavg::text, '' ) || ';' || COALESCE(atmpressure::text, '' ) || ';' || COALESCE(dewpoint::text, '' ) || ';' || COALESCE(humidity::text, '' ) || ';' || COALESCE(sunduration::text, '' )  || ';' || COALESCE(phenomena::text, '' )
+        FROM weather
+        WHERE dateTime = $dateTime
+        ORDER BY city
+      """
+        .query[String]
+        .to[List]
+        .transact(transactor)
+  }
+
+  def getDateFileNames(date: LocalDate): IO[List[String]] = {
+    val year = date.atStartOfDay.atZone(rigaZone).getYear
+    val month = date.atStartOfDay.atZone(rigaZone).getMonthValue
+    val day = date.atStartOfDay.atZone(rigaZone).getDayOfMonth
+    val whereClauses = fr"(EXTRACT(DAY FROM dateTime) = $day AND EXTRACT(MONTH FROM dateTime) = $month AND EXTRACT(YEAR FROM dateTime) = $year)"
+    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HH00")
+
+    (
+      fr"""
+          SELECT DISTINCT dateTime
+          FROM weather
+          WHERE """ ++ whereClauses ++
+        fr"ORDER BY dateTime"
+    )
+      .query[OffsetDateTime]
+      .to[List]
+      .transact(transactor)
+      .map { dateTimes => {
+          dateTimes.map(_.format(formatter))
+        }
+      }
+  }
   def getResourceContent(path: String): IO[String] = {
     val streamResource = Resource.make(IO(getClass.getResourceAsStream(path))) { stream =>
       IO(stream.close()).handleErrorWith(_ => IO.unit)
@@ -85,7 +118,6 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
   implicit val doubleOptionMeta: Meta[Option[Double]] = Meta[Double].imap(Option(_))(_.getOrElse(Double.NaN))
 
   def insertInWeatherTable(data: List[WeatherStationData]): IO[Int] = {
-//    IO.blocking {
       getResourceContent("/db/insert_weather_table.sql").flatMap { insertTableSql =>
         val insertData = data.map(line => {
           val zonedTime: ZonedDateTime = line.timestamp.atZone(rigaZone)
@@ -97,7 +129,6 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
           .updateMany(insertData)
           .transact(transactor)
       }
-//    }.flatten
   }
 
   def selectWeatherTable(): IO[List[(String, Option[Double])]] = {

@@ -6,6 +6,9 @@ import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 
+import java.time.{LocalDate, LocalDateTime}
+import java.time.format.DateTimeFormatter
+
 object Main {
     def transactor[F[_]: Async]: Transactor[F] = Transactor.fromDriverManager[F](
       "org.postgresql.Driver",
@@ -15,13 +18,21 @@ object Main {
     )
 
   def main(args: Array[String]): Unit = {
-//    val xa = transactor[IO]
+    val xa = transactor[IO]
+//    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+//    val localDate = LocalDate.parse("2023-12-10", formatter)
 //    val result = for {
 //      postgresService <- PostgresService.of(xa)
-//      re <- postgresService.selectWeatherTable
+//      re <- postgresService.getDateFileNames(localDate)
 //    } yield re
 
-    println(System.getenv("DATABASE_URL"))
+    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
+    val dateTime = LocalDateTime.parse("20231210_1300", formatter)
+    val result = for {
+            postgresService <- PostgresService.of(xa)
+            re <- postgresService.getDateTimeEntries(dateTime)
+          } yield re
+    println(result.unsafeRunSync().toString())
 
     //    val result = createWeatherTable(xa).unsafeRunSync()
 //    val result = insertInWeatherTable(xa).unsafeRunSync()

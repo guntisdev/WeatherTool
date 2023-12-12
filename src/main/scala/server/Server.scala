@@ -6,7 +6,7 @@ import com.comcast.ip4s.IpLiteralSyntax
 import db.DataService
 import fetch.FetchService
 import parse.{Aggregate, Parser, WeatherData}
-import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, Granularity, ValidDate, ValidateMonths}
+import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateMonths}
 import io.circe.{Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
@@ -61,7 +61,7 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
         .flatMap(responseWrapper => Ok(responseWrapper.asJson.pretty))
 
     // http://0.0.0.0:8080/api/fetch/date/20230514
-    case GET -> Root / "fetch" / "date" / ValidDate(date) =>
+    case GET -> Root / "fetch" / "date" / ValidateDate(date) =>
       val result = for {
         fetchResultEither <- fetch.fetchFromDate(date).attempt
         fetchServiceError = fetchResultEither.left.toOption.map(e => s"FetchServiceError: ${e.getMessage}").toList
@@ -97,12 +97,16 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
       )
 
     // http://0.0.0.0:8080/api/show/date/20230423
-    case GET -> Root / "show" / "date" / ValidDate(date) =>
+    case GET -> Root / "show" / "date" / ValidateDate(date) =>
       dataService.getDateFileNames(date).flatMap(fileNames =>
         Ok(fileNames.asJson.pretty)
       )
 
-    // http://0.0.0.0:8080/api/show/file/20230423_12:30.csv
+    // http://0.0.0.0:8080/api/show/datetime/20230423_1300
+    case GET -> Root / "show" / "datetime" / ValidateDateTime(datetime) =>
+      dataService.getDateTimeEntries(datetime).flatMap(content => Ok(content.asJson))
+
+    // http://0.0.0.0:8080/api/show/file/20230423_12:30
     case GET -> Root / "show" / "file" / (fileName: String) =>
       dataService.readFile(fileName).flatMap(content => Ok(content.asJson))
 
