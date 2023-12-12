@@ -81,16 +81,21 @@ class DataService private(
 
   def readFile(fileName: String): IO[List[String]] = fileService.readFile(fileName)
 
+  def getDateTimeEntries(dateTime: LocalDateTime): IO[List[String]] = postgresService.getDateTimeEntries(dateTime)
+
   def getInRange(from: LocalDateTime, to: LocalDateTime): IO[List[String]] = fileService.getInRange(from, to)
 
   def getDates: IO[List[LocalDate]] = fileService.getDates
 
   def getDatesByMonths(monthList: List[LocalDate]): IO[List[LocalDate]] = {
-    fileService.getDatesByMonths(monthList)
-//    postgresService.getDatesByMonths(monthList)
+//    fileService.getDatesByMonths(monthList)
+    postgresService.getDatesByMonths(monthList)
   }
 
-  def getDateFileNames(date: LocalDate): IO[List[String]] = fileService.getDateFileNames(date)
+  def getDateFileNames(date: LocalDate): IO[List[String]] = {
+//    fileService.getDateFileNames(date)
+    postgresService.getDateFileNames(date)
+  }
 
   // TODO implement getting full data from state
 //  def getLast24Hours: IO[List[String]] = {

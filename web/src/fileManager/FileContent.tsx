@@ -6,7 +6,7 @@ export const FileContent: Component<{getFileName: Accessor<string>}> = (props) =
     const fetchFileContent = async (fileName: string) => {
         if (fileName === "") return;
         await new Promise(resolve => setTimeout(resolve, 500))
-        const response = await fetch(`${apiHost}/api/show/file/${fileName}`);
+        const response = await fetch(`${apiHost}/api/show/datetime/${fileName}`);
         const text = await response.json();
         return text;
     }

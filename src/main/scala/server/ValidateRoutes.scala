@@ -20,10 +20,17 @@ object ValidateRoutes {
     }
   }
 
-  object ValidDate {
+  object ValidateDate {
     def unapply(str: String): Option[LocalDate] = {
       val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
       Try(LocalDate.parse(str, formatter)).toOption
+    }
+  }
+
+  object ValidateDateTime {
+    def unapply(str: String): Option[LocalDateTime] = {
+      val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
+      Try(LocalDateTime.parse(str, formatter)).toOption
     }
   }
 
