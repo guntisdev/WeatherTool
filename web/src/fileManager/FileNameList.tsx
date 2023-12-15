@@ -18,7 +18,6 @@ export const FileNameList: Component<{
     const [fileNameResource] = createResource(props.getDate, fetchFileNames);
 
     function clickFileName(fileName: string) {
-        console.log(fileName);
         props.setFileName(fileName);
     }
 

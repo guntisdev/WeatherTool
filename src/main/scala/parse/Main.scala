@@ -1,5 +1,6 @@
 package parse
 
+import cats.data.NonEmptyList
 import cats.effect.unsafe.implicits.global
 import db.FileService
 import io.circe.syntax.EncoderOps
@@ -45,7 +46,7 @@ object Main {
 
     val fileService = FileService.of.unsafeRunSync()
     val lines = fileService.getInRange(from, to).unsafeRunSync()
-    val query = UserQuery(List("Ainaži"), "tempAvg", AggregateKey.Avg, ChronoUnit.HOURS)
+    val query = UserQuery(NonEmptyList.of("Ainaži"), "tempAvg", AggregateKey.Avg, ChronoUnit.HOURS, from, to)
     val parsed = Parser.queryData(query, lines)
     println(parsed.asJson)
 

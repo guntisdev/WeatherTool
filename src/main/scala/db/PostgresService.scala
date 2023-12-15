@@ -2,7 +2,7 @@ package db
 
 import cats.data.NonEmptyList
 import cats.effect._
-import cats.implicits.{catsSyntaxParallelTraverse1, toFoldableOps}
+import cats.implicits._
 import doobie._
 import doobie.implicits._
 
@@ -11,6 +11,7 @@ import java.time.{LocalDate, LocalDateTime, OffsetDateTime, ZoneId, ZonedDateTim
 import doobie.postgres.implicits._
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import parse.Aggregate.{AggregateKey, AggregateValue, DoubleValue, UserQuery}
 import parse.{Parser, WeatherStationData}
 
 object PostgresService {
@@ -31,6 +32,55 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
       .flatMap {
         case Left(error) => log.error(s"Write db '$fileName' failed with error: ${error.getMessage}") *> IO.raiseError(error)
         case Right(rowCount) => log.info(s"write rows: $rowCount file: $fileName").as(fileName)
+    }
+  }
+
+  /*
+  SELECT city, AVG(tempmax) AS tempmax  -- MAX MIN AVG SUM
+  FROM weather
+  WHERE city IN ('Rīga', 'Rēzekne', 'Kolka')
+  AND dateTime BETWEEN '2023-12-10 00:00:00' AND '2023-12-10 23:59:59'
+  GROUP BY city;
+   */
+
+  /*
+  SELECT city, dateTime, tempmax
+  FROM weather
+  WHERE city IN ('Rīga', 'Rēzekne', 'Kolka')
+  AND dateTime BETWEEN '2023-12-10 00:00:00' AND '2023-12-10 23:59:59'
+   */
+
+  /*
+  SELECT city, DATE(dateTime) as day, MAX(tempmax) as max_temp
+  FROM weather
+  WHERE city IN ('Rīga', 'Rēzekne', 'Kolka')
+  AND dateTime BETWEEN '2023-12-01' AND '2023-12-31'
+  GROUP BY city, DATE(dateTime)
+  ORDER BY city, day;
+   */
+  def query(userQuery: UserQuery):  IO[Map[String, Option[AggregateValue]]] = {
+    if (List(
+      AggregateKey.Max,
+      AggregateKey.Min,
+      AggregateKey.Avg,
+      AggregateKey.Sum
+    ).contains(userQuery.key)) {
+      val query =
+        (fr"SELECT city, ROUND(CAST(" ++ Fragment.const(userQuery.key.toString.toUpperCase) ++ fr"(" ++ Fragment.const(userQuery.field) ++ fr") AS NUMERIC), 1) AS value FROM weather WHERE " ++
+          Fragments.in(fr"city", userQuery.cities) ++
+          fr" AND dateTime BETWEEN ${userQuery.from} AND ${userQuery.to} GROUP BY city")
+
+      query.query[(String, Option[Double])]
+        .to[List]
+        .transact(transactor)
+        .map { resultList =>
+          resultList.map {
+            case (city, maybeValue) =>
+              city -> maybeValue.map(DoubleValue)
+          }.toMap: Map[String, Option[AggregateValue]]
+        }
+    } else {
+      ???
     }
   }
 
