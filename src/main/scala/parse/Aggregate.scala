@@ -1,5 +1,6 @@
 package parse
 
+import cats.data.NonEmptyList
 import cats.implicits.{catsSyntaxOptionId, toFoldableOps}
 import io.circe.generic.semiauto.deriveEncoder
 import io.circe.syntax.EncoderOps
@@ -12,15 +13,17 @@ import java.time.temporal.ChronoUnit
 object Aggregate {
 
   final case class UserQuery(
-    cities: List[String],
-    field: String,
-    key: AggregateKey,
-    granularity: ChronoUnit,
+                              cities: NonEmptyList[String],
+                              field: String,
+                              key: AggregateKey,
+                              granularity: ChronoUnit,
+                              from: LocalDateTime,
+                              to: LocalDateTime,
   )
 
   implicit val userQueryEncoder: Encoder[UserQuery] = new Encoder[UserQuery] {
     override def apply(userQuery: UserQuery): Json = Json.obj(
-      "cities" -> Json.fromValues(userQuery.cities.map(Json.fromString)),
+      "cities" -> Json.fromValues(userQuery.cities.toList.map(Json.fromString)),
       "field" -> Json.fromString(userQuery.field),
       "key" -> Json.fromString(userQuery.key.toString),
       "granularity" -> Json.fromString(userQuery.granularity.toString)

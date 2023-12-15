@@ -39,7 +39,7 @@ object Parser {
   def queryData(userQuery: UserQuery, lines: List[String]): Map[String, Option[AggregateValue]] = {
     val weatherByCity = lines
       .flatMap(parseLine)
-      .filter(line => userQuery.cities.contains(line.city))
+      .filter(line => userQuery.cities.toList.contains(line.city))
       .groupBy(_.city)
 
     weatherByCity.map { case (city, weatherStationData) =>

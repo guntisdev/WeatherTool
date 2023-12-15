@@ -1,13 +1,16 @@
 package db
 
+import cats.data.NonEmptyList
 import cats.effect._
 import cats.effect.unsafe.implicits.global
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
+import parse.Aggregate.{AggregateKey, UserQuery}
 
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 object Main {
     def transactor[F[_]: Async]: Transactor[F] = Transactor.fromDriverManager[F](
@@ -27,10 +30,14 @@ object Main {
 //    } yield re
 
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    val dateTime = LocalDateTime.parse("20231210_1300", formatter)
+    val from = LocalDateTime.parse("20231212_0000", formatter)
+    val to = LocalDateTime.parse("20231214_2359", formatter)
+
+    val query = UserQuery(NonEmptyList.of("Ainaži", "Rīga", "Kolka", "Vičaki"), "tempAvg", AggregateKey.Max, ChronoUnit.HOURS, from, to)
+
     val result = for {
             postgresService <- PostgresService.of(xa)
-            re <- postgresService.getDateTimeEntries(dateTime)
+            re <- postgresService.query(query)
           } yield re
     println(result.unsafeRunSync().toString())
 

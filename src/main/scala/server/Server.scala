@@ -53,10 +53,14 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
 
     // http://0.0.0.0:8080/api/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempMax/max
     case GET -> Root / "query" / DateTimeRange(from, to) / Granularity(granularity) / CityList(cities) / field / AggKey(key) =>
-      val userQuery = UserQuery(cities, field, key, granularity)
+      val userQuery = UserQuery(cities, field, key, granularity, from, to)
 
-      dataService.getInRange(from, to)
-        .map(Parser.queryData(userQuery, _))
+//      dataService.getInRange(from, to)
+//        .map(Parser.queryData(userQuery, _))
+//        .map(result => ResponseWrapper(result, userQuery))
+//        .flatMap(responseWrapper => Ok(responseWrapper.asJson.pretty))
+
+      dataService.query(userQuery)
         .map(result => ResponseWrapper(result, userQuery))
         .flatMap(responseWrapper => Ok(responseWrapper.asJson.pretty))
 
@@ -84,12 +88,6 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
           ).pretty)
       }
 
-    // http://0.0.0.0:8080/api/show/all_dates
-    case GET -> Root / "show" / "all_dates" =>
-      dataService.getDates.flatMap(dates =>
-        Ok(dates.asJson.pretty)
-      )
-
     // http://0.0.0.0:8080/api/show/months/202304,202305,202306
     case GET -> Root / "show" / "months" / ValidateMonths(monthList) =>
       dataService.getDatesByMonths(monthList).flatMap(dates =>
@@ -105,30 +103,6 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
     // http://0.0.0.0:8080/api/show/datetime/20230423_1300
     case GET -> Root / "show" / "datetime" / ValidateDateTime(datetime) =>
       dataService.getDateTimeEntries(datetime).flatMap(content => Ok(content.asJson))
-
-    // http://0.0.0.0:8080/api/show/file/20230423_12:30
-    case GET -> Root / "show" / "file" / (fileName: String) =>
-      dataService.readFile(fileName).flatMap(content => Ok(content.asJson))
-
-    // http://0.0.0.0:8080/api/getLast24hours
-//    case GET -> Root / "getLast24hours" => {
-//      dataService.getLast24Hours.flatMap(content => Ok(content.asJson.pretty))
-//    }
-
-    // http://0.0.0.0:8080/api/help
-    case GET -> Root / "help" => {
-      val host = "weather-tool.fly.dev"
-      Ok(Json.obj(
-        "aggregate fields" -> WeatherData.getKeys.asJson,
-        "aggregate keys" -> AggregateKey.getKeys.asJson,
-        "example urls" -> List(
-          s"https://$host/api/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempMax/max",
-          s"https://$host/api/fetch/date/20230423",
-          s"https://$host/api/show/all_dates",
-          s"https://$host/api/show/date/20230423",
-        ).asJson,
-      ).pretty)
-    }
   }
 
   private val corsConfig = CORSConfig.default

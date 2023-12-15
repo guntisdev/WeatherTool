@@ -6,6 +6,8 @@ import cats.implicits.toTraverseOps
 import fetch.FileNameService
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import parse.Aggregate
+import parse.Aggregate.UserQuery
 
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 
@@ -84,6 +86,8 @@ class DataService private(
   def getDateTimeEntries(dateTime: LocalDateTime): IO[List[String]] = postgresService.getDateTimeEntries(dateTime)
 
   def getInRange(from: LocalDateTime, to: LocalDateTime): IO[List[String]] = fileService.getInRange(from, to)
+
+  def query(userQuery: UserQuery):  IO[Map[String, Option[Aggregate.AggregateValue]]] = postgresService.query(userQuery)
 
   def getDates: IO[List[LocalDate]] = fileService.getDates
 

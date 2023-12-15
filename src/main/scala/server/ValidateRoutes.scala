@@ -1,5 +1,6 @@
 package server
 
+import cats.data.NonEmptyList
 import parse.Aggregate.AggregateKey
 
 import java.time.{LocalDate, LocalDateTime}
@@ -50,11 +51,8 @@ object ValidateRoutes {
   }
 
   object CityList {
-    def unapply(str: String): Option[List[String]] = {
-      str.split(",").toList match {
-        case Nil => None
-        case list => Some(list)
-      }
+    def unapply(str: String): Option[NonEmptyList[String]] = {
+      NonEmptyList.fromList(str.split(",").toList)
     }
   }
 
