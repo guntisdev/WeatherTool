@@ -6,7 +6,14 @@ import cats.effect.unsafe.implicits.global
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
+import io.circe.syntax.EncoderOps
 import parse.Aggregate.{AggregateKey, UserQuery}
+import parse.Aggregate.AggregateValueImplicits.aggregateValueEncoder
+import parse.Aggregate.userQueryEncoder
+import io.circe.{Json, Printer}
+import io.circe.generic.auto._
+import io.circe.syntax._
+import parse.Aggregate
 
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
@@ -20,6 +27,14 @@ object Main {
       "mysecretpassword"
     )
 
+  implicit class JsonPrettyPrinter(json: Json) {
+    def pretty: String = {
+      val printer = Printer.spaces2.copy(dropNullValues = true)
+      printer.print(json)
+    }
+  }
+  private case class ResponseWrapper(result: Map[String, Option[Aggregate.AggregateValue]], query: UserQuery)
+
   def main(args: Array[String]): Unit = {
     val xa = transactor[IO]
 //    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -30,16 +45,22 @@ object Main {
 //    } yield re
 
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    val from = LocalDateTime.parse("20231212_0000", formatter)
+    val from = LocalDateTime.parse("20231210_0000", formatter)
     val to = LocalDateTime.parse("20231214_2359", formatter)
+    val cities = NonEmptyList.of("Ainaži", "Rīga", "Kolka", "Vičaki")
+//    val cities = NonEmptyList.of("Rīga")
 
-    val query = UserQuery(NonEmptyList.of("Ainaži", "Rīga", "Kolka", "Vičaki"), "tempAvg", AggregateKey.Max, ChronoUnit.HOURS, from, to)
+    val query = UserQuery(cities, "tempMax", AggregateKey.List, ChronoUnit.DAYS, from, to)
 
-    val result = for {
+    val re = for {
             postgresService <- PostgresService.of(xa)
             re <- postgresService.query(query)
           } yield re
-    println(result.unsafeRunSync().toString())
+
+    val jssson = re.map(result => ResponseWrapper(result, query))
+        .map(responseWrapper => responseWrapper.asJson.pretty)
+
+    println(jssson.unsafeRunSync())
 
     //    val result = createWeatherTable(xa).unsafeRunSync()
 //    val result = insertInWeatherTable(xa).unsafeRunSync()

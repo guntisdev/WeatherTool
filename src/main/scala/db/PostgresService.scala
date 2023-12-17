@@ -11,8 +11,10 @@ import java.time.{LocalDate, LocalDateTime, OffsetDateTime, ZoneId, ZonedDateTim
 import doobie.postgres.implicits._
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import parse.Aggregate.{AggregateKey, AggregateValue, DoubleValue, UserQuery}
+import parse.Aggregate.{AggregateKey, AggregateValue, DoubleValue, TimeDoubleList, UserQuery}
 import parse.{Parser, WeatherStationData}
+
+import java.time.temporal.ChronoUnit
 
 object PostgresService {
   def of(transactor: Transactor[IO]): IO[PostgresService] = {
@@ -35,40 +37,24 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
     }
   }
 
-  /*
-  SELECT city, AVG(tempmax) AS tempmax  -- MAX MIN AVG SUM
-  FROM weather
-  WHERE city IN ('Rīga', 'Rēzekne', 'Kolka')
-  AND dateTime BETWEEN '2023-12-10 00:00:00' AND '2023-12-10 23:59:59'
-  GROUP BY city;
-   */
-
-  /*
-  SELECT city, dateTime, tempmax
-  FROM weather
-  WHERE city IN ('Rīga', 'Rēzekne', 'Kolka')
-  AND dateTime BETWEEN '2023-12-10 00:00:00' AND '2023-12-10 23:59:59'
-   */
-
-  /*
-  SELECT city, DATE(dateTime) as day, MAX(tempmax) as max_temp
-  FROM weather
-  WHERE city IN ('Rīga', 'Rēzekne', 'Kolka')
-  AND dateTime BETWEEN '2023-12-01' AND '2023-12-31'
-  GROUP BY city, DATE(dateTime)
-  ORDER BY city, day;
-   */
   def query(userQuery: UserQuery):  IO[Map[String, Option[AggregateValue]]] = {
-    if (List(
+    if (userQuery.field == "phenomena") { // this handles strings
+      // TODO query list and distinct values from phenomena
+      println("EMPTY RESULT!!!!!111")
+      IO(Map()) // empty result
+    } else if (List(
       AggregateKey.Max,
       AggregateKey.Min,
       AggregateKey.Avg,
-      AggregateKey.Sum
+      AggregateKey.Sum,
+      AggregateKey.Distinct
     ).contains(userQuery.key)) {
       val query =
-        (fr"SELECT city, ROUND(CAST(" ++ Fragment.const(userQuery.key.toString.toUpperCase) ++ fr"(" ++ Fragment.const(userQuery.field) ++ fr") AS NUMERIC), 1) AS value FROM weather WHERE " ++
-          Fragments.in(fr"city", userQuery.cities) ++
-          fr" AND dateTime BETWEEN ${userQuery.from} AND ${userQuery.to} GROUP BY city")
+        fr"SELECT city, ROUND(CAST(" ++ Fragment.const(userQuery.key.toString.toUpperCase) ++ fr"(" ++ Fragment.const(userQuery.field) ++ fr") AS NUMERIC), 1) AS value" ++
+          fr" FROM weather" ++
+          fr" WHERE " ++ Fragments.in(fr"city", userQuery.cities) ++
+          fr" AND dateTime BETWEEN ${userQuery.from} AND ${userQuery.to}" ++
+          fr" GROUP BY city"
 
       query.query[(String, Option[Double])]
         .to[List]
@@ -79,8 +65,88 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
               city -> maybeValue.map(DoubleValue)
           }.toMap: Map[String, Option[AggregateValue]]
         }
+    } else if (userQuery.key == AggregateKey.List) {
+      val byField = userQuery.field match {
+        case "tempMax" => "MAX(tempMax)"
+        case "tempMin" => "MIN(tempMin)"
+        case "tempAvg" => "AVG(tempAvg)"
+        case "precipitation" => "SUM(precipitation)"
+        case "windAvg" => "AVG(windAvg)"
+        case "windMax" => "MAX(windMax)"
+        case "visibilityMin" => "MIN(visibilityMin)"
+        case "visibilityAvg" => "AVG(visibilityAvg)"
+        case "snowAvg" => "AVG(snowAvg)"
+        case "atmPressure" => "AVG(atmPressure)"
+        case "dewPoint" => "AVG(dewPoint)"
+        case "humidity" => "AVG(humidity)"
+        case "sunDuration" => "SUM(sunDuration)"
+      }
+
+      val selectField = if(userQuery.granularity == ChronoUnit.HOURS) userQuery.field else byField;
+      val selectTime = userQuery.granularity match {
+        case ChronoUnit.HOURS => "dateTime"
+        case ChronoUnit.DAYS => "DATE(dateTime)"
+        case ChronoUnit.MONTHS => "TO_CHAR(DATE_TRUNC('month', dateTime), 'YYYY-MM')"
+        case ChronoUnit.YEARS => "TO_CHAR(DATE_TRUNC('year', dateTime), 'YYYY')"
+        case _ => ""
+      }
+      val groupBy = if(userQuery.granularity == ChronoUnit.HOURS) "" else "GROUP BY city, " + selectTime;
+
+      val query =
+        fr"SELECT city, " ++ Fragment.const(selectTime) ++ fr" as time, ROUND(CAST(" ++ Fragment.const(selectField) ++ fr" AS NUMERIC), 1) as value" ++
+        fr" FROM weather" ++
+        fr" WHERE " ++ Fragments.in(fr"city", userQuery.cities) ++
+        fr" AND dateTime BETWEEN ${userQuery.from} AND ${userQuery.to}" ++
+        fr" " ++  Fragment.const(groupBy) ++
+        fr" ORDER BY city, time;"
+
+
+      /*
+      SELECT city, dateTime, tempmax
+      FROM weather
+      WHERE city IN ('Rīga', 'Rēzekne', 'Kolka')
+      AND dateTime BETWEEN '2023-12-10' AND '2023-12-14'
+      ORDER BY city, dateTime;
+
+      SELECT city, DATE(dateTime) as day, MAX(tempmax) as max_temp
+      FROM weather
+      WHERE city IN ('Rīga', 'Rēzekne', 'Kolka')
+      AND dateTime BETWEEN '2023-12-10' AND '2023-12-14'
+      GROUP BY city, DATE(dateTime)
+      ORDER BY city, day;
+
+      SELECT city, TO_CHAR(DATE_TRUNC('month', dateTime), 'YYYY-MM') as month, MAX(tempmax) as max_temp
+      FROM weather
+      WHERE city IN ('Rīga', 'Rēzekne', 'Kolka')
+      AND dateTime BETWEEN '2023-01-01' AND '2023-12-31'
+      GROUP BY city, TO_CHAR(DATE_TRUNC('month', dateTime), 'YYYY-MM')
+      ORDER BY city, month;
+
+      SELECT city, TO_CHAR(DATE_TRUNC('year', dateTime), 'YYYY') as year, MAX(tempmax) as max_temp
+      FROM weather
+      WHERE city IN ('Rīga', 'Rēzekne', 'Kolka')
+      AND dateTime BETWEEN '2023-01-01' AND '2023-12-31'
+      GROUP BY city, TO_CHAR(DATE_TRUNC('year', dateTime), 'YYYY')
+      ORDER BY city, year;
+       */
+
+      query.query[(String, String, Option[Double])]
+        .to[List]
+        .transact(transactor)
+        .map { resultList =>
+          resultList
+            .groupBy(_._1)
+            .view.mapValues { list =>
+            TimeDoubleList(list.map { case (_, date, maybeValue) =>
+              (date, maybeValue)
+            }).some
+          }
+            .toMap: Map[String, Option[AggregateValue]]
+        }
+
     } else {
-      ???
+      println("EMPTY RESULT!!!!!")
+      IO(Map()) // empty result
     }
   }
 
