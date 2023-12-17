@@ -4,14 +4,15 @@ import base.IOSuite
 import cats.effect.{Clock, IO}
 import cats.effect.kernel.Ref
 import cats.implicits.catsSyntaxTuple3Semigroupal
-import db.FileService
+import db.PostgresService
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import fs2.Stream
+import org.scalamock.scalatest.MockFactory
 
 
-class FileFetchSchedulerSpec extends AsyncWordSpec with Matchers with IOSuite {
+class FileFetchSchedulerSpec extends AsyncWordSpec with Matchers with MockFactory with IOSuite {
   "FileFetchScheduler" should {
     "save into db" in runIO {
       for {
@@ -19,11 +20,7 @@ class FileFetchSchedulerSpec extends AsyncWordSpec with Matchers with IOSuite {
         refFetch <- Ref.of[IO, Option[(String, String)]](None)
         refScheduler <- Ref.of[IO, Option[Either[Throwable, (String, String)]]](None)
         log <- Slf4jLogger.create[IO]
-        fileService = new FileService(log) {
-          override def save(fileName: String, content: String): IO[String] = {
-            refDb.set(Some(fileName)).as(fileName)
-          }
-        }
+        mockDatabaseOps = mock[PostgresService]
         fileNameService = new FileNameService {
           override def generateCurrentHour(implicit clock: Clock[IO]): IO[String] = IO.pure("file_test")
         }
@@ -40,7 +37,7 @@ class FileFetchSchedulerSpec extends AsyncWordSpec with Matchers with IOSuite {
           }
         }
 
-        res = new FileFetchScheduler(fileService, fetchService, fileNameService, scheduler, log)
+        res = new FileFetchScheduler(mockDatabaseOps, fetchService, fileNameService, scheduler, log)
           .run.compile.drain *>
           (refDb.get, refFetch.get, refScheduler.get).tupled.map { case (db, fetch, scheduler) =>
             db shouldBe Some("file_test")

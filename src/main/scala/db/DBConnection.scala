@@ -20,7 +20,6 @@ object DBConnection {
       val raw = URI.create(url)
 
       val name = raw.getPath.substring(1)
-      println("")
       val dbUrl = s"jdbc:postgresql://${raw.getHost}:${raw.getPort}${raw.getPath}?${raw.getQuery}"
       val username = raw.getUserInfo.split(":")(0)
       val password = raw.getUserInfo.split(":")(1)

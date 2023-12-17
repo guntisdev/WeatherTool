@@ -2,7 +2,7 @@ package parse
 
 import cats.data.NonEmptyList
 import cats.effect.unsafe.implicits.global
-import db.FileService
+//import db.FileService
 import io.circe.syntax.EncoderOps
 import parse.Aggregate.{AggregateKey, UserQuery}
 
@@ -41,14 +41,14 @@ object Main {
 //      println(s"$key -> $value")
 //    }
 
-    val from = LocalDateTime.parse("20230627_0000", formatter)
-    val to = LocalDateTime.parse("20230627_2359", formatter)
+//    val from = LocalDateTime.parse("20230627_0000", formatter)
+//    val to = LocalDateTime.parse("20230627_2359", formatter)
 
-    val fileService = FileService.of.unsafeRunSync()
-    val lines = fileService.getInRange(from, to).unsafeRunSync()
-    val query = UserQuery(NonEmptyList.of("Ainaži"), "tempAvg", AggregateKey.Avg, ChronoUnit.HOURS, from, to)
-    val parsed = Parser.queryData(query, lines)
-    println(parsed.asJson)
+//    val fileService = FileService.of.unsafeRunSync()
+//    val lines = fileService.getInRange(from, to).unsafeRunSync()
+//    val query = UserQuery(NonEmptyList.of("Ainaži"), "tempAvg", AggregateKey.Avg, ChronoUnit.HOURS, from, to)
+//    val parsed = Parser.queryData(query, lines)
+//    println(parsed.asJson)
 
 
 //    val query2 = UserQuery(List("Ainaži"), "tempAvg", AggregateKey.Avg, ChronoUnit.DAYS)
