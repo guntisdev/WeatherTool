@@ -3,9 +3,9 @@ package server
 import cats.effect._
 import cats.implicits.toTraverseOps
 import com.comcast.ip4s.IpLiteralSyntax
-import db.DataService
+import db.PostgresService
 import fetch.FetchService
-import parse.{Aggregate, Parser, WeatherData}
+import parse.{Aggregate}
 import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateMonths}
 import io.circe.{Json, Printer}
 import org.http4s._
@@ -25,19 +25,18 @@ import org.http4s.circe.jsonEncoder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.DurationInt
 
 
 object Server {
-  def of(dataService: DataService, fetch: FetchService): IO[Server] = {
+  def of(postgresService: PostgresService, fetch: FetchService): IO[Server] = {
     Slf4jLogger.create[IO].map {
-      new Server(dataService, fetch, _)
+      new Server(postgresService, fetch, _)
     }
   }
 }
 
-class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
+class Server(postgresService: PostgresService, fetch: FetchService, log: Logger[IO]) {
 
   // Define the extension method `pretty` for Json
   implicit class JsonPrettyPrinter(json: Json) {
@@ -55,12 +54,7 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
     case GET -> Root / "query" / DateTimeRange(from, to) / Granularity(granularity) / CityList(cities) / field / AggKey(key) =>
       val userQuery = UserQuery(cities, field, key, granularity, from, to)
 
-//      dataService.getInRange(from, to)
-//        .map(Parser.queryData(userQuery, _))
-//        .map(result => ResponseWrapper(result, userQuery))
-//        .flatMap(responseWrapper => Ok(responseWrapper.asJson.pretty))
-
-      dataService.query(userQuery)
+      postgresService.query(userQuery)
         .map(result => ResponseWrapper(result, userQuery))
         .flatMap(responseWrapper => Ok(responseWrapper.asJson.pretty))
 
@@ -72,7 +66,7 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
         fetchResult = fetchResultEither.getOrElse(List.empty)
         (fetchErrors, successDownloads) = fetchResult.partitionMap(identity)
         _ <- log.info(s"FETCHED SUCCESSFULLY files: ${successDownloads.size}")
-        saveResults <- successDownloads.traverse { case (name, content) => dataService.save(name, content).attempt }
+        saveResults <- successDownloads.traverse { case (name, content) => postgresService.save(name, content).attempt }
         (saveErrors, successSaves) = saveResults.partitionMap(identity)
 //        successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
         successes = successSaves
@@ -90,19 +84,19 @@ class Server(dataService: DataService, fetch: FetchService, log: Logger[IO]) {
 
     // http://0.0.0.0:8080/api/show/months/202304,202305,202306
     case GET -> Root / "show" / "months" / ValidateMonths(monthList) =>
-      dataService.getDatesByMonths(monthList).flatMap(dates =>
+      postgresService.getDatesByMonths(monthList).flatMap(dates =>
         Ok(dates.asJson.pretty)
       )
 
     // http://0.0.0.0:8080/api/show/date/20230423
     case GET -> Root / "show" / "date" / ValidateDate(date) =>
-      dataService.getDateFileNames(date).flatMap(fileNames =>
+      postgresService.getDateFileNames(date).flatMap(fileNames =>
         Ok(fileNames.asJson.pretty)
       )
 
     // http://0.0.0.0:8080/api/show/datetime/20230423_1300
     case GET -> Root / "show" / "datetime" / ValidateDateTime(datetime) =>
-      dataService.getDateTimeEntries(datetime).flatMap(content => Ok(content.asJson))
+      postgresService.getDateTimeEntries(datetime).flatMap(content => Ok(content.asJson))
   }
 
   private val corsConfig = CORSConfig.default

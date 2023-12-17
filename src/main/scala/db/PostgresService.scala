@@ -22,7 +22,7 @@ object PostgresService {
   }
 }
 
-class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataServiceTrait {
+class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
   private val rigaZone = ZoneId.of("Europe/Riga")
   // in pgAdmin run: ```SET TIMEZONE = 'Europe/Riga';```
 
@@ -40,7 +40,6 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
   def query(userQuery: UserQuery):  IO[Map[String, Option[AggregateValue]]] = {
     if (userQuery.field == "phenomena") { // this handles strings
       // TODO query list and distinct values from phenomena
-      println("EMPTY RESULT!!!!!111")
       IO(Map()) // empty result
     } else if (List(
       AggregateKey.Max,
@@ -145,7 +144,6 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) extends DataS
         }
 
     } else {
-      println("EMPTY RESULT!!!!!")
       IO(Map()) // empty result
     }
   }
