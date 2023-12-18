@@ -23,7 +23,6 @@ object PostgresService {
 }
 
 class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
-  private val rigaZone = ZoneId.of("Europe/Riga")
   // in pgAdmin run: ```SET TIMEZONE = 'Europe/Riga';```
 
   def save(fileName: String, content: String): IO[String] = {
@@ -150,8 +149,8 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
 
   def getDatesByMonths(monthList: List[LocalDate]): IO[List[LocalDate]] = {
     val monthYearPairs = monthList.map { localDate =>
-      val month = localDate.atStartOfDay.atZone(rigaZone).getMonthValue
-      val year = localDate.atStartOfDay.atZone(rigaZone).getYear
+      val month = localDate.atStartOfDay.getMonthValue
+      val year = localDate.atStartOfDay.getYear
       (month, year)
     }
 
@@ -194,9 +193,9 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
   }
 
   def getDateFileNames(date: LocalDate): IO[List[String]] = {
-    val year = date.atStartOfDay.atZone(rigaZone).getYear
-    val month = date.atStartOfDay.atZone(rigaZone).getMonthValue
-    val day = date.atStartOfDay.atZone(rigaZone).getDayOfMonth
+    val year = date.atStartOfDay.getYear
+    val month = date.atStartOfDay.getMonthValue
+    val day = date.atStartOfDay.getDayOfMonth
     val whereClauses = fr"(EXTRACT(DAY FROM dateTime) = $day AND EXTRACT(MONTH FROM dateTime) = $month AND EXTRACT(YEAR FROM dateTime) = $year)"
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HH00")
 
@@ -212,7 +211,7 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
       .transact(transactor)
       .map { dateTimes =>
         dateTimes.map(dateTime =>
-          dateTime.atZoneSameInstant(rigaZone).format(formatter)
+          dateTime.format(formatter)
         )
       }
   }
@@ -239,12 +238,11 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
   def insertInWeatherTable(data: List[WeatherStationData]): IO[Int] = {
       getResourceContent("/db/insert_weather_table.sql").flatMap { insertTableSql =>
         val insertData = data.map(line => {
-          val zonedTime: ZonedDateTime = line.timestamp.atZone(rigaZone)
           val w = line.weather
-          (zonedTime, line.city, w.tempMax, w.tempMin, w.tempAvg, w.precipitation, w.windAvg, w.windMax, w.visibilityMin, w.visibilityAvg, w.snowAvg, w.atmPressure, w.dewPoint, w.humidity, w.sunDuration, w.phenomena)
+          (line.timestamp, line.city, w.tempMax, w.tempMin, w.tempAvg, w.precipitation, w.windAvg, w.windMax, w.visibilityMin, w.visibilityAvg, w.snowAvg, w.atmPressure, w.dewPoint, w.humidity, w.sunDuration, w.phenomena)
         })
 
-        Update[(ZonedDateTime, String, Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], List[String])](insertTableSql)
+        Update[(LocalDateTime, String, Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], List[String])](insertTableSql)
           .updateMany(insertData)
           .transact(transactor)
       }
@@ -252,8 +250,8 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
 
   def selectWeatherTable(): IO[List[(String, Option[Double])]] = {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    val from = LocalDateTime.parse("20230516_0100", formatter).atZone(rigaZone)
-    val to = LocalDateTime.parse("20230516_1500", formatter).atZone(rigaZone)
+    val from = LocalDateTime.parse("20230516_0100", formatter)
+    val to = LocalDateTime.parse("20230516_1500", formatter)
     val citiesNel = NonEmptyList.of("Rīga", "Rēzekne")
     val granularity = "HOUR" // "HOUR", "DAY", "MONTH", "YEAR"
     val columnName = "tempMin"
