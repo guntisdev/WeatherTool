@@ -1,5 +1,4 @@
 src/main/resources/application.conf
-src/main/resources/postgres2.conf
 
 target/
 project/target/
@@ -25,5 +24,6 @@ dependency-reduced-pom.xml
 *.log
 logs/
 .DS_Store
+.env
 data/*
 !project/assembly.sbt
