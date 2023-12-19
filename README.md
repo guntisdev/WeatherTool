@@ -4,6 +4,12 @@ Tool for downloading historical and real-time data from 33 weather stations in L
 
 ## Run
 ```
+docker-compose up node
+docker-compose up scala
+```
+
+## Run
+```
 // scala
 sbt run
 

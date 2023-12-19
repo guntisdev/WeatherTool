@@ -1,7 +1,14 @@
 version: '3'
 services:
+  node:
+    image: node:16.13.1
+    working_dir: /app/web
+    volumes:
+      - $PWD/web:/app/web
+    command: sh -c "npm install && npm run build"
+
   postgres:
-    image: postgres:latest
+    image: postgres:16.1
     ports:
       - "5432:5432"
     environment:
@@ -11,7 +18,7 @@ services:
     volumes:
       - /var/lib/postgresql/data:/var/lib/postgresql/data
 
-  scala-app:
+  scala:
     build:
       context: .
       dockerfile: Dockerfile.local
