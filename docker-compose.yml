@@ -1,0 +1,23 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: weather-tool
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+    volumes:
+      - /var/lib/postgresql/data:/var/lib/postgresql/data
+
+  scala-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    volumes:
+      - $PWD:/app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres

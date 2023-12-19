@@ -13,7 +13,7 @@ case class PostgresConfig(url: String, username: String, password: String)
 
 object DBConnection {
   private def getDatabaseUrl: String =
-    sys.env.getOrElse("DATABASE_URL", "postgres://postgres:mysecretpassword@localhost:5432/weather-tool")
+    sys.env.getOrElse("DATABASE_URL", "postgres://postgres:mysecretpassword@postgres:5432/weather-tool")
 
   private def parseUrl(url: String): Either[String, PostgresConfig] = {
     Try {
