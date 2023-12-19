@@ -8,8 +8,6 @@ import org.http4s.headers.Authorization
 import org.http4s.ember.client.EmberClientBuilder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import pureconfig._
-import pureconfig.generic.auto._
 
 import java.time.{LocalDate, LocalDateTime}
 
@@ -25,11 +23,16 @@ object FetchService {
   }
 }
 
-class FetchService(fileNameService: FileNameService, log: Logger[IO]) {
-  private val weatherServerConfig: WeatherServerConfig = ConfigSource.default.load[WeatherServerConfig] match {
-    case Right(config) => config
-    case Left(errors) => throw new RuntimeException(s"Unable to load config: $errors")
-  }
+class FetchService(fileNameService: FileNameService, log: Logger[IO]) {private val weatherServerConfig: WeatherServerConfig = (
+  sys.env.get("METEO_USER"),
+  sys.env.get("METEO_PASSWORD"),
+  sys.env.get("METEO_URL")
+) match {
+  case (Some(user), Some(password), Some(url)) =>
+    WeatherServerConfig(user, password, url)
+  case _ =>
+    throw new RuntimeException("Unable to load meteo config: Missing required environment variables")
+}
 
   private val basicCredentials: BasicCredentials =
     BasicCredentials(weatherServerConfig.username, weatherServerConfig.password)

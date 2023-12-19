@@ -8,9 +8,6 @@ import server.Server
 
 object Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
-    // postgres://weather_tool:XID547uldXliJBa@weather-tool-db.flycast:5432/weather_tool?sslmode=disable
-    //    println(System.getenv("DATABASE_URL"))
-
     for {
       transactor <- DBConnection.transactor[IO]
       postgresService <- PostgresService.of(transactor)
