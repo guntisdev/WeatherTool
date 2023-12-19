@@ -1,5 +1,4 @@
 # flyctl launch added from .gitignore
-**/src/main/resources/application.conf
 
 **/project/target
 **/project/project/target
