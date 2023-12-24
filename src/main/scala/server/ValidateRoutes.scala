@@ -2,6 +2,7 @@ package server
 
 import cats.data.NonEmptyList
 import parse.Aggregate.AggregateKey
+import parse.WeatherData
 
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
@@ -53,6 +54,14 @@ object ValidateRoutes {
   object CityList {
     def unapply(str: String): Option[NonEmptyList[String]] = {
       NonEmptyList.fromList(str.split(",").toList)
+    }
+  }
+
+  object AggFieldList {
+    def unapply(str: String): Option[NonEmptyList[String]] = {
+      val weatherFields = WeatherData.getKeys
+      val filteredList = str.split(",").toList.filter(weatherFields.contains)
+      NonEmptyList.fromList(filteredList)
     }
   }
 

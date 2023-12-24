@@ -5,8 +5,8 @@ import cats.implicits.toTraverseOps
 import com.comcast.ip4s.IpLiteralSyntax
 import db.PostgresService
 import fetch.FetchService
-import parse.{Aggregate}
-import server.ValidateRoutes.{AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateMonths}
+import parse.Aggregate
+import server.ValidateRoutes.{AggFieldList, AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateMonths}
 import io.circe.{Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
@@ -50,13 +50,18 @@ class Server(postgresService: PostgresService, fetch: FetchService, log: Logger[
 
   private val apiRoutes = HttpRoutes.of[IO] {
 
-    // http://0.0.0.0:8080/api/query/20230414_2200-20230501_1230/Liepāja,Rēzekne/tempMax/max
-    case GET -> Root / "query" / DateTimeRange(from, to) / Granularity(granularity) / CityList(cities) / field / AggKey(key) =>
+    // http://0.0.0.0:8080/api/query/city/Liepāja,Rēzekne/20230414_2200-20230501_1230/hour/tempMax/max
+    case GET -> Root / "query" / "city" / CityList(cities) / DateTimeRange(from, to) / Granularity(granularity) / field / AggKey(key) =>
       val userQuery = UserQuery(cities, field, key, granularity, from, to)
 
       postgresService.query(userQuery)
         .map(result => ResponseWrapper(result, userQuery))
         .flatMap(responseWrapper => Ok(responseWrapper.asJson.pretty))
+
+    // http://0.0.0.0:8080/api/query/country/20230414_2200-20230501_1230/tempMax,tempMin,tempAvg,precipitation
+    case GET -> Root / "query" / "country" / DateTimeRange(from, to) / AggFieldList(fieldList) =>
+      postgresService.queryCountry(from, to, fieldList)
+        .flatMap(result => Ok(result.asJson.pretty))
 
     // http://0.0.0.0:8080/api/fetch/date/20230514
     case GET -> Root / "fetch" / "date" / ValidateDate(date) =>

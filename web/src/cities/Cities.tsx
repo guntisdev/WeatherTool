@@ -6,12 +6,12 @@ import { SelectCity } from "./SelectCity";
 import { SelectField } from "./SelectField";
 import { SelectGranularity } from "./SelectGranularity";
 import { SelectKey } from "./SelectKey";
-import { SelectTimeRange } from "./SelectTimeRange";
+import { SelectTimeRange } from "../components/SelectTimeRange";
 
 const nowRounded = new Date(new Date().setMinutes(30));
 const dayAgo = moment(nowRounded).subtract(1, "days").subtract(30, "minutes").toDate();
 
-export function Aggregator() {
+export function Cities() {
     const [getCities, setCities] = createSignal<Set<string>>(new Set([]));
     const [getStart, setStart] = createSignal(dayAgo);
     const [getEnd, setEnd] = createSignal(nowRounded);
@@ -21,7 +21,7 @@ export function Aggregator() {
 
     return (
         <div class="aggregator">
-            <h2>Aggregator</h2>
+            <h2>Cities</h2>
             <div class="container">
                 <div class="column">
                     <SelectCity getCities={getCities} setCities={setCities} />

@@ -1,28 +1,23 @@
 import moment from "moment";
 import { Accessor, Component, createResource, createSignal } from "solid-js";
 
-import "../../css/Result.css"
 import { apiHost } from "../../consts";
-import { isQueryResult } from "../helpers";
 import { Result } from "./Result";
 
+
 export const QueryResult: Component<{
-    getCities: Accessor<Set<string>>,
     getStart: Accessor<Date>,
     getEnd: Accessor<Date>,
-    getField: Accessor<string>,
-    getKey: Accessor<string>,
-    getGranularity: Accessor<string>,
+    getFields: Accessor<string[]>,
 }> = (props) => {
-    const cities = () => [...props.getCities()].join(",");
     const queryStart = () => moment(props.getStart()).format("YYYYMMDD_HHmm");
     const queryEnd = () => moment(props.getEnd()).format("YYYYMMDD_HHmm"); 
     const [getTimestamp, setTimestamp] = createSignal<number>(0);
-
+    
     const fetchQuery = async (timestamp: number) => {
-        if (cities() === "") return new Error("ERROR: Select cities!");
+        if (props.getFields().length === 0) return new Error("ERROR: Select weather parameters!");
         await new Promise(resolve => setTimeout(resolve, 500))
-        const response = await fetch(`${apiHost}/api/query/${queryStart()}-${queryEnd()}/${props.getGranularity()}/${cities()}/${props.getField()}/${props.getKey()}`);
+        const response = await fetch(`${apiHost}/api/query/country/${queryStart()}-${queryEnd()}/${props.getFields().join(",")}`);
         const json = await response.json();
         return json;
     }
@@ -49,7 +44,7 @@ export const QueryResult: Component<{
             { queryResource() && queryResource() instanceof Error &&
                 <div>{ queryResource().message }</div>
             }
-            { queryResource() && isQueryResult( queryResource() ) &&
+            { queryResource() &&
                 <Result result={queryResource} />
             }
         </div>
