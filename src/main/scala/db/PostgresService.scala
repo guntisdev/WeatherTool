@@ -7,7 +7,7 @@ import doobie._
 import doobie.implicits._
 
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, LocalDateTime, OffsetDateTime, ZoneId, ZonedDateTime}
+import java.time.{LocalDate, LocalDateTime, OffsetDateTime}
 import doobie.postgres.implicits._
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -23,8 +23,6 @@ object PostgresService {
 }
 
 class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
-  // in pgAdmin run: ```SET TIMEZONE = 'Europe/Riga';```
-
   def save(fileName: String, content: String): IO[String] = {
     val strLines = content.split(System.lineSeparator()).toList
     val weatherStationData = strLines.flatMap(Parser.parseLine)
@@ -34,6 +32,30 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
         case Left(error) => log.error(s"Write db '$fileName' failed with error: ${error.getMessage}") *> IO.raiseError(error)
         case Right(rowCount) => log.info(s"write rows: $rowCount file: $fileName").as(fileName)
     }
+  }
+
+  def queryCountry(from: LocalDateTime, to: LocalDateTime, fieldList: NonEmptyList[String]): IO[Map[String, (Option[Double], Option[Double], Option[Double], Option[Double])]] = {
+    def queryForField(field: String, from: LocalDateTime, to: LocalDateTime): ConnectionIO[(String, (Option[Double], Option[Double], Option[Double], Option[Double]))] =
+    {
+      val query =
+        fr"SELECT " ++
+          fr" ROUND(CAST(MIN(" ++ Fragment.const(field) ++ fr") AS NUMERIC), 1), " ++
+          fr" ROUND(CAST(MAX(" ++ Fragment.const(field) ++ fr") AS NUMERIC), 1), " ++
+          fr" ROUND(CAST(AVG(" ++ Fragment.const(field) ++ fr") AS NUMERIC), 1), " ++
+          fr" ROUND(CAST(SUM(" ++ Fragment.const(field) ++ fr") AS NUMERIC), 1)" ++
+          fr" FROM weather" ++
+          fr" WHERE dateTime BETWEEN $from AND $to"
+
+      query.query[(Option[Double], Option[Double], Option[Double], Option[Double])]
+        .unique
+        .map { case (min, max, avg, sum) =>
+          field -> (min, max, avg, sum)
+        }
+    }
+
+    fieldList.toList.traverse { field =>
+      queryForField(field, from, to).transact(transactor)
+    }.map(_.toMap)
   }
 
   def query(userQuery: UserQuery):  IO[Map[String, Option[AggregateValue]]] = {
@@ -171,12 +193,6 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
       .transact(transactor)
   }
 
-  def readFile(fileName: String): IO[List[String]] = ???
-
-  def getInRange(from: LocalDateTime, to: LocalDateTime): IO[List[String]] = ???
-
-  def getDates: IO[List[LocalDate]] = ???
-
   def getDateTimeEntries(dateTime: LocalDateTime): IO[List[String]] = {
     val columnNames = List("City; TempMax; TempMin; TempAvg; Precipitation; WindAvg; WindMax; VisibilityMin; VisibilityAvg; SnowAvg; AtmPressure; DewPoint; Humidity; SunDuration; Phenomena")
     val result = fr"""
@@ -246,39 +262,5 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
           .updateMany(insertData)
           .transact(transactor)
       }
-  }
-
-  def selectWeatherTable(): IO[List[(String, Option[Double])]] = {
-    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    val from = LocalDateTime.parse("20230516_0100", formatter)
-    val to = LocalDateTime.parse("20230516_1500", formatter)
-    val citiesNel = NonEmptyList.of("Rīga", "Rēzekne")
-    val granularity = "HOUR" // "HOUR", "DAY", "MONTH", "YEAR"
-    val columnName = "tempMin"
-
-    val baseQuery =
-      fr"""
-        SELECT
-          city,
-          MIN(""" ++ Fragment.const(columnName) ++ fr""") AS tempMin
-        FROM weather
-        WHERE
-          """ ++ Fragments.in(fr"city", citiesNel) ++ fr"""
-          AND dateTime BETWEEN $from AND $to
-          AND """ ++ Fragment.const(columnName) ++fr""" IS NOT NULL
-        GROUP BY city, EXTRACT(""" ++ Fragment.const(granularity) ++ fr""" FROM dateTime)
-      """
-
-    baseQuery
-      .query[(String, Option[Double])]
-      .to[List]
-      .transact(transactor)
-  }
-
-  def dropWeatherTable(): IO[Int] = {
-    for {
-      dropTableSql <- getResourceContent("/db/drop_weather_table.sql")
-      result <- Update0(dropTableSql, None).run.transact(transactor)
-    } yield result
   }
 }

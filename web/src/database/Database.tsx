@@ -7,7 +7,7 @@ import { FetchFiles } from "./FetchFiles";
 import { FileContent } from "./FileContent";
 import { FileNameList } from "./FileNameList";
 
-export function FileManager() {
+export function Database() {
     const [getDate, setDate] = createSignal(new Date());
     const [getFileName, setFileName] = createSignal("");
 
@@ -15,7 +15,7 @@ export function FileManager() {
 
     return (
         <div class="fileManager">
-            <h2>File manager</h2>
+            <h2>Database</h2>
             <div class="container">
                 <div class="column">
                     <DateList getDate={getDate} setDate={setDate} />
