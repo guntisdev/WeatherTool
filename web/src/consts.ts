@@ -1,4 +1,10 @@
-export const apiHost = import.meta.env.VITE_API_HOST;
+
+const protocol = window.location.protocol;
+const host = window.location.hostname;
+const port = window.location.port;
+export const apiHost = import.meta.env.MODE === "development"
+    ? import.meta.env.VITE_API_HOST : `${protocol}//${host}:${port}`;
+// export const apiHost = import.meta.env.VITE_API_HOST;
 
 export const cityList = ["Ainaži", "Alūksne", "Bauska", "Dagda", "Daugavgrīva", "Daugavpils", "Dobele", "Gulbene", "Jelgava", "Kalnciems", "Kolka", "Kuldīga", "Lielpēči", "Liepāja", "Madona", "Mērsrags", "Pāvilosta", "Piedruja", "Priekuļi", "Rēzekne", "Rīga", "Rucava", "Rūjiena", "Saldus", "Sigulda", "Sīļi", "Skrīveri", "Skulte", "Stende", "Ventspils", "Vičaki", "Zīlāni", "Zosēni"];
 
