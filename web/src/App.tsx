@@ -11,7 +11,7 @@ console.log("api host:", import.meta.env.VITE_API_HOST);
 type Section = "cities" | "country" | "database";
 
 const App: Component = () => {
-    const [getSection, setSection] = createSignal<Section>("country");
+    const [getSection, setSection] = createSignal<Section>("cities");
 
     const section = () => {
         switch(getSection()) {

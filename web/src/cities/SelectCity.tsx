@@ -33,8 +33,8 @@ export const SelectCity: Component<{
                 onClick={selectAll}
             />
             <ul>{cityList.map(city =>
-                <label>
                 <li>
+                    <label>
                     <input
                         type="checkbox"
                         name="city"
@@ -43,8 +43,8 @@ export const SelectCity: Component<{
                         onClick={handleSelect}
                     />
                     {city}
+                    </label>
                 </li>
-                </label>
                 )}
             </ul>
         </div>
