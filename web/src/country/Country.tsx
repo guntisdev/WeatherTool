@@ -1,15 +1,15 @@
+import moment from "moment";
 import { createSignal } from "solid-js";
 
 import { QueryResult } from "./result/QueryResult";
 import { SelectTimeRange } from "../components/SelectTimeRange";
-import moment from "moment";
-import { weatherField } from "../consts";
+import { weatherFieldNumeric } from "../consts";
+import { MultiSelectField } from "./MultiSelectField";
 
 const nowRounded = new Date(new Date().setMinutes(30));
 const dayAgo = moment(nowRounded).subtract(1, "days").subtract(30, "minutes").toDate();
 
 export function Country() {
-    const weatherFieldNumeric = weatherField.filter(f => f !== "phenomena");
     const [getStart, setStart] = createSignal(dayAgo);
     const [getEnd, setEnd] = createSignal(nowRounded);
     const [getFields, setFields] = createSignal(weatherFieldNumeric);
@@ -19,7 +19,10 @@ export function Country() {
             <h2>Latvia</h2>
             <div class="container">
                 <div class="column">
-                    column1
+                    <MultiSelectField
+                        getFields={getFields}
+                        setFields={setFields}
+                    />
                 </div>
                 <div class="column">
                     <SelectTimeRange

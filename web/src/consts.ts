@@ -4,6 +4,8 @@ export const cityList = ["Ainaži", "Alūksne", "Bauska", "Dagda", "Daugavgrīva
 
 export const weatherField = ["tempMax", "tempMin", "tempAvg", "precipitation", "windAvg", "windMax", "visibilityMin", "visibilityAvg", "snowAvg", "atmPressire", "dewPoint", "humidity", "sunDuration", "phenomena"];
 
+export const weatherFieldNumeric = weatherField.filter(f => f !== "phenomena");
+
 export const aggregateKey = ["min", "max", "avg", "sum", "list", "distinct"];
 
 export const aggregateGranularity = ["hour", "day", "month", "year"];
