@@ -3,7 +3,7 @@ services:
     image: node:16.13.1
     working_dir: /app/web
     volumes:
-      - $PWD/web:/app/web
+      - ./web:/app/web
     command: sh -c "npm install && npm run build"
 
   postgres:
@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: Dockerfile.local
     volumes:
-      - $PWD:/app
+      - ./:/app
     ports:
       - "9080:8080"
     depends_on:
