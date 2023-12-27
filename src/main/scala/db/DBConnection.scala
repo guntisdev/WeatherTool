@@ -37,7 +37,7 @@ object DBConnection {
         config.username,
         config.password
       ))
-      case Left(error) => IO.raiseError(new RuntimeException(s"Failed to parse DATABASE_URL: $error"))
+      case Left(error) => IO.raiseError(new RuntimeException(s"Failed to parse DATABASE_URL: '$getDatabaseUrl' $error"))
     }
   }
 }
