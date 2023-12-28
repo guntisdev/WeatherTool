@@ -12,7 +12,7 @@ docker-compose up scala --build
 ```
 
 ## Web
-[http://0.0.0.0:9080/](http://0.0.0.0:9080/)
+[http://0.0.0.0:9090/](http://0.0.0.0:9090/)
 
 ## nginx proxy config
 ```
@@ -21,7 +21,7 @@ server {
     server_name laikazinas.lsm.lv;
 
     location / {
-        proxy_pass http://localhost:9080; # Forward requests to the Scala app
+        proxy_pass http://localhost:9090; # Forward requests to the Scala app
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
