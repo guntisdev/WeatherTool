@@ -10,8 +10,6 @@ import { apiHost } from './consts';
 console.log("env:", import.meta.env.MODE);
 console.log("api host:", apiHost);
 
-// type Section = "station" | "cities" | "country" | "database";
-
 const App: Component = () => {
     const pages: [string, () => JSXElement][] = [
         ["station", () => <Station />],

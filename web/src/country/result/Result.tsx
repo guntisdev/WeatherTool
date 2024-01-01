@@ -9,6 +9,7 @@ export const Result: Component<{
 }> = ({ result: resultResource }) => {
     const countryData = () => Object.entries(resultResource()!)
         .sort((a, b) => a[0] > b[0] ? 1 : -1)
+        .map(filterOutSums)
         .map(([field, values]) => <tr>
             <td>{field}</td>
             <td>{values[0]}</td>
@@ -31,4 +32,15 @@ export const Result: Component<{
             </table>
         </div>
     );
+}
+
+type CountryFieldValues = [number | undefined, number | undefined, number | undefined, number | undefined];
+
+const sumFields = ["precipitation", "snowAvg", "sunDuration"];
+
+function filterOutSums([field, values]: [string, CountryFieldValues]): [string, CountryFieldValues] {
+    const modifiedValues: CountryFieldValues = [...values];
+    if (!sumFields.includes(field)) modifiedValues[3] = undefined;
+
+    return [field, modifiedValues];
 }

@@ -42,3 +42,15 @@ thead {
 .primary:hover {
   background-color: #ffb92d;
 }
+
+table td {
+  padding: 3px 7px;
+}
+
+table tr:nth-child(odd) {
+  background: #d6d6d6;
+}
+
+table tr:hover {
+  background: #c0c0c0;
+}

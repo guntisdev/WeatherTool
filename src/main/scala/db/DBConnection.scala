@@ -12,9 +12,10 @@ object DBConnection {
   private def getDbName = sys.env.getOrElse("POSTGRES_DB", "")
   private def getDbUser = sys.env.getOrElse("POSTGRES_USER", "")
   private def getDbPassword = sys.env.getOrElse("POSTGRES_PASSWORD", "")
+  private def getDbHost = sys.env.getOrElse("POSTGRES_HOST", "")
 
   private def getDatabaseUrl: String =
-    sys.env.getOrElse("DATABASE_URL", s"postgres://${getDbUser}:${getDbPassword}@postgres:5432/${getDbName}") // host - postgres for docker, 0.0.0.0 outside docker
+    sys.env.getOrElse("DATABASE_URL", s"postgres://${getDbUser}:${getDbPassword}@${getDbHost}:5432/${getDbName}") // host - postgres for docker, 0.0.0.0 outside docker
 
   private def parseUrl(url: String): Either[String, PostgresConfig] = {
     Try {
