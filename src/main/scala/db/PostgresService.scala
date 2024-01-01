@@ -15,6 +15,7 @@ import parse.Aggregate.{AggregateKey, AggregateValue, DoubleValue, TimeDoubleLis
 import parse.{Parser, WeatherStationData}
 
 import java.time.temporal.ChronoUnit
+import scala.util.matching.Regex
 
 object PostgresService {
   def of(transactor: Transactor[IO]): IO[PostgresService] = {
@@ -24,13 +25,25 @@ object PostgresService {
 
 class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
   def save(fileName: String, content: String): IO[String] = {
-    val strLines = content.split(System.lineSeparator()).toList
-    val weatherStationData = strLines.flatMap(Parser.parseLine)
-    insertInWeatherTable(weatherStationData)
-      .attempt
-      .flatMap {
-        case Left(error) => log.error(s"Write db '$fileName' failed with error: ${error.getMessage}") *> IO.raiseError(error)
-        case Right(rowCount) => log.info(s"write rows: $rowCount file: $fileName").as(fileName)
+    val YearPattern: Regex = """(\d{4})\d{4}_\d{4}\.csv""".r
+
+    def extractYear(filename: String): Option[String] = {
+      YearPattern.findFirstMatchIn(filename).map(_.group(1))
+    }
+
+    extractYear(fileName) match {
+      case Some(year) =>
+        val strLines = content.split(System.lineSeparator()).toList
+        val weatherStationData = strLines.flatMap(line => Parser.parseLine(line, year))
+        insertInWeatherTable(weatherStationData)
+          .attempt
+          .flatMap {
+            case Left(error) => log.error(s"Write db '$fileName' failed with error: ${error.getMessage}") *> IO.raiseError(error)
+            case Right(rowCount) => log.info(s"write rows: $rowCount file: $fileName in year: $year").as(fileName)
+          }
+
+      case None =>
+        IO.raiseError(new RuntimeException(s"Could not extract year from file name: $fileName"))
     }
   }
 

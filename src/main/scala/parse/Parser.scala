@@ -1,20 +1,16 @@
 package parse
 
-import parse.Aggregate.{AggregateValue, UserQuery, aggregateDoubleValues, aggregatePhenomenaValues, aggregateByField}
-
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import scala.util.Try
 
 object Parser {
-  def parseLine(line: String): Option[WeatherStationData] = {
+  def parseLine(line: String, year: String): Option[WeatherStationData] = {
     val paramCount = WeatherData.getDoubleParamCount
 
     def parseTimestamp(timestampStr: String): Option[LocalDateTime] = {
       val formatter = DateTimeFormatter.ofPattern("yyyydd.MM HH:mm")
-      // TODO figure out what to do with hardcoded year. Proly fetched data should be also modified to include year
-      Try(LocalDateTime.parse(s"2023${timestampStr.trim}", formatter)).toEither match {
+      Try(LocalDateTime.parse(s"$year${timestampStr.trim}", formatter)).toEither match {
         case Right(timestamp) => Some(timestamp)
         case Left(_) => None
       }
@@ -34,26 +30,5 @@ object Parser {
       phenomena <- Some(phenomenaList.map(_.trim))
       weatherData <- WeatherData.fromDoubles(strList.map(_.toDoubleOption), phenomena)
     } yield WeatherStationData(city, timestamp, weatherData)
-  }
-
-  def queryData(userQuery: UserQuery, lines: List[String]): Map[String, Option[AggregateValue]] = {
-    val weatherByCity = lines
-      .flatMap(parseLine)
-      .filter(line => userQuery.cities.toList.contains(line.city))
-      .groupBy(_.city)
-
-    weatherByCity.map { case (city, weatherStationData) =>
-      userQuery.field match {
-        case "phenomena" => {
-          val phenomenaList = weatherStationData.map(_.weather.phenomena)
-          (city -> aggregatePhenomenaValues(userQuery.key, phenomenaList))
-        }
-        case field => {
-          val doubleList = aggregateByField(field, userQuery.granularity, weatherStationData)
-          (city -> aggregateDoubleValues(userQuery.key, doubleList))
-
-        }
-      }
-    }
   }
 }
