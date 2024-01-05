@@ -54,3 +54,11 @@ table tr:nth-child(odd) {
 table tr:hover {
   background: #c0c0c0;
 }
+
+.hidden {
+  display: none;
+}
+
+.visible {
+  display: block;
+}

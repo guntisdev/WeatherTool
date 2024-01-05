@@ -1,0 +1,37 @@
+.stationWrapper .container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.stationWrapper .container .column {
+    flex: 1;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.stationWrapper .container .column:nth-child(1) {
+    padding: 0;
+    flex-basis: 20%;
+    background-color: white;
+    min-width: 1000px;
+}
+
+.stationWrapper .container .column:nth-child(2) {
+    padding: 10px;
+    flex-basis: 80%;
+    background-color: #f2f2f2;
+    min-width: 300px;
+}
+
+.stationWrapper .cities {
+    width: 200px;
+    position: absolute;
+    z-index: 10;
+    background-color: white;
+    opacity: 0.7;
+}
+
+.stationWrapper .submenu {
+    padding: 5px 10px;
+    background-color: #f2f2f2;
+}

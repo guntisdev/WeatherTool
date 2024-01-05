@@ -24,18 +24,14 @@
 }
 
 .menu {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    padding-left: 20px;
-    text-align: left;
+    padding: 8px 20px;
+    text-align: right;
 }
 
 .menu li{
   display: inline;
   padding: 10px 0 10px 10px;
   cursor: pointer;
-  line-height: 40px;
 }
 
 .menu li:not(:first-child)::before {

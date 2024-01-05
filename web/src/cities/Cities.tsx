@@ -2,11 +2,12 @@ import moment from "moment";
 import { createSignal } from "solid-js";
 import { QueryResult } from "./result/QueryResult";
 
-import { SelectCity } from "./SelectCity";
+import { SelectCity } from "../components/SelectCity";
+import { SelectTimeRange } from "../components/SelectTimeRange";
+
 import { SelectField } from "./SelectField";
 import { SelectGranularity } from "./SelectGranularity";
 import { SelectKey } from "./SelectKey";
-import { SelectTimeRange } from "../components/SelectTimeRange";
 
 const nowRounded = new Date(new Date().setMinutes(30));
 const dayAgo = moment(nowRounded).subtract(1, "days").subtract(30, "minutes").toDate();
@@ -21,7 +22,6 @@ export function Cities() {
 
     return (
         <div class="aggregator">
-            <h2>Cities</h2>
             <div class="container">
                 <div class="column">
                     <SelectCity getCities={getCities} setCities={setCities} />

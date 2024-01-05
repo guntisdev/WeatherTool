@@ -17,7 +17,7 @@ const App: Component = () => {
         ["latvia", () => <Country />],
         ["database", () => <Database />],
     ];
-    const [getPageTitle, setPageTitle] = createSignal("cities");
+    const [getPageTitle, setPageTitle] = createSignal("station");
 
     const getPageContent = () => {
         const page = pages.find(p => p[0] === getPageTitle());
