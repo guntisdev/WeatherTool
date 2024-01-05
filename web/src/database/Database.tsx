@@ -15,7 +15,6 @@ export function Database() {
 
     return (
         <div class="fileManager">
-            <h2>Database</h2>
             <div class="container">
                 <div class="column">
                     <DateList getDate={getDate} setDate={setDate} />

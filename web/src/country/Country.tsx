@@ -16,7 +16,6 @@ export function Country() {
 
     return (
         <div class="fileManager">
-            <h2>Latvia</h2>
             <div class="container">
                 <div class="column">
                     <MultiSelectField
