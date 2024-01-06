@@ -1,21 +1,42 @@
 import { Component, createEffect, createSignal, onMount } from "solid-js";
+import moment from "moment";
 
-import mapUrl from "../assets/map_1000x570.webp";
-
-import "../css/station.css"
 import { cityCoords } from "./cityCoords";
 import { SelectCity } from "../components/SelectCity";
+
+import mapUrl from "../assets/map_1000x570.webp";
+import "../css/station.css"
+import { SelectField } from "../components/SelectField";
+import { coordToCity } from "./coordToCity";
+import { Result } from "./Result";
 
 export const Station: Component<{}> = () => {
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>();
     const [getImg, setImg] = createSignal(new Image());
     const [getShowCities, setShowCities] = createSignal(false);
-    const [getCities, setCities] = createSignal<Set<string>>(new Set(["Rīga", "Rēzekne", "Liepāja"]));
+    const [getCities, setCities] = createSignal<Set<string>>(new Set(["Ainaži", "Rīga", "Rēzekne", "Liepāja", "Daugavpils", "Ventspils", "Madona"]));
+    const [getDate, setDate] = createSignal(moment());
+    const [getField, setField] = createSignal("tempMax");
+    const [getCity, setCity] = createSignal<string | undefined>(undefined);
 
     let ctx: CanvasRenderingContext2D | undefined;
 
     onMount(() => {
-        ctx = getCanvas()!.getContext("2d")!;
+        const canvas = getCanvas()!;
+        canvas.addEventListener("click", event => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x = Math.round((event.clientX - rect.left) * scaleX);
+            const y = Math.round((event.clientY - rect.top) * scaleY);
+
+            const selectedCityCoords = Object.entries(cityCoords).filter(([city]) => getCities().has(city));
+            const optionalCity = coordToCity(x, y, selectedCityCoords);
+            setCity(optionalCity);
+        });
+
+        ctx = canvas.getContext("2d")!;
 
         const img = new Image();
         img.onload = () => setImg(img);
@@ -41,6 +62,8 @@ export const Station: Component<{}> = () => {
                             value="Select stations"
                             onClick={() => setShowCities(!getShowCities())}
                         />
+                        <input type="date" value={getDate().format("YYYY-MM-DD")} />
+                        <SelectField getField={getField} setField={setField} />
                     </div>
                     <div class={"cities " + (getShowCities() ? "visible" : "hidden")}>
                         <SelectCity getCities={getCities} setCities={setCities} />
@@ -48,7 +71,7 @@ export const Station: Component<{}> = () => {
                     <canvas ref={setCanvas} width={1000} height={570} />
                 </div>
                 <div class="column">
-                    3rd
+                    <Result getCity={getCity} />
                 </div>
             </div>
         </div>
@@ -60,7 +83,6 @@ function drawOnMap(
     imgArr: [HTMLImageElement],
     cities: Set<string>,
 ): void {
-    console.log("Draw cities");
     ctx.drawImage(imgArr[0], 0, 0);
     ctx.fillStyle = "red";
     ctx.font = "18px serif";
@@ -69,9 +91,12 @@ function drawOnMap(
         if (!coord) return;
 
         ctx.beginPath();
-        ctx.arc(coord.x, coord.y, 6, 0, 2 * Math.PI);
+        ctx.arc(coord.x, coord.y, 4, 0, 2 * Math.PI);
         const cityTextSize = ctx.measureText(city);
         ctx.fillText(city, coord.x - cityTextSize.width/2, coord.y - 6);
         ctx.fill();
+        // const boxWidth = 60;
+        // const boxHeight = 30;
+        // ctx.strokeRect(coord.x-boxWidth/2, coord.y-boxHeight/2, boxWidth, boxHeight);
     });
 }

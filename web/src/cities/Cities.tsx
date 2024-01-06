@@ -4,8 +4,8 @@ import { QueryResult } from "./result/QueryResult";
 
 import { SelectCity } from "../components/SelectCity";
 import { SelectTimeRange } from "../components/SelectTimeRange";
+import { SelectField } from "../components/SelectField";
 
-import { SelectField } from "./SelectField";
 import { SelectGranularity } from "./SelectGranularity";
 import { SelectKey } from "./SelectKey";
 
@@ -36,7 +36,10 @@ export function Cities() {
                         />
                     </div>
                     <div>
-                        <SelectField getField={getField} setField={setField} />
+                        <div>
+                            <h4>Select field</h4>
+                            <SelectField getField={getField} setField={setField} />
+                        </div>
                         <SelectKey getKey={getKey} setKey={setKey} />
                         <SelectGranularity getGranularity={getGranularity} setGranularity={setGranularity} />
                     </div>
