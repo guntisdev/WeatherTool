@@ -6,15 +6,15 @@ import { CityLargeChart } from "./CityLargeChart";
 import { createCustomChart } from "./CustomChart";
 
 export const CityChart: Component<{
-    city: string;
-    data: [string, number | null][];
-    query: DataQuery;
+    city: () => string;
+    data: () => [string, number | null][];
+    query: () => DataQuery;
 }> = (props) => {
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>();
     const [getIsLarge, setIsLarge] = createSignal(false);
 
     let chart: Chart | undefined;
-    const data: [string, number | null][] = props.data.map(([dateStr, value]) => [
+    const data: [string, number | null][] = props.data().map(([dateStr, value]) => [
         formatDateString(dateStr),
         value,
     ]);
@@ -30,9 +30,9 @@ export const CityChart: Component<{
             false,
             timestamps,
             values,
-            props.city,
-            props.query.field,
-            props.query.granularity,
+            props.city(),
+            props.query().field,
+            props.query().granularity,
         );
     });
 

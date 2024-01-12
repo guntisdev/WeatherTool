@@ -71,6 +71,35 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
     }.map(_.toMap)
   }
 
+  def queryCityAllFields(city: String, from: LocalDateTime, to: LocalDateTime): IO[Map[String, Option[Double]]] = {
+    val query =
+      fr"SELECT MAX(tempMax), MIN(tempMin), AVG(tempAvg), SUM(precipitation), AVG(windAvg), MAX(windMax), MIN(visibilityMin), AVG(visibilityAvg), AVG(snowAvg), AVG(atmPressure), AVG(dewPoint), AVG(humidity), SUM(sunDuration)" ++
+        fr" FROM weather" ++
+        fr" WHERE city = $city" ++
+        fr" AND dateTime BETWEEN $from AND $to"
+
+    query.query[(Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double], Option[Double])]
+      .unique
+      .map { case (tempMax, tempMin, tempAvg, precipitation, windAvg, windMax, visibilityMin, visibilityAvg, snowAvg, atmPressure, dewPoint, humidity, sunDuration) =>
+        Map(
+          "tempMax" -> tempMax,
+          "tempMin" -> tempMin,
+          "tempAvg" -> tempAvg,
+          "precipitation" -> precipitation,
+          "windAvg" -> windAvg,
+          "windMax" -> windMax,
+          "visibilityMin" -> visibilityMin,
+          "visibilityAvg" -> visibilityAvg,
+          "snowAvg" -> snowAvg,
+          "atmPressure" -> atmPressure,
+          "dewPoint" -> dewPoint,
+          "humidity" -> humidity,
+          "sunDuration" -> sunDuration
+        )
+      }
+      .transact(transactor)
+  }
+
   def query(userQuery: UserQuery):  IO[Map[String, Option[AggregateValue]]] = {
     if (userQuery.field == "phenomena") { // this handles strings
       // TODO query list and distinct values from phenomena

@@ -6,14 +6,14 @@ import "../../css/overlay.css"
 import { createCustomChart } from "./CustomChart";
 
 export const CityLargeChart: Component<{
-    city: string;
-    data: [string, number | null][];
-    query: DataQuery;
+    city: () => string;
+    data: () => [string, number | null][];
+    query: () => DataQuery;
     close: () => void
 }> = (props) => {
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>();
     let chart: Chart;
-    const data: [string, number | null][] = props.data.map(([dateStr, value]) => [
+    const data: [string, number | null][] = props.data().map(([dateStr, value]) => [
         formatDateString(dateStr),
         value,
     ]);
@@ -30,9 +30,9 @@ export const CityLargeChart: Component<{
             true,
             timestamps,
             values,
-            props.city,
-            props.query.field,
-            props.query.granularity,
+            props.city(),
+            props.query().field,
+            props.query().granularity,
         );
     });
 

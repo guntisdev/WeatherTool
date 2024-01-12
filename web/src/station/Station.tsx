@@ -17,7 +17,9 @@ export const Station: Component<{}> = () => {
     const [getCities, setCities] = createSignal<Set<string>>(new Set(["Ainaži", "Rīga", "Rēzekne", "Liepāja", "Daugavpils", "Ventspils", "Madona"]));
     const [getDate, setDate] = createSignal(moment());
     const [getField, setField] = createSignal("tempMax");
-    const [getCity, setCity] = createSignal<string | undefined>(undefined);
+    const [getCity, setCity] = createSignal<string | undefined>("Rīga");
+    const [getStart, setStart] = createSignal(moment().subtract(1, "days").toDate());
+    const [getEnd, setEnd] = createSignal(moment().toDate());
 
     let ctx: CanvasRenderingContext2D | undefined;
 
@@ -71,7 +73,12 @@ export const Station: Component<{}> = () => {
                     <canvas ref={setCanvas} width={1000} height={570} />
                 </div>
                 <div class="column">
-                    <Result getCity={getCity} />
+                    <Result
+                        getCity={getCity}
+                        getField={getField}
+                        getStart={getStart}
+                        getEnd={getEnd}
+                    />
                 </div>
             </div>
         </div>
