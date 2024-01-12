@@ -58,6 +58,10 @@ class Server(postgresService: PostgresService, fetch: FetchService, log: Logger[
         .map(result => ResponseWrapper(result, userQuery))
         .flatMap(responseWrapper => Ok(responseWrapper.asJson.pretty))
 
+    // http://0.0.0.0:8080/api/query/city/Kolka/20230414_2200-20230501_1230/allFields
+    case GET -> Root / "query" / "city" / (city: String) / DateTimeRange(from, to) / "allFields" =>
+      postgresService.queryCityAllFields(city, from, to).flatMap(result => Ok(result.asJson))
+
     // http://0.0.0.0:8080/api/query/country/20230414_2200-20230501_1230/tempMax,tempMin,tempAvg,precipitation
     case GET -> Root / "query" / "country" / DateTimeRange(from, to) / AggFieldList(fieldList) =>
       postgresService.queryCountry(from, to, fieldList)
