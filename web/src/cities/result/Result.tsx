@@ -3,7 +3,7 @@ import { Component, createSignal, Resource } from "solid-js";
 import "../../css/Result.css"
 import { ResultKeyVal, resultOrder, ResultOrderKeys } from "../../consts";
 import { SelectOrder } from "../SelectOrder";
-import { CityResult } from "../chart/CityResult";
+import { CityResult } from "./CityResult";
 import { QueryResult } from "../helpers";
 import { MapView } from "../map/MapView";
 
