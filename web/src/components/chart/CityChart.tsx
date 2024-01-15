@@ -1,9 +1,9 @@
 import { onMount, onCleanup, createSignal, Component } from "solid-js";
 import { Chart } from "chart.js";
 
-import { DataQuery, formatDateString } from "../helpers";
 import { CityLargeChart } from "./CityLargeChart";
 import { createCustomChart } from "./CustomChart";
+import { DataQuery, formatDateString } from "../../cities/helpers";
 
 export const CityChart: Component<{
     city: () => string;

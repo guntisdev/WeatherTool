@@ -1,5 +1,6 @@
 import { Component } from "solid-js";
-import { CityChart } from "./CityChart";
+
+import { CityChart } from "../../components/chart/CityChart";
 import { DataQuery } from "../helpers";
 
 export const CityResult: Component<{ city: string, query: DataQuery, result: any }> = ({ city, query, result }) => {
@@ -8,7 +9,7 @@ export const CityResult: Component<{ city: string, query: DataQuery, result: any
             <h4>{ city }</h4>
             {
                 isDateNumber(result)
-                    ? <CityChart city={city} data={result} query={query}/>
+                    ? <CityChart city={()=>city} data={()=>result} query={()=>query}/>
                     : result
             }
         </div>
