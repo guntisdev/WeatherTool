@@ -12,7 +12,7 @@ export const Result: Component<{
     const queryStart = () => moment(props.getStart()).format("YYYYMMDD_HHmm");
     const queryEnd = () => moment(props.getEnd()).format("YYYYMMDD_HHmm");
 
-    const fetchList = async ([city, field]: [string | undefined, string]) => {
+    const fetchList = async ([city, field, getStart, getEnd]: [string | undefined, string, Date, Date]) => {
         if (city === undefined) return undefined;
         await new Promise(resolve => setTimeout(resolve, 500));
         const response = await fetch(`${apiHost}/api/query/city/${city}/${queryStart()}-${queryEnd()}/hour/${field}/list`);
@@ -20,17 +20,27 @@ export const Result: Component<{
         return json;
     }
 
-    const fetchMeteo = async (city: string | undefined) => {
+    const fetchMeteo = async ([city, getStart, getEnd]: [string | undefined, Date, Date]) => {
         if (city === undefined) return undefined;
         await new Promise(resolve => setTimeout(resolve, 500));
-        const response = await fetch(`${apiHost}/api/query/city/${props.getCity()}/${queryStart()}-${queryEnd()}/allFields`);
+        const response = await fetch(`${apiHost}/api/query/city/${city}/${queryStart()}-${queryEnd()}/allFields`);
         const json = await response.json();
         return json;
     }
 
-    const cityFieldSignal = (): [string | undefined, string] => [props.getCity(), props.getField()];
-    const [listResource] = createResource(cityFieldSignal, fetchList);
-    const [meteoResource] = createResource(props.getCity, fetchMeteo);
+    const cityFieldDate = (): [string | undefined, string, Date, Date] => [
+        props.getCity(),
+        props.getField(),
+        props.getStart(),
+        props.getEnd(),
+    ];
+    const cityDate = (): [string | undefined, Date, Date] => [
+        props.getCity(),
+        props.getStart(),
+        props.getEnd(),
+    ]
+    const [listResource] = createResource(cityFieldDate, fetchList);
+    const [meteoResource] = createResource(cityDate, fetchMeteo);
 
     return (
         <div>
