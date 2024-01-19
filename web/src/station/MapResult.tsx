@@ -96,8 +96,10 @@ function drawOnMap(
     cityValues: [string, number | undefined][],
 ): void {
     ctx.drawImage(imgArr[0], 0, 0);
-    ctx.fillStyle = "red";
-    ctx.font = "18px serif";
+    ctx.fillStyle = "white";
+    ctx.font = "18px Arial";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 4;
     cityValues.forEach(([city, optionalValue]) => {
         const coord = cityCoords[city];
         if (!coord) return;
@@ -107,8 +109,10 @@ function drawOnMap(
         ctx.beginPath();
         // ctx.arc(coord.x, coord.y, 4, 0, 2 * Math.PI);
         const cityTextSize = ctx.measureText(city);
+        ctx.strokeText(city, coord.x - cityTextSize.width/2, coord.y - 4);
         ctx.fillText(city, coord.x - cityTextSize.width/2, coord.y - 4);
         const valueTextSize = ctx.measureText(value);
+        ctx.strokeText(value, coord.x - valueTextSize.width/2, coord.y + 14);
         ctx.fillText(value, coord.x - valueTextSize.width/2, coord.y + 14);
         ctx.fill();
         // const boxWidth = 60;
