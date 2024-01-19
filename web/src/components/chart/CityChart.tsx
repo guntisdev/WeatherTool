@@ -13,6 +13,8 @@ export const CityChart: Component<{
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>();
     const [getIsLarge, setIsLarge] = createSignal(false);
 
+    console.log("props.data()", props.data());
+
     let chart: Chart | undefined;
     const data: [string, number | null][] = props.data().map(([dateStr, value]) => [
         formatDateString(dateStr),

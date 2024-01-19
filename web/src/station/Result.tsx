@@ -1,5 +1,5 @@
 import { Accessor, Component, createResource } from "solid-js";
-import { apiHost } from "../consts";
+import { FETCH_DELAY_MS, apiHost } from "../consts";
 import moment from "moment";
 import { CityChart } from "../components/chart/CityChart";
 
@@ -14,7 +14,7 @@ export const Result: Component<{
 
     const fetchList = async ([city, field, getStart, getEnd]: [string | undefined, string, Date, Date]) => {
         if (city === undefined) return undefined;
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, FETCH_DELAY_MS));
         const response = await fetch(`${apiHost}/api/query/city/${city}/${queryStart()}-${queryEnd()}/hour/${field}/list`);
         const json = await response.json();
         return json;
@@ -22,7 +22,7 @@ export const Result: Component<{
 
     const fetchMeteo = async ([city, getStart, getEnd]: [string | undefined, Date, Date]) => {
         if (city === undefined) return undefined;
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, FETCH_DELAY_MS));
         const response = await fetch(`${apiHost}/api/query/city/${city}/${queryStart()}-${queryEnd()}/allFields`);
         const json = await response.json();
         return json;
@@ -63,10 +63,10 @@ export const Result: Component<{
             }
             { listResource() && props.getCity() && !listResource.loading &&
                 <div>
-                    <h3>{ props.getCity() }</h3>
+                    <h3>{ props.getCity() }: { props.getField() }</h3>
                     <CityChart
                         city={() => listResource().query.cities[0]}
-                        data={() => listResource().result[listResource().query.cities[0]]}
+                        data={() => listResource().result[listResource().query.cities[0]] ?? []}
                         query={() => listResource().query}
                     />
                 </div>

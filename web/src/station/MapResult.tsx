@@ -4,7 +4,8 @@ import { coordToCity } from "./coordToCity";
 import { cityCoords } from "./cityCoords";
 import mapUrl from "../assets/map_1000x570.webp";
 import moment from "moment";
-import { apiHost } from "../consts";
+import { FETCH_DELAY_MS, apiHost } from "../consts";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 
 export const MapResult: Component<{
     setCity: Setter<string | undefined>,
@@ -49,6 +50,8 @@ export const MapResult: Component<{
 
     const [meteoValues] = createResource(citiesFieldDate, async ([cities, field, start, end]: [Set<string>, string, Date, Date]) => {
         if (cities.size === 0) return;
+        await new Promise(resolve => setTimeout(resolve, FETCH_DELAY_MS));
+
         const queryStart = moment(start).format("YYYYMMDD_HHmm");
         const queryEnd = moment(end).format("YYYYMMDD_HHmm");
         let aggregate: string = "avg";
@@ -74,7 +77,17 @@ export const MapResult: Component<{
         );
     });
 
-    return <canvas ref={setCanvas} width={1000} height={570} />;
+    return (
+        <div>
+            { meteoValues.loading && <LoadingSpinner text="Drawing map..." /> }
+            <canvas
+                ref={setCanvas}
+                style={{ display: meteoValues.loading ? "none" : "block" }}
+                width={1000}
+                height={570}
+            />
+        </div>
+    );
 }
 
 function drawOnMap(

@@ -1,8 +1,9 @@
 import moment from "moment";
 import { Accessor, Component, createResource, createSignal } from "solid-js";
 
-import { apiHost } from "../../consts";
+import { FETCH_DELAY_MS, apiHost } from "../../consts";
 import { Result } from "./Result";
+import { LoadingSpinner } from "../../components/LoadingSpinner";
 
 
 export const QueryResult: Component<{
@@ -16,7 +17,7 @@ export const QueryResult: Component<{
     
     const fetchQuery = async (timestamp: number) => {
         if (props.getFields().length === 0) return new Error("ERROR: Select weather parameters!");
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, FETCH_DELAY_MS))
         const response = await fetch(`${apiHost}/api/query/country/${queryStart()}-${queryEnd()}/${props.getFields().join(",")}`);
         const json = await response.json();
         return json;
@@ -32,12 +33,7 @@ export const QueryResult: Component<{
                 value="Query Data"
                 onClick={() => setTimestamp(Date.now())}
             />
-            { queryResource.loading && (
-                <div>
-                    <span class="spinner"></span>
-                    <span style={{ "padding-left": "16px" }}>Loading query</span>
-                </div>
-            )}
+            { queryResource.loading && <LoadingSpinner text="Loading query" /> }
             { queryResource.error && (
                 <div>Error while querying: ${queryResource.error}</div>
             )}

@@ -1,15 +1,16 @@
 import moment from "moment";
 import { Accessor, Component, createResource, Setter } from "solid-js";
-import { apiHost } from "../consts";
+import { apiHost, FETCH_DELAY_MS } from "../consts";
 
 import "../css/spinner.css";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 
 export const FileNameList: Component<{
     getDate: Accessor<Date>,
     setFileName: Setter<string>,
 }> = (props) => {
     const fetchFileNames = async (fetchDate: Date) => {
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, FETCH_DELAY_MS))
         const response = await fetch(`${apiHost}/api/show/date/${moment(fetchDate).format("YYYYMMDD")}`);
         const json = await response.json();
         return json;
@@ -23,12 +24,7 @@ export const FileNameList: Component<{
 
     return (
         <div>
-            { fileNameResource.loading && (
-                <div>
-                    <span class="spinner"></span>
-                    <span style={{ "padding-left": "16px" }}>loading {moment(props.getDate()).format("YYYYMMDD")}</span>
-                </div>
-            )}
+            { fileNameResource.loading && <LoadingSpinner text={"Loading date: "+moment(props.getDate()).format("YYYYMMDD")} /> }
             { fileNameResource.error && (
                 <div>Error while loading file names: ${fileNameResource.error}</div>
             )}
