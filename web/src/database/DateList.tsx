@@ -1,10 +1,11 @@
 import moment from "moment";
 import { Accessor, Component, createResource, createSignal, Setter } from "solid-js";
 
-import { apiHost } from "../consts";
+import { apiHost, FETCH_DELAY_MS } from "../consts";
 
 import "../css/spinner.css";
 import { Calendar } from "./Calendar";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 
 export const DateList: Component<{getDate: Accessor<Date>, setDate: Setter<Date>;}> = (props) => {
     const [getCurrentMonth, setCurrentMonth] = createSignal(new Date());
@@ -14,7 +15,7 @@ export const DateList: Component<{getDate: Accessor<Date>, setDate: Setter<Date>
             moment(getCurrentMonth()).subtract(1, "months").format("yyyyMM"),
             moment(getCurrentMonth()).add(1, "months").format("yyyyMM"),
         ];
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, FETCH_DELAY_MS))
         const response = await fetch(`${apiHost}/api/show/months/${months.join(",")}`);
         const json = await response.json();
         return json;
@@ -24,12 +25,7 @@ export const DateList: Component<{getDate: Accessor<Date>, setDate: Setter<Date>
 
     return (
         <div>
-            { datesResource.loading && (
-                <div>
-                    <span class="spinner"></span>
-                    <span style={{ "padding-left": "16px" }}>Loading dates</span>
-                </div>
-            )}
+            { datesResource.loading && <LoadingSpinner text="Loading calendar..." /> }
             { datesResource.error && (
                 <div>Error while loading dates: ${datesResource.error}</div>
             )}

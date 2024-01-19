@@ -2,9 +2,10 @@ import moment from "moment";
 import { Accessor, Component, createResource, createSignal } from "solid-js";
 
 import "../../css/Result.css"
-import { apiHost } from "../../consts";
+import { FETCH_DELAY_MS, apiHost } from "../../consts";
 import { isQueryResult } from "../helpers";
 import { Result } from "./Result";
+import { LoadingSpinner } from "../../components/LoadingSpinner";
 
 export const QueryResult: Component<{
     getCities: Accessor<Set<string>>,
@@ -21,7 +22,7 @@ export const QueryResult: Component<{
 
     const fetchQuery = async (timestamp: number) => {
         if (cities() === "") return new Error("ERROR: Select cities!");
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, FETCH_DELAY_MS))
         const response = await fetch(`${apiHost}/api/query/city/${cities()}/${queryStart()}-${queryEnd()}/${props.getGranularity()}/${props.getField()}/${props.getKey()}`);
         const json = await response.json();
         return json;
@@ -37,12 +38,7 @@ export const QueryResult: Component<{
                 value="Query Data"
                 onClick={() => setTimestamp(Date.now())}
             />
-            { queryResource.loading && (
-                <div>
-                    <span class="spinner"></span>
-                    <span style={{ "padding-left": "16px" }}>Loading query</span>
-                </div>
-            )}
+            { queryResource.loading && <LoadingSpinner text="Loading query" /> }
             { queryResource.error && (
                 <div>Error while querying: ${queryResource.error}</div>
             )}
