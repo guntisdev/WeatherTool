@@ -26,5 +26,6 @@ dependency-reduced-pom.xml
 logs/
 .DS_Store
 .env
+.env-fly
 data/*
 !project/assembly.sbt
