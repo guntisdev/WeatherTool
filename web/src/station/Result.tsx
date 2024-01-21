@@ -86,7 +86,7 @@ export const Result: Component<{
                 <div>{ meteoResource().message }</div>
             }
             { meteoResource() && props.getCity() && !meteoResource.loading &&
-                <ul>
+                <ul class="stationResult">
                     { Object.entries(meteoResource())
                     .sort((a, b) => a[0] > b[0] ? 1 : -1)
                     .map(([key, value]: any) =>

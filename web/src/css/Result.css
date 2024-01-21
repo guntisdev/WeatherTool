@@ -1,13 +1,13 @@
 .result-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 10px;
 }
 
-  .result-item {
-    background-color: #f2f2f2;
-    padding: 10px;
-    text-align: center;
+.result-item {
+  background-color: #f2f2f2;
+  padding: 10px;
+  text-align: center;
 }
 
 .resultTitle {

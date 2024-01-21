@@ -4,7 +4,7 @@ import { coordToCity } from "./coordToCity";
 import { cityCoords } from "./cityCoords";
 import mapUrl from "../assets/map_1000x570.webp";
 import moment from "moment";
-import { FETCH_DELAY_MS, apiHost } from "../consts";
+import { FETCH_DELAY_MS, apiHost, cityList } from "../consts";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 
 export const MapResult: Component<{
@@ -41,15 +41,13 @@ export const MapResult: Component<{
         img.src = mapUrl;
     });
 
-    const citiesFieldDate = (): [Set<string>, string, Date, Date] => [
-        props.getCities(),
+    const fieldDate = (): [string, Date, Date] => [
         props.getField(),
         props.getStart(),
         props.getEnd(),
     ];
 
-    const [meteoValues] = createResource(citiesFieldDate, async ([cities, field, start, end]: [Set<string>, string, Date, Date]) => {
-        if (cities.size === 0) return;
+    const [meteoValues] = createResource(fieldDate, async ([field, start, end]: [string, Date, Date]) => {
         await new Promise(resolve => setTimeout(resolve, FETCH_DELAY_MS));
 
         const queryStart = moment(start).format("YYYYMMDD_HHmm");
@@ -58,7 +56,7 @@ export const MapResult: Component<{
         if (["tempMax", "windMax"].includes(field)) aggregate = "max";
         if (["tempMin", "visibilityMin"].includes(field)) aggregate = "min";
         if (["precipitation", "sunDuration"].includes(field)) aggregate = "sum";
-        const response = await fetch(`${apiHost}/api/query/city/${[...cities].join(",")}/${queryStart}-${queryEnd}/hour/${field}/${aggregate}`);
+        const response = await fetch(`${apiHost}/api/query/city/${[...cityList].join(",")}/${queryStart}-${queryEnd}/hour/${field}/${aggregate}`);
         const json = await response.json();
         return json.result;
     });
