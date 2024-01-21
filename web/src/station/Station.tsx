@@ -6,6 +6,7 @@ import { SelectField } from "../components/SelectField";
 import { Result } from "./Result";
 import { MapResult } from "./MapResult";
 import "../css/station.css"
+import { Spacer } from "../components/Spacer";
 
 export const Station: Component<{}> = () => {
     const [getShowCities, setShowCities] = createSignal(false);
@@ -15,14 +16,12 @@ export const Station: Component<{}> = () => {
     const [getStart, setStart] = createSignal(moment().subtract(1, "days").toDate());
     const [getEnd, setEnd] = createSignal(moment().toDate());
 
-    
-
     function handleDateChange(value: string) {
         const today = moment();
         const inputDate = moment(value, 'YYYY-MM-DD');
         if (today.isSame(inputDate, "date")) {
             batch(() => {
-                setStart(today.subtract(1, "days").toDate());
+                setStart(today.clone().subtract(1, "days").toDate());
                 setEnd(today.toDate());
             });
         } else {
@@ -43,11 +42,13 @@ export const Station: Component<{}> = () => {
                             value="Select stations"
                             onClick={() => setShowCities(!getShowCities())}
                         />
+                        <Spacer />
                         <input
                             type="date"
                             value={moment(getEnd()).format("YYYY-MM-DD")}
                             onChange={e => handleDateChange(e.target.value)}
                         />
+                        <Spacer />
                         <SelectField getField={getField} setField={setField} />
                     </div>
                     <div class={"cities " + (getShowCities() ? "visible" : "hidden")}>

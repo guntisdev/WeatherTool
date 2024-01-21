@@ -35,3 +35,15 @@
     padding: 5px 10px;
     background-color: #f2f2f2;
 }
+
+.stationResult {
+    padding-inline-start: 5px;
+}
+
+.stationResult li {
+    padding: 3px;
+}
+
+.stationResult li:nth-child(odd) {
+    background-color: #d6d6d6;
+}
