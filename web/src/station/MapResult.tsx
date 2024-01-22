@@ -1,11 +1,11 @@
 import { Accessor, Component, Setter, createEffect, createResource, createSignal, onMount } from "solid-js";
 
 import { coordToCity } from "./coordToCity";
-import { cityCoords } from "./cityCoords";
 import mapUrl from "../assets/map_1000x570.webp";
 import moment from "moment";
 import { FETCH_DELAY_MS, apiHost, cityList } from "../consts";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { cityCoords } from "../components/cityCoords";
 
 export const MapResult: Component<{
     setCity: Setter<string | undefined>,
