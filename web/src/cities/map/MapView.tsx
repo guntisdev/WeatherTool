@@ -1,12 +1,12 @@
 import { Component, createEffect, createSignal, onMount } from "solid-js";
 
 import { ResultKeyVal } from "../../consts";
-import { cityCoords } from "./cityCoords";
 import { drawRotatedImage, getAngleFromString } from "./windAngles";
 import { WindInputs, WindSignals } from "./WindInputs";
 
 import mapUrl from "../../assets/map_1920x1080.webp";
 import arrowUrl from "../../assets/arrow.webp";
+import { cityCoords } from "../../components/cityCoords";
 
 export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => {
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>();
@@ -78,7 +78,10 @@ function drawOnMap(
     coords: [string, {x: number, y: number }, number][],
     windData: [string, string, string, boolean],
 ): void {
-    const size = 80;
+    const boxSize = 80;
+    const offsetX = 90;
+    const offsetY = 120;
+    const scale = 1.35;
 
     const [windDirection, windSpeed, windGusts, roundValues] = windData;
     const [bgImg, arrowImg] = imgArr;
@@ -89,7 +92,13 @@ function drawOnMap(
     // city boxes
     ctx.fillStyle = "#FFFFFF";
     coords.forEach(([, {x, y}, value]) => {
-        ctx.rect(x, y, size, size);
+        const localX = offsetX + x * scale;
+        const localY = offsetY + y * scale;
+
+        ctx.beginPath();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.rect(localX-boxSize/2, localY-boxSize/2, boxSize, boxSize);
+        ctx.fill();
     });
     ctx.fill();
 
@@ -97,12 +106,14 @@ function drawOnMap(
     ctx.font = "bold 30px Rubik";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = "#000000";
     coords.forEach(([, {x, y}, value]) => {
-        ctx.rect(x, y, size, size);
+        const localX = offsetX + x * scale;
+        const localY = offsetY + y * scale;
+
+        ctx.fillStyle = "#000000";
         const numericValue = roundValues ? Math.round(value) : value;
         const stringValue = numericValue.toString().replace(".", ",");
-        ctx.fillText(stringValue, x + size/2, y + size/2);
+        ctx.fillText(stringValue, localX, localY);
     });
 
     // wind values
