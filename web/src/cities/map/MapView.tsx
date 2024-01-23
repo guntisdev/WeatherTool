@@ -4,14 +4,33 @@ import { ResultKeyVal } from "../../consts";
 import { drawRotatedImage, getAngleFromString } from "./windAngles";
 import { WindInputs, WindSignals } from "./WindInputs";
 
-import mapUrl from "../../assets/map_1920x1080.webp";
+import map_1920x1080 from "../../assets/map_1920x1080.webp";
+import map_3840x1440 from "../../assets/map_3840x1440.webp";
 import arrowUrl from "../../assets/arrow.webp";
 import { cityCoords } from "../../components/cityCoords";
 
-export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => {
+type MapResolution = "map_1920x1080" | "map_3840x1440";
+
+type ResolutionPropsValue = {
+    offsetX: number;
+    offsetY: number;
+    width: number;
+    height: number;
+    scale: number;
+    showWind: boolean;
+    map: string;
+};
+
+const resolutionProps: Record<string, ResolutionPropsValue> = {
+    "map_1920x1080": { offsetX: 90, offsetY: 120, width: 1920, height: 1080, scale: 1.35, showWind: true, map: map_1920x1080 },
+    "map_3840x1440": { offsetX: 800, offsetY: 120, width: 3840, height: 1440, scale: 2.2, showWind: false, map: map_3840x1440 },
+}
+
+export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[] }> = ({ type, data }) => {
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>();
     const [getImg, setImg] = createSignal(new Image());
     let lastCoords: [string, {x: number, y: number }, number][] = [];
+    const props = resolutionProps[type];
 
     const arrowImg = new Image();
     arrowImg.src = arrowUrl;
@@ -42,9 +61,10 @@ export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => 
                 [img, arrowImg],
                 lastCoords,
                 getWindData(),
+                props,
             );
         };
-        img.src = mapUrl;
+        img.src = props.map;
     });
 
     createEffect(() => {
@@ -61,13 +81,14 @@ export const MapView: Component<{ data: () => ResultKeyVal[] }> = ({ data }) => 
             [getImg(),arrowImg],
             coordsAndData,
             getWindData(),
+            props,
         );
     });
 
     return (
         <>
             <WindInputs signals={windSignals} />
-            <canvas ref={setCanvas} width="1920px" height="1080px" />
+            <canvas ref={setCanvas} width={props.width+"px"} height={props.height+"px"} />
         </>
     );
 }
@@ -77,11 +98,9 @@ function drawOnMap(
     imgArr: [HTMLImageElement, HTMLImageElement],
     coords: [string, {x: number, y: number }, number][],
     windData: [string, string, string, boolean],
+    props: ResolutionPropsValue,
 ): void {
     const boxSize = 80;
-    const offsetX = 90;
-    const offsetY = 120;
-    const scale = 1.35;
 
     const [windDirection, windSpeed, windGusts, roundValues] = windData;
     const [bgImg, arrowImg] = imgArr;
@@ -92,8 +111,8 @@ function drawOnMap(
     // city boxes
     ctx.fillStyle = "#FFFFFF";
     coords.forEach(([, {x, y}, value]) => {
-        const localX = offsetX + x * scale;
-        const localY = offsetY + y * scale;
+        const localX = props.offsetX + x * props.scale;
+        const localY = props.offsetY + y * props.scale;
 
         ctx.beginPath();
         ctx.fillStyle = "#FFFFFF";
@@ -107,14 +126,16 @@ function drawOnMap(
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     coords.forEach(([, {x, y}, value]) => {
-        const localX = offsetX + x * scale;
-        const localY = offsetY + y * scale;
+        const localX = props.offsetX + x * props.scale;
+        const localY = props.offsetY + y * props.scale;
 
         ctx.fillStyle = "#000000";
         const numericValue = roundValues ? Math.round(value) : value;
         const stringValue = numericValue.toString().replace(".", ",");
         ctx.fillText(stringValue, localX, localY);
     });
+
+    if (!props.showWind) return;
 
     // wind values
     ctx.font = "bold 45px Rubik";
