@@ -4,10 +4,10 @@ import { Accessor, Component, createResource, createSignal } from "solid-js";
 import "../../css/Result.css"
 import { FETCH_DELAY_MS, apiHost } from "../../consts";
 import { isQueryResult } from "../helpers";
-import { Result } from "./Result";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
+import { ResultView } from "./ResultView";
 
-export const QueryResult: Component<{
+export const QueryView: Component<{
     getCities: Accessor<Set<string>>,
     getStart: Accessor<Date>,
     getEnd: Accessor<Date>,
@@ -46,7 +46,7 @@ export const QueryResult: Component<{
                 <div>{ queryResource().message }</div>
             }
             { queryResource() && isQueryResult( queryResource() ) &&
-                <Result result={queryResource} />
+                <ResultView result={queryResource} />
             }
         </div>
     );

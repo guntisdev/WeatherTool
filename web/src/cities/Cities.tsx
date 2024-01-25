@@ -1,6 +1,5 @@
 import moment from "moment";
 import { createSignal } from "solid-js";
-import { QueryResult } from "./result/QueryResult";
 
 import { SelectCity } from "../components/SelectCity";
 import { SelectTimeRange } from "../components/SelectTimeRange";
@@ -8,6 +7,7 @@ import { SelectField } from "../components/SelectField";
 
 import { SelectGranularity } from "./SelectGranularity";
 import { SelectKey } from "./SelectKey";
+import { QueryView } from "./result/QueryView";
 
 const nowRounded = new Date(new Date().setMinutes(30));
 const dayAgo = moment(nowRounded).subtract(1, "days").subtract(30, "minutes").toDate();
@@ -45,7 +45,7 @@ export function Cities() {
                     </div>
                 </div>
                 <div class="column">
-                    <QueryResult
+                    <QueryView
                         getCities={getCities}
                         getStart={getStart}
                         getEnd={getEnd}

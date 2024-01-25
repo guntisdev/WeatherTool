@@ -1,15 +1,3 @@
-.result-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-gap: 10px;
-}
-
-.result-item {
-  background-color: #f2f2f2;
-  padding: 10px;
-  text-align: center;
-}
-
 .resultTitle {
   display: flex;
   align-items: center;
@@ -19,4 +7,33 @@
 
 .resultTitle h3 {
   margin: 0;
+}
+
+.grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-gap: 10px;
+}
+
+.grid-view .item {
+  background-color: #f2f2f2;
+  padding: 10px;
+  text-align: center;
+}
+
+.list-view {
+  display: flex;
+  flex-direction: column;
+  grid-gap: 10px;
+}
+
+.list-view .item {
+  background-color: #f2f2f2;
+  padding: 10px;
+  max-width: 300px;
+}
+
+.list-view .item h4 {
+  float: right;
+  display: block;
 }
