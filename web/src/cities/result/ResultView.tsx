@@ -3,16 +3,16 @@ import { Component, createSignal, Resource, Show } from "solid-js";
 import "../../css/Result.css"
 import { ResultKeyVal, resultOrder, ResultOrderKeys } from "../../consts";
 import { SelectOrder } from "../SelectOrder";
-import { CityResult } from "./CityResult";
 import { QueryResult } from "../helpers";
 import { MapView } from "../map/MapView";
+import { GridResult } from "./GridResult";
 
-export const Result: Component<{
+export const ResultView: Component<{
     result: Resource<QueryResult>
 }> = ({ result: resultResource }) => {
     const [getOrderKey, setOrderKey] = createSignal<ResultOrderKeys>("A -> Z");
-    type ResultView = "text" | "map_1920x1080" | "map_3840x1440";
-    const [getResultView, setResultView] = createSignal<ResultView>("text");
+    type ResultView = "grid" | "list" | "map_1920x1080" | "map_3840x1440";
+    const [getResultView, setResultView] = createSignal<ResultView>("grid");
 
     const cityData = () =>
         Object.entries(resultResource()!.result)
@@ -24,11 +24,18 @@ export const Result: Component<{
             <div class="resultTitle">
                 <h3>Result:</h3>
                 <span>
+                <input
+                        type="button"
+                        class="secondary"
+                        value="grid"
+                        onClick={() => setResultView("grid")}
+                    /> 
+                    &nbsp; | &nbsp;
                     <input
                         type="button"
                         class="secondary"
-                        value="text"
-                        onClick={() => setResultView("text")}
+                        value="list"
+                        onClick={() => setResultView("list")}
                     /> 
                     &nbsp; | &nbsp;
                     <input
@@ -45,18 +52,30 @@ export const Result: Component<{
                         onClick={() => setResultView("map_3840x1440")}
                     />
                 </span>
-                <span style={{ visibility: getResultView() === "text" ? "visible" : "hidden" }}>
+                <span style={{ visibility: ["grid", "list"].includes(getResultView()) ? "visible" : "hidden" }}>
                     <SelectOrder getter={getOrderKey} setter={setOrderKey} />
                 </span>
             </div>
-            <div class={getResultView() === "text" ? "result-container" : ""}>
-                <Show when={getResultView() === "text"}>
-                    {cityData().map(([city, data]) =>
-                    <CityResult
-                        city={city}
-                        query={resultResource()!.query}
-                        result={data}
-                    />)}
+            <div>
+                <Show when={getResultView() === "grid"}>
+                    <div class="grid-view">
+                        {cityData().map(([city, data]) =>
+                        <GridResult
+                            city={city}
+                            query={resultResource()!.query}
+                            result={data}
+                        />)}
+                    </div>
+                </Show>
+                <Show when={getResultView() === "list"}>
+                    <div class="list-view">
+                        {cityData().map(([city, data]) =>
+                        <GridResult
+                            city={city}
+                            query={resultResource()!.query}
+                            result={data}
+                        />)}
+                    </div>
                 </Show>
                 <Show when={getResultView() === "map_1920x1080"}>
                     <MapView type="map_1920x1080" data={cityData} />
