@@ -5,11 +5,13 @@ import { drawRotatedImage, getAngleFromString } from "./windAngles";
 import { WindInputs, WindSignals } from "./WindInputs";
 
 import map_1920x1080 from "../../assets/map_1920x1080.webp";
+import map_1920x1080_wind from "../../assets/map_1920x1080_wind.webp";
 import map_3840x1440 from "../../assets/map_3840x1440.webp";
+import map_3840x1440_wind from "../../assets/map_3840x1440_wind.webp";
 import arrowUrl from "../../assets/arrow.webp";
 import { cityCoords } from "../../components/cityCoords";
 
-type MapResolution = "map_1920x1080" | "map_3840x1440";
+type MapResolution = "map_1920x1080" | "map_1920x1080_wind" | "map_3840x1440" | "map_3840x1440_wind";
 
 type ResolutionPropsValue = {
     offsetX: number;
@@ -22,8 +24,10 @@ type ResolutionPropsValue = {
 };
 
 const resolutionProps: Record<string, ResolutionPropsValue> = {
-    "map_1920x1080": { offsetX: 90, offsetY: 120, width: 1920, height: 1080, scale: 1.35, showWind: true, map: map_1920x1080 },
-    "map_3840x1440": { offsetX: 800, offsetY: 120, width: 3840, height: 1440, scale: 2.2, showWind: false, map: map_3840x1440 },
+    "map_1920x1080":        { offsetX: 90, offsetY: 120, width: 1920, height: 1080, scale: 1.35, showWind: false, map: map_1920x1080 },
+    "map_1920x1080_wind":   { offsetX: 90, offsetY: 120, width: 1920, height: 1080, scale: 1.35, showWind: true, map: map_1920x1080_wind },
+    "map_3840x1440":        { offsetX: 800, offsetY: 120, width: 3840, height: 1440, scale: 2.2, showWind: false, map: map_3840x1440 },
+    "map_3840x1440_wind":   { offsetX: 800, offsetY: 120, width: 3840, height: 1440, scale: 2.2, showWind: true, map: map_3840x1440_wind },
 }
 
 export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[] }> = ({ type, data }) => {
@@ -88,7 +92,12 @@ export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[
     return (
         <>
             <WindInputs signals={windSignals} />
-            <canvas ref={setCanvas} width={props.width+"px"} height={props.height+"px"} />
+            <canvas
+                ref={setCanvas}
+                width={props.width+"px"}
+                height={props.height+"px"}
+                style={{"max-width": "1000px"}}
+            />
         </>
     );
 }
