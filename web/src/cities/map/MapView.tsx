@@ -68,6 +68,12 @@ export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[
         );
     });
 
+    const getStyleSize = () => {
+        return props.width === 1920
+            ? { "width": "1000px", "height": "562px" }
+            : { "width": "1000px", "height": "374px" };
+    }
+
     return (
         <>
             { props.showWind && <WindInputs signals={windSignals} /> }
@@ -75,7 +81,7 @@ export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[
                 ref={setCanvas}
                 width={props.width+"px"}
                 height={props.height+"px"}
-                style={{"max-width": "1000px"}}
+                style={getStyleSize()}
             />
         </>
     );
