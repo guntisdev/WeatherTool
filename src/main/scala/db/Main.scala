@@ -45,22 +45,22 @@ object Main {
 //    } yield re
 
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
-    val from = LocalDateTime.parse("20240110_1000", formatter)
-    val to = LocalDateTime.parse("20240111_1000", formatter)
-//    val cities = NonEmptyList.of("Ainaži", "Rīga", "Kolka", "Vičaki")
+    val from = LocalDateTime.parse("20240207_1000", formatter)
+    val to = LocalDateTime.parse("20240208_1400", formatter)
+    val cities = NonEmptyList.of("Ainaži", "Rīga", "Kolka", "Vičaki")
 //    val cities = NonEmptyList.of("Rīga")
 
-//    val query = UserQuery(cities, "tempMax", AggregateKey.List, ChronoUnit.DAYS, from, to)
+    val query = UserQuery(cities, "phenomena", AggregateKey.List, ChronoUnit.DAYS, from, to)
 
     val re = for {
             postgresService <- PostgresService.of(xa)
-            re <- postgresService.queryCityAllFields("Rīga", from, to)
+            re <- postgresService.query(query)
           } yield re
 
 //    val jssson = re.map(result => ResponseWrapper(result, query))
 //        .map(responseWrapper => responseWrapper.asJson.pretty)
 
-    println(re.unsafeRunSync())
+    println(re.unsafeRunSync().asJson.pretty)
 
 
 //    println(jssson.unsafeRunSync())

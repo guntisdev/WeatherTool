@@ -11,8 +11,12 @@ import java.time.{LocalDate, LocalDateTime, OffsetDateTime}
 import doobie.postgres.implicits._
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import parse.Aggregate.{AggregateKey, AggregateValue, DoubleValue, TimeDoubleList, UserQuery}
+import parse.Aggregate.{AggregateKey, AggregateValue, DistinctStringList, DoubleValue, TimeDoubleList, UserQuery}
 import parse.{Parser, WeatherStationData}
+import shapeless.syntax.std.tuple.productTupleOps
+
+import io.circe._
+import io.circe.parser._
 
 import java.time.temporal.ChronoUnit
 import scala.util.matching.Regex
@@ -101,9 +105,31 @@ class PostgresService(transactor: Transactor[IO], log: Logger[IO]) {
   }
 
   def query(userQuery: UserQuery):  IO[Map[String, Option[AggregateValue]]] = {
-    if (userQuery.field == "phenomena") { // this handles strings
-      // TODO query list and distinct values from phenomena
-      IO(Map()) // empty result
+    if (userQuery.field == "phenomena") {
+      val query =
+        fr"""
+        SELECT city, array_to_json(array_agg(phenomena)) AS aggregated_phenomena
+        FROM weather
+        WHERE """ ++ Fragments.in(fr"city", userQuery.cities) ++
+          fr" AND dateTime BETWEEN ${userQuery.from} AND ${userQuery.to}" ++
+          fr" GROUP BY city, phenomena"
+
+      query.query[(String, Option[String])]
+        .to[List]
+        .transact(transactor)
+        .map { resultList =>
+          resultList
+            .flatMap {
+              case (city, jsonOption) =>
+                jsonOption.flatMap { jsonString =>
+                  parse(jsonString).toOption.flatMap(_.as[List[List[String]]].toOption.map(_.flatten.distinct))
+                }.map(phenomena => (city, phenomena.filter(_.nonEmpty)))
+            }
+            .groupBy(_._1)
+            .view.mapValues(_.flatMap(_._2).distinct).toMap
+            .map { case (city, phenomenaList) => city -> Option(DistinctStringList(phenomenaList)) }
+        }
+
     } else if (List(
       AggregateKey.Max,
       AggregateKey.Min,

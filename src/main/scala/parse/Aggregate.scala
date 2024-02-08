@@ -93,7 +93,9 @@ object Aggregate {
     implicit val stringListListEncoder: Encoder[StringListList] = Encoder.instance { sllValue =>
       Json.arr(sllValue.list.map(_.asJson): _*)
     }
-    implicit val distinctStringListEncoder: Encoder[DistinctStringList] = deriveEncoder[DistinctStringList]
+    implicit val distinctStringListEncoder: Encoder[DistinctStringList] = Encoder.instance { dslistValue =>
+      Json.arr(dslistValue.list.map(_.asJson): _*)
+    }
   }
 
   private def convertDateTime(granularity: ChronoUnit)(data: (LocalDateTime, _)): String = {

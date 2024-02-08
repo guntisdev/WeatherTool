@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import { Component, Match, Switch } from "solid-js";
 
 import { CityChart } from "../../components/chart/CityChart";
 import { DataQuery } from "../helpers";
@@ -7,11 +7,14 @@ export const GridResult: Component<{ city: string, query: DataQuery, result: any
     return (
         <div class="item">
             <h4>{ city }</h4>
-            {
-                isDateNumber(result)
-                    ? <CityChart city={()=>city} data={()=>result} query={()=>query}/>
-                    : <p>{ result }</p>
-            }
+            <Switch fallback={<p>{ result }</p>}>
+                <Match when={query.field === "phenomena"}>
+                    { result.join(", ") }
+                </Match>
+                <Match when={isDateNumber(result)}>
+                    <CityChart city={()=>city} data={()=>result} query={()=>query}/>
+                </Match>
+            </Switch>
         </div>
     );
 }
