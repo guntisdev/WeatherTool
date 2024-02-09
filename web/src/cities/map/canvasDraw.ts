@@ -8,8 +8,6 @@ export function drawOnMap(
     windData: [string, string, string, boolean, WindProps],
     props: ResolutionPropsValue,
 ): void {
-    const boxSize = 80;
-
     const [windDirection, windSpeed, windGusts, roundValues, windProp] = windData;
     const [bgImg, arrowImg] = imgArr;
 
@@ -24,13 +22,13 @@ export function drawOnMap(
 
         ctx.beginPath();
         ctx.fillStyle = "#FFFFFF";
-        ctx.rect(localX-boxSize/2, localY-boxSize/2, boxSize, boxSize);
+        ctx.rect(localX-props.boxSize/2, localY-props.boxSize/2, props.boxSize, props.boxSize);
         ctx.fill();
     });
     ctx.fill();
 
     // weather values
-    ctx.font = "bold 30px Rubik";
+    ctx.font = `bold ${props.fontSize}px Rubik`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     coords.forEach(([, {x, y}, value]) => {
