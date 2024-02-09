@@ -14,7 +14,8 @@ export const weatherField = ["tempMax", "tempMin", "tempAvg", "precipitation", "
 
 export const weatherFieldNumeric = weatherField.filter(f => f !== "phenomena");
 
-export const aggregateKey = ["min", "max", "avg", "sum", "list", "distinct"];
+// export const aggregateKey = ["min", "max", "avg", "sum", "list", "distinct"];
+export const aggregateKey = ["min", "max", "avg", "sum", "list"];
 
 export const aggregateGranularity = ["hour", "day", "month", "year"];
 

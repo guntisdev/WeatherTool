@@ -1,4 +1,4 @@
-import { Component, createSignal, Resource, Show } from "solid-js";
+import { Component, createSignal, JSXElement, Resource, Show } from "solid-js";
 
 import "../../css/Result.css"
 import { ResultKeyVal, resultOrder, ResultOrderKeys } from "../../consts";
@@ -7,11 +7,13 @@ import { QueryResult } from "../helpers";
 import { MapView } from "../map/MapView";
 import { GridResult } from "./GridResult";
 
+type ResultView = "grid" | "list" | "map_1920x1080" | "map_1920x1080_wind" | "map_3840x1440" | "map_3840x1440_wind";
+const resultViews: Array<ResultView> = ["grid", "list", "map_1920x1080", "map_1920x1080_wind", "map_3840x1440", "map_3840x1440_wind"];
+
 export const ResultView: Component<{
     result: Resource<QueryResult>
 }> = ({ result: resultResource }) => {
     const [getOrderKey, setOrderKey] = createSignal<ResultOrderKeys>("A -> Z");
-    type ResultView = "grid" | "list" | "map_1920x1080" | "map_1920x1080_wind" | "map_3840x1440" | "map_3840x1440_wind";
     const [getResultView, setResultView] = createSignal<ResultView>("grid");
 
     const cityData = () =>
@@ -19,52 +21,33 @@ export const ResultView: Component<{
         .map(keyVal => [...keyVal] as ResultKeyVal)
         .sort((a, b) => resultOrder[getOrderKey()](a, b));
 
+    function showViewButton(viewName: string): boolean {
+        if (!resultResource()) return false;
+        if (["grid", "list"].includes(viewName) && resultResource()!.query.field === "phenomena") return true;
+        if (["grid", "list"].includes(viewName) && resultResource()!.query.key !== "List") return true;
+        if (!["grid", "list"].includes(viewName) && resultResource()!.query.key === "List") return false;
+        if (resultResource()!.query.field === "phenomena") return false;
+
+        return true;
+    }
+
     return (
         <div>
             <div class="resultTitle">
                 <h3>Result:</h3>
                 <span>
-                <input
-                        type="button"
-                        class="secondary"
-                        value="grid"
-                        onClick={() => setResultView("grid")}
-                    /> 
-                    &nbsp; | &nbsp;
-                    <input
-                        type="button"
-                        class="secondary"
-                        value="list"
-                        onClick={() => setResultView("list")}
-                    /> 
-                    &nbsp; | &nbsp;
-                    <input
-                        type="button"
-                        class="secondary"
-                        value="map 1920x1080"
-                        onClick={() => setResultView("map_1920x1080")}
-                    />
-                    &nbsp; | &nbsp;
-                    <input
-                        type="button"
-                        class="secondary"
-                        value="map 1920x1080 wind"
-                        onClick={() => setResultView("map_1920x1080_wind")}
-                    />
-                    &nbsp; | &nbsp;
-                    <input
-                        type="button"
-                        class="secondary"
-                        value="map 3840x1440"
-                        onClick={() => setResultView("map_3840x1440")}
-                    />
-                    &nbsp; | &nbsp;
-                    <input
-                        type="button"
-                        class="secondary"
-                        value="map 3840x1440 wind"
-                        onClick={() => setResultView("map_3840x1440_wind")}
-                    />
+                    {resultViews.map(viewName =>
+                        <>
+                        <input
+                            type="button"
+                            class="secondary"
+                            value={viewName}
+                            disabled={!showViewButton(viewName)}
+                            onClick={() => setResultView(viewName)}
+                        />
+                        &nbsp; | &nbsp;
+                        </>
+                    )}
                 </span>
                 <span style={{ visibility: ["grid", "list"].includes(getResultView()) ? "visible" : "hidden" }}>
                     <SelectOrder getter={getOrderKey} setter={setOrderKey} />
