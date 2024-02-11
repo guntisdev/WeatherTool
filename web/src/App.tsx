@@ -6,6 +6,7 @@ import { Cities } from './cities/Cities';
 import { Database } from './database/Database';
 import { Station } from './station/Station';
 import { apiHost } from './consts';
+import { WeatherIconStub } from './components/weatherIcons/WeatherIconStub';
 
 console.log("env:", import.meta.env.MODE);
 console.log("api host:", apiHost);
@@ -30,16 +31,21 @@ const App: Component = () => {
 
     return (
         <div class={styles.App}>
-            <ul class={styles.menu}>
-                { pages.map(([pageTitle]) =>
-                    <li
-                        class={getActiveCSS(pageTitle)}
-                        onClick={() => setPageTitle(pageTitle)}
-                    >
-                        {pageTitle}
-                    </li>
-                )}
-            </ul>
+            <div class="grid-1-1">
+                <div><WeatherIconStub /></div>
+                <div>
+                    <ul class={styles.menu}>
+                        { pages.map(([pageTitle]) =>
+                            <li
+                                class={getActiveCSS(pageTitle)}
+                                onClick={() => setPageTitle(pageTitle)}
+                            >
+                                {pageTitle}
+                            </li>
+                        )}
+                    </ul>
+                </div>
+            </div>
             { getPageContent() }
         </div>
     );

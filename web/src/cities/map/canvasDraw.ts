@@ -1,10 +1,13 @@
 import { ResolutionPropsValue, WindProps, windProps } from "./mapConsts";
 import { drawRotatedImage, getAngleFromString } from "./windAngles";
 
+// cityName, {x, y}, weatherValue, icon
+export type CityData = [string, {x: number, y: number }, number, string | undefined][];
+
 export function drawOnMap(
     ctx: CanvasRenderingContext2D,
     imgArr: [HTMLImageElement, HTMLImageElement],
-    coords: [string, {x: number, y: number }, number][],
+    cityData: CityData,
     windData: [string, string, string, boolean, WindProps],
     props: ResolutionPropsValue,
 ): void {
@@ -16,7 +19,7 @@ export function drawOnMap(
 
     // city boxes
     ctx.fillStyle = "#FFFFFF";
-    coords.forEach(([, {x, y}, value]) => {
+    cityData.forEach(([, {x, y}]) => {
         const localX = props.offsetX + x * props.scale;
         const localY = props.offsetY + y * props.scale;
 
@@ -28,17 +31,24 @@ export function drawOnMap(
     ctx.fill();
 
     // weather values
-    ctx.font = `bold ${props.fontSize}px Rubik`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    coords.forEach(([, {x, y}, value]) => {
+    cityData.forEach(([, {x, y}, value, icon]) => {
         const localX = props.offsetX + x * props.scale;
         const localY = props.offsetY + y * props.scale;
 
+        ctx.font = `bold ${props.fontSize}px Rubik`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillStyle = "#000000";
         const numericValue = roundValues ? Math.round(value) : value;
         const stringValue = numericValue.toString().replace(".", ",");
         ctx.fillText(stringValue, localX, localY);
+
+        if (icon) {
+            ctx.fillStyle = "#FFFFFF";
+            ctx.font = `normal ${props.fontSize * 5}px Daira by LTV grafika`;
+            const iconSize = ctx.measureText(icon);
+            ctx.fillText(icon, localX + props.boxSize/2 + 10 + iconSize.width/2, localY);
+        }
     });
 
     if (!props.showWind) return;
