@@ -34,7 +34,6 @@ export const ResultView: Component<{
     return (
         <div>
             <div class="resultTitle">
-                <h3>Result:</h3>
                 <span>
                     {resultViews.map(viewName =>
                         <>

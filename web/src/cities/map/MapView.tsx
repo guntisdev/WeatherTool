@@ -5,13 +5,17 @@ import { WindInputs, WindSignals } from "./WindInputs";
 
 import arrowUrl from "../../assets/arrow.webp";
 import { cityCoords } from "../../components/cityCoords";
-import { MapResolution, resolutionProps, ResolutionPropsValue, windProps, WindProps } from "./mapConsts";
-import { drawOnMap } from "./canvasDraw";
+import { MapResolution, resolutionProps, windProps, WindProps } from "./mapConsts";
+import { CityData, drawOnMap } from "./canvasDraw";
+import { IconInputs } from "../../components/weatherIcons/IconInputs";
 
 export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[] }> = ({ type, data }) => {
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>();
     const [getImg, setImg] = createSignal(new Image());
-    let lastCoords: [string, {x: number, y: number }, number][] = [];
+    const weatherIconsSingal = createSignal<{[key: string]: string;}>({});
+    const [getWeatherIcons] = weatherIconsSingal;
+    
+    let lastCoords: CityData = [];
     const props = resolutionProps[type];
 
     const arrowImg = new Image();
@@ -52,16 +56,18 @@ export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[
 
     createEffect(() => {
         const ctx = getCanvas()!.getContext("2d")!;
-        const coordsAndData: [string, {x: number, y: number }, number][] = data()
+        const weatherIcons = getWeatherIcons();
+        const coordsAndData: CityData = data()
             .map(([city, value]) => [
                 city,
                 cityCoords[city as keyof typeof cityCoords],
                 typeof value === "number" ? value : -99,
+                weatherIcons[city],
             ]);
             lastCoords = coordsAndData;
         drawOnMap(
             ctx,
-            [getImg(),arrowImg],
+            [getImg(), arrowImg],
             coordsAndData,
             getWindData(),
             props,
@@ -76,7 +82,12 @@ export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[
 
     return (
         <>
-            { props.showWind && <WindInputs signals={windSignals} /> }
+            <div class="grid-1-2">
+                <div>
+                    { props.showWind && <WindInputs signals={windSignals} /> }
+                </div>
+                <div><IconInputs weatherIconsSingal={weatherIconsSingal} /></div>
+            </div>
             <canvas
                 ref={setCanvas}
                 width={props.width+"px"}

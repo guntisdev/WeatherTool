@@ -55,10 +55,30 @@ table tr:hover {
   background: #c0c0c0;
 }
 
+@font-face {
+  font-family: 'Daira by LTV grafika';
+  src: url('../assets/ltv_meteo.otf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .hidden {
   display: none;
 }
 
 .visible {
   display: block;
+}
+
+.grid-1-1 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.grid-1-2 {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
 }
