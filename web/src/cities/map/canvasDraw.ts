@@ -54,7 +54,7 @@ export function drawOnMap(
     if (!props.showWind) return;
 
     // wind values
-    ctx.font = "bold 45px Rubik";
+    ctx.font = `bold ${props.windFontSize}px Rubik`;
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.fillStyle = "#FFFFFF";
@@ -70,7 +70,7 @@ export function drawOnMap(
     ctx.font = "bold 25px Rubik";
     ctx.fillText("M/S", windProp.offsetX + boxMiddleX + speedWidth / 2 - 22, (windProp.offsetY + 590)*windProp.scaleY);
 
-    ctx.font = "bold 45px Rubik";
+    ctx.font = `bold ${props.windFontSize}px Rubik`;
     const gustsWidth = ctx.measureText(windGusts).width;
     ctx.fillText(windGusts, windProp.offsetX + boxMiddleX - gustsWidth / 2 - 30, (windProp.offsetY + 790)*windProp.scaleY);
     ctx.font = "bold 25px Rubik";
