@@ -1,6 +1,6 @@
 import { Component, JSXElement, createSignal } from 'solid-js';
 
-import styles from './css/App.module.css';
+import styles from './css/menu.module.css';
 import { Country } from './country/Country';
 import { Cities } from './cities/Cities';
 import { Database } from './database/Database';
@@ -30,7 +30,7 @@ const App: Component = () => {
     }
 
     return (
-        <div class={styles.App}>
+        <div>
             <div class="grid-1-1">
                 <div><WeatherIconStub /></div>
                 <div>
