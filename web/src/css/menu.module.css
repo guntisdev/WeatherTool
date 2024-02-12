@@ -1,0 +1,19 @@
+.menu {
+    padding: 8px 20px;
+    text-align: right;
+}
+
+.menu li{
+  display: inline;
+  padding: 10px 0 10px 10px;
+  cursor: pointer;
+}
+
+.menu li:not(:first-child)::before {
+  content: '•';
+  margin-right: 1ch;
+}
+
+.active {
+  font-weight: bold;
+}
