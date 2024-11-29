@@ -16,6 +16,11 @@ primary_region = "waw"
   source = "data_volume"
   destination = "/data"
 
+[[vm]]
+  memory = 256
+  cpu_kind = 'shared'
+  cpus = 1
+
 [scale]
   count = 1
   idle_timeout = 0
