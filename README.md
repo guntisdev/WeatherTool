@@ -48,3 +48,13 @@ npm run dev
 ## Frontend Tech:
 - SolidJS
 - Vite
+
+## Fly commands
+```
+// suspend instance
+fly scale count 0
+```
+
+```
+fly scale memory 512
+```
