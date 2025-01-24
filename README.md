@@ -34,9 +34,12 @@ server {
 ## Local development
 ```
 // 1st terminal
-sbt run
+podman-compose up postgres
 
 // 2nd terminal
+sbt run
+
+// 3rd terminal
 cd web/
 npm run dev
 ```
