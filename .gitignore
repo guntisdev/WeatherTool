@@ -2,6 +2,7 @@ src/main/resources/application.conf
 postgres/
 
 target/
+data/
 project/target/
 project/project/target/
 .bsp
