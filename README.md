@@ -44,6 +44,9 @@ cd web/
 npm run dev
 ```
 
+Run one file
+```sbt "runMain grib.GribParser"```
+
 ## Backend Tech:
 - scala: cats-effects, http4s, fs2, circe, scalatest
 - postgres
