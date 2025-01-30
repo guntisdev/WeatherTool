@@ -3,6 +3,8 @@ package grib
 import cats.effect._
 import cats.effect.unsafe.implicits.global
 import fs2.io.file.{Files, Path}
+import io.circe.generic.auto._
+import io.circe.syntax._
 
 import java.nio.ByteBuffer
 import java.time.temporal.ChronoUnit
@@ -14,7 +16,9 @@ object GribParser {
     val path = Path(fileName)
 
     val program = for {
-      _ <- parseFile(path)
+      gribList <- parseFile(path)
+      json = gribList.asJson
+      _ <- IO.println(json.spaces2)
     } yield ()
 
     program.unsafeRunSync()
