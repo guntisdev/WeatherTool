@@ -45,7 +45,7 @@ npm run dev
 ```
 
 Run one file
-```sbt "runMain grib.GribParser"```
+```sbt "runMain grib.GribParserTest"```
 
 ## Backend Tech:
 - scala: cats-effects, http4s, fs2, circe, scalatest
