@@ -8,6 +8,10 @@ import cats.effect.unsafe.implicits.global
 
 object GribParserTest {
   def main(args: Array[String]): Unit = {
+    val gribTitle = Codes.codesToString(0, 0, 2)
+    println(gribTitle)
+
+
     val fileName = "data/HARMONIE_DINI_SF_2025-01-24T030000Z_2025-01-26T010000Z.grib"
     val path = Path(fileName)
 

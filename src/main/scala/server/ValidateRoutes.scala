@@ -4,7 +4,7 @@ import cats.data.NonEmptyList
 import parse.Aggregate.AggregateKey
 import parse.WeatherData
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDate, LocalDateTime, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import scala.util.Try
@@ -33,6 +33,13 @@ object ValidateRoutes {
     def unapply(str: String): Option[LocalDateTime] = {
       val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmm")
       Try(LocalDateTime.parse(str, formatter)).toOption
+    }
+  }
+
+  object ValidateZonedDateTime {
+    def unapply(str: String): Option[ZonedDateTime] = {
+      val formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddTHH:mm:ssZ")
+      Try(ZonedDateTime.parse(str, formatter)).toOption
     }
   }
 

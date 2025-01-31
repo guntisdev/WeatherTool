@@ -2,6 +2,7 @@ package grib
 case class Grib(
    version: Int,
    length: Long,
+   title: String,
    grid: GribGrid,
    meteo: MeteoParam,
    time: GribTime,

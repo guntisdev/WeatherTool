@@ -53,11 +53,12 @@ object GribParser {
         GribSection(5, ptr5, len5),
         GribSection(6, ptr6, len6),
       )
-      grib = Grib(version, gribLength, grid, meteo, time, conversion, bitsPerDataPoint, sections)
+      title = Codes.codesToString(meteo.discipline, meteo.category, meteo.product)
+      grib = Grib(version, gribLength, title, grid, meteo, time, conversion, bitsPerDataPoint, sections)
     } yield grib
   }
 
-  def parse0(path: Path, ptr: Long): IO[(Int, Int, Long, Int)] = {
+  private def parse0(path: Path, ptr: Long): IO[(Int, Int, Long, Int)] = {
     val length = 16
     for {
       bytes <- readBytes(path, ptr, length)
@@ -68,7 +69,7 @@ object GribParser {
     } yield (version, discipline, gribLength, length)
   }
 
-  def parse1(path: Path, ptr: Long): IO[(ZonedDateTime, Int)] = {
+  private def parse1(path: Path, ptr: Long): IO[(ZonedDateTime, Int)] = {
     for {
       bytes <- readBytes(path, ptr, 64)
       length = ByteBuffer.wrap(bytes.slice(0, 4)).getInt
@@ -87,7 +88,7 @@ object GribParser {
     } yield (referenceTime, length)
   }
 
-  def parse3(path: Path, ptr: Long): IO[(GribGrid, Int)] = {
+  private def parse3(path: Path, ptr: Long): IO[(GribGrid, Int)] = {
     for {
       bytes <- readBytes(path, ptr, 64)
       length = ByteBuffer.wrap(bytes.slice(0, 4)).getInt
@@ -97,7 +98,7 @@ object GribParser {
     } yield (GribGrid(template, cols, rows), length)
   }
 
-  def parse4(path: Path, ptr: Long, discipline: Int, referenceTime: ZonedDateTime): IO[(MeteoParam, GribTime, Int)] = {
+  private def parse4(path: Path, ptr: Long, discipline: Int, referenceTime: ZonedDateTime): IO[(MeteoParam, GribTime, Int)] = {
     for {
       bytes <- readBytes(path, ptr, 64)
       length = ByteBuffer.wrap(bytes.slice(0, 4)).getInt
@@ -127,7 +128,7 @@ object GribParser {
     } yield (meteoParam, time, length)
   }
 
-  def parse5(path: Path, ptr: Long): IO[(MeteoConversion, Int, Int)] = {
+  private def parse5(path: Path, ptr: Long): IO[(MeteoConversion, Int, Int)] = {
     for {
       bytes <- readBytes(path, ptr, 64)
       length = ByteBuffer.wrap(bytes.slice(0, 4)).getInt
@@ -139,14 +140,14 @@ object GribParser {
     } yield (conversion, bitsPerDataPoint, length)
   }
 
-  def parse6(path: Path, ptr: Long): IO[Int] = {
+  private def parse6(path: Path, ptr: Long): IO[Int] = {
     for {
       bytes <- readBytes(path, ptr, 64)
       length = ByteBuffer.wrap(bytes.slice(0, 4)).getInt
     } yield length
   }
 
-  def readBytes(path: Path, ptr: Long, len: Int): IO[Array[Byte]] = {
+  private def readBytes(path: Path, ptr: Long, len: Int): IO[Array[Byte]] = {
     Files[IO].readRange(path, 1024, ptr, ptr + len)
       .compile
       .to(Array)
