@@ -10,8 +10,10 @@ object FetchServiceTest {
     val program = for {
       nowUTC <- IO(ZonedDateTime.now(ZoneOffset.UTC))
       referenceTime = FileName.getClosestReferenceTime(nowUTC)
+      timeList = FileName.generateTimeList(referenceTime)
       fetch <- FetchService.of
-      _ <- fetch.fetchFromDateTime(referenceTime)
+      nameList <- fetch.fetchFromList(timeList)
+      _ <- IO.println(nameList)
     } yield ()
 
     program.unsafeRunSync()
