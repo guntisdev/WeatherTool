@@ -1,9 +1,10 @@
 package fetchDMI
 
 import cats.effect._
-import fs2.io.file.{Files, Path}
+import cats.implicits.toTraverseOps
+import fs2.io.file.{CopyFlag, CopyFlags, Files, Path}
+import grib.GribParser
 import org.http4s._
-import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -41,11 +42,14 @@ class FetchService(log: Logger[IO]) {
    */
 
   private val baseUrl: IO[Uri] = IO(Uri.unsafeFromString(harmonieServerConfig.url))
-  private def makeRequest(client: Client[IO], url: Uri) = {
 
+  def fetchFromList(timeList: List[ZonedDateTime]): IO[List[String]] = {
+    timeList.traverse { time =>
+      fetchFromDateTime(time)
+    }
   }
 
-  def fetchFromDateTime(time: ZonedDateTime) = {
+  private def fetchFromDateTime(time: ZonedDateTime): IO[String] = {
     EmberClientBuilder.default[IO].build.use { client =>
       for {
         base <- baseUrl
@@ -55,18 +59,21 @@ class FetchService(log: Logger[IO]) {
           "api-key" -> harmonieServerConfig.api_key,
         )
         urlWithParams = Uri.unsafeFromString(s"${base.toString}?${queryParams.toString}")
-        _ <- IO.println(urlWithParams)
-
         request = Request[IO](Method.GET, urlWithParams)
 
-        _ <- Files[IO].createDirectories(Path("data"))
-
+        tmpPath = Path("data/tmp.grib")
         _ <- client.stream(request)
           .flatMap(_.body)
-          .through(Files[IO].writeAll(Path("data/tmp.grib")))
+          .through(Files[IO].writeAll(tmpPath))
           .compile
           .drain
-      } yield ()
+        gribList <- GribParser.parseFile(tmpPath)
+        gribTime = gribList.head.time
+        fileName = Path(s"data/harmonie_${gribTime.referenceTime}_${gribTime.forecastTime}.grib".replace(":", ""))
+        _ <- Files[IO].move(tmpPath, fileName, CopyFlags.apply(CopyFlag.ReplaceExisting))
+        _ <- log.info(fileName.toString)
+        fileNameStr = fileName.toString
+      } yield fileNameStr
     }
   }
 

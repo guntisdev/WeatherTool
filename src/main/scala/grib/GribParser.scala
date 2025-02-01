@@ -26,7 +26,7 @@ object GribParser {
     loop(0L, List.empty)
   }
 
-  def parseGrib(path: Path, ptr: Long): IO[Grib] = {
+  private def parseGrib(path: Path, ptr: Long): IO[Grib] = {
     for {
       res0 <- parse0(path, ptr)
       (version, discipline, gribLength, len0) = res0
