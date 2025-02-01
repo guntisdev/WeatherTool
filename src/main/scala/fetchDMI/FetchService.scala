@@ -2,6 +2,7 @@ package fetchDMI
 
 import cats.effect._
 import cats.implicits.toTraverseOps
+import data.DataService
 import fs2.io.file.{CopyFlag, CopyFlags, Files, Path}
 import grib.GribParser
 import org.http4s._
@@ -61,7 +62,7 @@ class FetchService(log: Logger[IO]) {
         urlWithParams = Uri.unsafeFromString(s"${base.toString}?${queryParams.toString}")
         request = Request[IO](Method.GET, urlWithParams)
 
-        tmpPath = Path("data/tmp.grib")
+        tmpPath = Path(s"${DataService.FOLDER}/tmp.grib")
         _ <- client.stream(request)
           .flatMap(_.body)
           .through(Files[IO].writeAll(tmpPath))
@@ -69,7 +70,7 @@ class FetchService(log: Logger[IO]) {
           .drain
         gribList <- GribParser.parseFile(tmpPath)
         gribTime = gribList.head.time
-        fileName = Path(s"data/harmonie_${gribTime.referenceTime}_${gribTime.forecastTime}.grib".replace(":", ""))
+        fileName = Path(s"${DataService.FOLDER}/harmonie_${gribTime.referenceTime}_${gribTime.forecastTime}.grib".replace(":", ""))
         _ <- Files[IO].move(tmpPath, fileName, CopyFlags.apply(CopyFlag.ReplaceExisting))
         _ <- log.info(fileName.toString)
         fileNameStr = fileName.toString

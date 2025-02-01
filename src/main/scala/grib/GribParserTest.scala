@@ -5,6 +5,7 @@ import fs2.io.file.Path
 import io.circe.generic.auto._
 import io.circe.syntax._
 import cats.effect.unsafe.implicits.global
+import data.DataService
 
 object GribParserTest {
   def main(args: Array[String]): Unit = {
@@ -12,7 +13,8 @@ object GribParserTest {
     println(gribTitle)
 
 
-    val fileName = "data/HARMONIE_DINI_SF_2025-01-24T030000Z_2025-01-26T010000Z.grib"
+//    val fileName = s"${DataService.FOLDER}/HARMONIE_DINI_SF_2025-01-24T030000Z_2025-01-26T010000Z.grib"
+    val fileName = s"${DataService.FOLDER}/harmonie_2025-02-01T1500Z_2025-02-01T180000Z.grib"
     val path = Path(fileName)
 
     val program = for {

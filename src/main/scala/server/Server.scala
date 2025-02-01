@@ -3,9 +3,9 @@ package server
 import cats.effect._
 import cats.implicits.toTraverseOps
 import com.comcast.ip4s.IpLiteralSyntax
+import data.DataService
 import db.PostgresService
 import fetch.FetchService
-import grib.GribParser
 import parse.Aggregate
 import server.ValidateRoutes.{AggFieldList, AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateMonths, ValidateZonedDateTime}
 import io.circe.{Json, Printer}
@@ -51,14 +51,20 @@ class Server(postgresService: PostgresService, fetch: FetchService, log: Logger[
   private case class ResponseWrapper(result: Map[String, Option[Aggregate.AggregateValue]], query: UserQuery)
 
   private val apiRoutes = HttpRoutes.of[IO] {
-    // http://0.0.0.0:8080/api/show/grib/2025-01-24T03:00:00Z
-//    case GET -> Root / "show" / "grib" / ValidateZonedDateTime(referenceTime) =>
-    case GET -> Root / "show" / "grib" =>
-      // TODO change from hardcoded value to reference time and forecast time
-      val fileName = "data/HARMONIE_DINI_SF_2025-01-24T030000Z_2025-01-26T010000Z.grib"
-      GribParser.parseFile(Path(fileName)).flatMap(response => Ok(response.asJson.pretty))
+    // http://0.0.0.0:8080/api/show/grib-name/harmonie_2025-02-01T1500Z_2025-02-01T180000Z.grib
+    case GET -> Root / "show" / "grib" / fileName =>
+//      val fileName = "data/HARMONIE_DINI_SF_2025-01-24T030000Z_2025-01-26T010000Z.grib"
+      DataService.getGribStucture(fileName).flatMap(response => Ok(response.asJson.pretty))
 
     case GET -> Root / "show" / "gribName" => Ok("{\"fileName\":\"TODO replace this fake name\"}")
+
+    // http://0.0.0.0:8080/api/show/grib-list
+    case GET -> Root / "show" / "grib-list" =>
+      DataService.getFileList().flatMap(fileList => Ok(fileList.asJson))
+
+
+
+
 
     // http://0.0.0.0:8080/api/query/city/Liepāja,Rēzekne/20230414_2200-20230501_1230/hour/tempMax/max
     case GET -> Root / "query" / "city" / CityList(cities) / DateTimeRange(from, to) / Granularity(granularity) / field / AggKey(key) =>
