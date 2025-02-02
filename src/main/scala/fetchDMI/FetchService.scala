@@ -55,7 +55,8 @@ class FetchService(log: Logger[IO]) {
       for {
         base <- baseUrl
         queryParams = Query.fromPairs(
-          "parameter-name" -> "temperature-2m",
+          // https://opendatadocs.dmi.govcloud.dk/Data/Forecast_Data_Weather_Model_HARMONIE_DINI_EDR
+          "parameter-name" -> "temperature-2m,total-precipitation,precipitation-type,wind-speed,gust-wind-speed-10m,wind-10m-u,wind-10m-v",
           "datetime" -> time.toString,
           "api-key" -> harmonieServerConfig.api_key,
         )
