@@ -1,0 +1,18 @@
+.fileList li {
+    padding: 5px 0;
+}
+.fileList > li:nth-child(odd) {
+    background-color: #ddd;
+}
+
+.fileList .active .name {
+    font-weight: bold;
+}
+
+.fileList .meteoParams {
+    display: none;
+}
+
+.fileList li.active .meteoParams {
+    display: block;
+}

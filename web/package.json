@@ -19,6 +19,7 @@
   "dependencies": {
     "chart.js": "^4.4.1",
     "moment": "^2.30.1",
-    "solid-js": "^1.9.4"
+    "solid-js": "^1.9.4",
+    "@solidjs/router": "^0.15.2"
   }
 }

@@ -1,4 +1,5 @@
-import { Component, JSXElement, createSignal } from 'solid-js';
+import { Component, JSXElement, createSignal } from 'solid-js'
+import { Route, Router } from '@solidjs/router'
 
 import styles from './css/menu.module.css';
 import { Country } from './country/Country';
@@ -7,46 +8,35 @@ import { Database } from './database/Database';
 import { Station } from './station/Station';
 import { apiHost } from './consts';
 import { WeatherIconStub } from './components/weatherIcons/WeatherIconStub';
+import { Harmonie } from './harmonie/Harmonie'
 
 console.log("env:", import.meta.env.MODE);
 console.log("api host:", apiHost);
 
 const App: Component = () => {
-    const pages: [string, () => JSXElement][] = [
-        ["station", () => <Station />],
-        ["cities", () => <Cities />],
-        ["latvia", () => <Country />],
-        ["database", () => <Database />],
-    ];
-    const [getPageTitle, setPageTitle] = createSignal("station");
-
-    const getPageContent = () => {
-        const page = pages.find(p => p[0] === getPageTitle());
-        return page ? page[1]() : <div>Page not found!</div>;
-    }
-
-    const getActiveCSS = (pageTitle: string) => {
-        return getPageTitle() === pageTitle ? styles.active : "";
-    }
-
+    const pages = ['station', 'cities', 'latvia', 'database', 'harmonie']
     return (
         <div>
             <div class="grid-1-1">
                 <div><WeatherIconStub /></div>
                 <div>
                     <ul class={styles.menu}>
-                        { pages.map(([pageTitle]) =>
-                            <li
-                                class={getActiveCSS(pageTitle)}
-                                onClick={() => setPageTitle(pageTitle)}
-                            >
-                                {pageTitle}
+                        { pages.map(page =>
+                            <li>
+                                <a href={page}>{page}</a>
                             </li>
                         )}
                     </ul>
                 </div>
             </div>
-            { getPageContent() }
+            <Router>
+                <Route path="/" component={Harmonie} />
+                <Route path="/harmonie" component={Harmonie} />
+                <Route path="/station" component={Station} />
+                <Route path="/cities" component={Cities} />
+                <Route path="/latvia" component={Country} />
+                <Route path="/database" component={Database} />
+            </Router>
         </div>
     );
 };
