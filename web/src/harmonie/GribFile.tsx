@@ -24,7 +24,7 @@ export const GribFile: Component<{
         class={isActive() ? styles.active : ''}
         onClick={onFileClick}
     >
-        <div class={styles.name}>{ name }</div>
+        <div class={styles.name}>{ trimName(name) }</div>
         <ul class={styles.meteoParams}>
             { getStructure().map(grib => 
                 <li>{ grib.title }</li>
@@ -32,4 +32,11 @@ export const GribFile: Component<{
         </ul>
     </li>
 
+}
+
+function trimName(title: string): string {
+    let result = title
+    result = result.replace('harmonie_', '')
+    result = result.replace('.grib', '')
+    return result
 }

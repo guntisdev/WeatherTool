@@ -1,4 +1,4 @@
-import { Component, JSXElement, createSignal } from 'solid-js'
+import { Component } from 'solid-js'
 import { Route, Router } from '@solidjs/router'
 
 import styles from './css/menu.module.css';
