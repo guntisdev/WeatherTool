@@ -15,16 +15,18 @@ export const Harmonie: Component<{}> = () => {
             setFileList(fileList)
         })
 
-    return <div>
-        Harmonie
-        <ul class={styles.fileList}>
-            {getFileList().map(fileName =>
-                <GribFile 
-                    name={fileName}
-                    isActive={() => getActiveGrib() === fileName}
-                    onClick={() => setActiveGrib(fileName)}
-                />
-            )}
-        </ul>
+    return <div class={styles.container}>
+        <div class={styles.column}>
+            <ul class={styles.fileList}>
+                {getFileList().map(fileName =>
+                    <GribFile 
+                        name={fileName}
+                        isActive={() => getActiveGrib() === fileName}
+                        onClick={() => setActiveGrib(fileName)}
+                    />
+                )}
+            </ul>
+        </div>
+        <div class={styles.column}>here goes pictures</div>
     </div>
 }
