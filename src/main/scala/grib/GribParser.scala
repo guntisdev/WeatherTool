@@ -45,6 +45,8 @@ object GribParser {
       (conversion, bitsPerDataPoint, len5) = res5
       ptr6 = ptr5 + len5
       len6 <- parse6(path, ptr6)
+      ptr7 = ptr6 + len6
+      len7 <- parse7(path, ptr7)
       sections = List(
         GribSection(0, ptr, len0),
         GribSection(1, ptr1, len1),
@@ -52,6 +54,7 @@ object GribParser {
         GribSection(4, ptr4, len4),
         GribSection(5, ptr5, len5),
         GribSection(6, ptr6, len6),
+        GribSection(7, ptr7, len7),
       )
       title = Codes.codesToString(meteo.discipline, meteo.category, meteo.product)
       grib = Grib(version, gribLength, title, grid, meteo, time, conversion, bitsPerDataPoint, sections)
@@ -141,6 +144,13 @@ object GribParser {
   }
 
   private def parse6(path: Path, ptr: Long): IO[Int] = {
+    for {
+      bytes <- readBytes(path, ptr, 64)
+      length = ByteBuffer.wrap(bytes.slice(0, 4)).getInt
+    } yield length
+  }
+
+  private def parse7(path: Path, ptr: Long): IO[Int] = {
     for {
       bytes <- readBytes(path, ptr, 64)
       length = ByteBuffer.wrap(bytes.slice(0, 4)).getInt

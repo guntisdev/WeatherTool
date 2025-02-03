@@ -89,4 +89,10 @@ object ValidateRoutes {
       }
     }
   }
+
+  object ValidateInt {
+    def unapply(str: String): Option[Int] = {
+      Option(str.toInt)
+    }
+  }
 }
