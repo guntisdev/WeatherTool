@@ -7,6 +7,7 @@ import { GribFile } from './GribFile'
 export const Harmonie: Component<{}> = () => {
     const [getFileList, setFileList] = createSignal<string[]>([])
     const [getActiveGrib, setActiveGrib] = createSignal('')
+    const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>()
 
     fetch(`${apiHost}/api/show/grib-list`)
         .then(re => re.json())
@@ -22,11 +23,14 @@ export const Harmonie: Component<{}> = () => {
                     <GribFile 
                         name={fileName}
                         isActive={() => getActiveGrib() === fileName}
+                        getCanvas={getCanvas}
                         onClick={() => setActiveGrib(fileName)}
                     />
                 )}
             </ul>
         </div>
-        <div class={styles.column}>here goes pictures</div>
+        <div class={styles.column}>
+            <canvas ref={setCanvas} />
+        </div>
     </div>
 }

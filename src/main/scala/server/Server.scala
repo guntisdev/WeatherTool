@@ -7,7 +7,7 @@ import data.DataService
 import db.PostgresService
 import fetch.FetchService
 import parse.Aggregate
-import server.ValidateRoutes.{AggFieldList, AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateMonths, ValidateZonedDateTime}
+import server.ValidateRoutes.{AggFieldList, AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateMonths, ValidateInt, ValidateZonedDateTime}
 import io.circe.{Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
@@ -62,6 +62,9 @@ class Server(postgresService: PostgresService, fetch: FetchService, log: Logger[
     case GET -> Root / "show" / "grib-list" =>
       DataService.getFileList().flatMap(fileList => Ok(fileList.asJson))
 
+      // TODO implement binary-chunk/ get request
+    case GET -> Root / "grib" / "binary-chunk" / ValidateInt(binaryOffset) / ValidateInt(binaryLength) / fileName =>
+      DataService.getBinaryChunk(binaryOffset, binaryLength, fileName).flatMap(buffer => Ok(buffer))
 
 
 
