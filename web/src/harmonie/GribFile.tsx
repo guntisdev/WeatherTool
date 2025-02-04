@@ -5,7 +5,7 @@ import { apiHost } from '../consts'
 import { GribMessage } from './interfaces'
 import { fetchBuffer } from '../helpers/fetch'
 import { drawGrib } from './draw/drawGrib'
-import { fetchWindData } from './draw/windDirection'
+import { fetchWindData, getFakeWindDirection } from './draw/windDirection'
 
 const CROP_BOUNDS = { x: 1906-1-400, y: 950, width: 400, height: 300 }
 
@@ -32,7 +32,11 @@ export const GribFile: Component<{
         if (getGribList().length === 0) {
             fetch(`${apiHost}/api/show/grib/${name}`)
                 .then(re => re.json())
-                .then(setGribList)
+                .then((gribList: GribMessage[]) => {
+                    const windSpeed = gribList.find(m => m.meteo.discipline===0 && m.meteo.category===2 && m.meteo.product===1)
+                    if (windSpeed) gribList.push(getFakeWindDirection(windSpeed))
+                    setGribList(gribList)
+                })
         }
     }
 
@@ -66,7 +70,7 @@ export const GribFile: Component<{
         const binaryOffset = binarySection.offset + 5
         const binaryLength = binarySection.size - 5
         const fetchPromise: Promise<[GribMessage[], ArrayBuffer[], ArrayBuffer[]]> = grib.meteo.discipline === 0 && grib.meteo.category === 2 && grib.meteo.product === 192
-            ? fetchWindData(grib, getGribList())
+            ? fetchWindData(grib, getGribList(), name)
             : Promise.all([
                 Promise.resolve([grib]),
                 fetchBuffer(`${apiHost}/api/grib/binary-chunk/${binaryOffset}/${binaryLength}/${name}`).then(b=>[b]),

@@ -141,6 +141,7 @@ export function windSpeedColors(
 export function fetchWindData(
     customMessage: GribMessage,
     gribArr: GribMessage[],
+    fileName: string,
 ): Promise<[GribMessage[], ArrayBuffer[], ArrayBuffer[]]> {
     const windU = gribArr.find(m => m.meteo.discipline===0 && m.meteo.category===2 && m.meteo.product===2 && m.meteo.levelType===103 && m.meteo.levelValue===10)
     const windV = gribArr.find(m => m.meteo.discipline===0 && m.meteo.category===2 && m.meteo.product===3 && m.meteo.levelType===103 && m.meteo.levelValue===10)
@@ -157,8 +158,8 @@ export function fetchWindData(
     const vBinaryLength = section7v.size - 5
 
     return Promise.all([
-        fetchBuffer(`${apiHost}/api/binary-chunk/${uBinaryOffset}/${uBinaryLength}`),
-        fetchBuffer(`${apiHost}/api/binary-chunk/${vBinaryOffset}/${vBinaryLength}`),
+        fetchBuffer(`${apiHost}/api/grib/binary-chunk/${uBinaryOffset}/${uBinaryLength}/${fileName}`),
+        fetchBuffer(`${apiHost}/api/grib/binary-chunk/${vBinaryOffset}/${vBinaryLength}/${fileName}`),
     ]).then(([bufferU, bufferV]) => {
         const buffer = new Uint8Array(bufferU.byteLength + bufferV.byteLength)
         buffer.set(new Uint8Array(bufferU))
@@ -171,4 +172,11 @@ export function fetchWindData(
 
 function toInt(bytes: Uint8Array): number {
     return bytes.reduce((acc, curr) => acc * 256 + curr)
+}
+
+export function getFakeWindDirection(windSpeed: GribMessage): GribMessage {
+    const modifiedWindSpeed = structuredClone(windSpeed)
+    modifiedWindSpeed.meteo = {...modifiedWindSpeed.meteo, product: 192}
+    modifiedWindSpeed.title = 'meteorology, momentum, wind direction 10m (calc u,v)'
+    return modifiedWindSpeed
 }
