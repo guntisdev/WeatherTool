@@ -1,11 +1,11 @@
-import { interpolateColors } from '../../helpers/interpolateColors.ts'
-import { GribMessage, MeteoParam } from '../../interfaces/interfaces.ts'
-import { applyBitmask } from './bitmask.ts'
-import { extractFromBounds } from './bounds.ts'
-import { categoricalRainColors } from './categoricalRain.ts'
-import { precipitationColors } from './precipitation.ts'
-import { temperatureColors } from './temperature.ts'
-import { windDirectionArrows, windDirectionColors, windSpeedColors } from './windDirection.ts'
+import { interpolateColors } from '../../helpers/interpolateColors'
+import { GribMessage, MeteoParam } from '../interfaces'
+import { applyBitmask } from './bitmask'
+import { extractFromBounds } from './bounds'
+import { categoricalRainColors } from './categoricalRain'
+import { precipitationColors } from './precipitation'
+import { temperatureColors } from './temperature'
+import { windDirectionArrows, windDirectionColors, windSpeedColors } from './windDirection'
 
 export type CropBounds = { x: number, y: number, width: number, height: number }
 
@@ -14,7 +14,6 @@ export function drawGrib(
     messages: GribMessage[],
     buffers: Uint8Array[],
     bitmasks: Uint8Array[],
-    colors: [string, string],
     cropBounds: CropBounds | undefined,
 ): void {
     // normally we have one message/buffer/bitmask?. special cases have multiple like wind direction
@@ -41,7 +40,7 @@ export function drawGrib(
     const ctx = canvas.getContext('2d')!
     let imgData = ctx.createImageData(cols, rows)
     
-    fillImageData(imgData, messages, modifiedBuffers, colors)
+    fillImageData(imgData, messages, modifiedBuffers)
     if (grib.meteo.discipline === 0 && grib.meteo.category === 2 && grib.meteo.product === 192) {
         imgData = windDirectionArrows(imgData, messages, modifiedBuffers)
     }
@@ -71,10 +70,10 @@ function fillImageData(
     imgData: ImageData,
     messages: GribMessage[],
     buffers: Uint8Array[],
-    colors: [string, string],
 ) {
     const [grib] = messages
     const [buffer] = buffers
+    const colors: [string, string] = ['#0000ff', '#ffff00']
 
     const { meteo, conversion, bitsPerDataPoint } = grib
     const bytesPerPoint = grib.bitsPerDataPoint / 8

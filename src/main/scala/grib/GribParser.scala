@@ -136,7 +136,7 @@ object GribParser {
       bytes <- readBytes(path, ptr, 64)
       length = ByteBuffer.wrap(bytes.slice(0, 4)).getInt
       bitsPerDataPoint = bytes(19).toInt
-      reference = ByteBuffer.wrap(bytes.slice(11, 15)).getInt
+      reference = ByteBuffer.wrap(bytes.slice(11, 15)).getFloat
       binaryScale = -(bytes(16) & 0xFF)
       decimalScale = bytes(18) & 0xFF
       conversion = MeteoConversion(reference, binaryScale, decimalScale)
