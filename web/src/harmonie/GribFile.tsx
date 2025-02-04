@@ -1,4 +1,4 @@
-import { Accessor, Component, createSignal, Setter } from 'solid-js'
+import { Accessor, Component, createEffect, createMemo, createSignal, Setter } from 'solid-js'
 
 import styles from './harmonie.module.css'
 import { apiHost } from '../consts'
@@ -14,16 +14,17 @@ export const GribFile: Component<{
     isActive: Accessor<boolean>,
     getCanvas: Accessor<HTMLCanvasElement | undefined>,
     setIsLoading: Setter<boolean>,
+    getIsCrop: Accessor<boolean>,
     onClick: (name: string) => void,
 }> = ({
     name,
     isActive,
     getCanvas,
     setIsLoading,
+    getIsCrop,
     onClick,
 }) => {
     const [getGribList, setGribList] = createSignal<GribMessage[]>([])
-    const isCrop = createSignal(false)
 
     function onFileClick() {
         onClick(name)
@@ -38,6 +39,16 @@ export const GribFile: Component<{
     let cachedMessages: GribMessage[] = []
     let cachedBuffers: Uint8Array[] = []
     let cachedBitmasks: Uint8Array[] = []
+
+    createEffect(async () => {
+        setIsLoading(true)
+        const cropBounds = getIsCrop() ? CROP_BOUNDS : undefined
+        // hack to show loading spinner
+        await new Promise(resolve => setTimeout(resolve, 100))
+        if (cachedMessages.length === 0) return;
+        drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds)
+        setIsLoading(false)
+    })
 
     function onParamClick(paramId: number) {
         setIsLoading(true);
@@ -66,7 +77,7 @@ export const GribFile: Component<{
             cachedMessages = messages
             cachedBuffers = binaryBuffers.map(b => new Uint8Array(b))
             cachedBitmasks = bitmasks.map(b => new Uint8Array(b))
-            const cropBounds = isCrop[0]() ? CROP_BOUNDS : undefined 
+            const cropBounds = getIsCrop() ? CROP_BOUNDS : undefined 
             drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds)
         })
         .catch(err => console.warn(err.message))
