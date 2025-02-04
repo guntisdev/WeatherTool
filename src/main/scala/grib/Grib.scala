@@ -15,6 +15,7 @@ case class GribGrid(
    template: Short,
    cols: Int,
    rows: Int,
+   lambert: List[Int],
 )
 
 case class MeteoParam(

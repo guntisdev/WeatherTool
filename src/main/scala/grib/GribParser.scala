@@ -98,7 +98,10 @@ object GribParser {
       template = ByteBuffer.wrap(bytes.slice(12, 14)).getShort
       cols = ByteBuffer.wrap(bytes.slice(30, 34)).getInt
       rows = ByteBuffer.wrap(bytes.slice(34, 38)).getInt
-    } yield (GribGrid(template, cols, rows), length)
+      lambert1 = ByteBuffer.wrap(bytes.slice(34, 38)).getInt
+      lambert2 = ByteBuffer.wrap(bytes.slice(38, 42)).getInt
+      lambert = List(lambert1, lambert2)
+    } yield (GribGrid(template, cols, rows, lambert), length)
   }
 
   private def parse4(path: Path, ptr: Long, discipline: Int, referenceTime: ZonedDateTime): IO[(MeteoParam, GribTime, Int)] = {
