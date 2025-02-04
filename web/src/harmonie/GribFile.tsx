@@ -1,10 +1,11 @@
-import { Accessor, Component, createSignal } from 'solid-js'
+import { Accessor, Component, createSignal, Setter } from 'solid-js'
 
 import styles from './harmonie.module.css'
 import { apiHost } from '../consts'
 import { GribMessage } from './interfaces'
 import { fetchBuffer } from '../helpers/fetch'
 import { drawGrib } from './draw/drawGrib'
+import { fetchWindData } from './draw/windDirection'
 
 const CROP_BOUNDS = { x: 1906-1-400, y: 950, width: 400, height: 300 }
 
@@ -12,18 +13,25 @@ export const GribFile: Component<{
     name: string,
     isActive: Accessor<boolean>,
     getCanvas: Accessor<HTMLCanvasElement | undefined>,
+    setIsLoading: Setter<boolean>,
     onClick: (name: string) => void,
-}> = ({ name, isActive, getCanvas, onClick }) => {
-    const [getStructure, setStructure] = createSignal<GribMessage[]>([])
+}> = ({
+    name,
+    isActive,
+    getCanvas,
+    setIsLoading,
+    onClick,
+}) => {
+    const [getGribList, setGribList] = createSignal<GribMessage[]>([])
     const isCrop = createSignal(false)
 
     function onFileClick() {
         onClick(name)
 
-        if (getStructure().length === 0) {
+        if (getGribList().length === 0) {
             fetch(`${apiHost}/api/show/grib/${name}`)
                 .then(re => re.json())
-                .then(setStructure)
+                .then(setGribList)
         }
     }
 
@@ -32,12 +40,11 @@ export const GribFile: Component<{
     let cachedBitmasks: Uint8Array[] = []
 
     function onParamClick(paramId: number) {
-        const grib = getStructure()[paramId]
-        console.log("onParamClick", grib)
+        setIsLoading(true);
+        const grib = getGribList()[paramId]
         const bitmaskSection = grib.sections.find(section => section.id === 6)
         const binarySection = grib.sections.find(section => section.id === 7)
         if (!bitmaskSection || !binarySection) return;
-        console.log("sections 6,7")
 
         const bitmaskOffset = bitmaskSection.offset + 6
         const bitmaskLength = bitmaskSection.size - 6
@@ -47,9 +54,10 @@ export const GribFile: Component<{
 
         const binaryOffset = binarySection.offset + 5
         const binaryLength = binarySection.size - 5
-        const fetchPromise: Promise<[GribMessage[], ArrayBuffer[], ArrayBuffer[]]> = 
-            Promise.all([
-                [grib],
+        const fetchPromise: Promise<[GribMessage[], ArrayBuffer[], ArrayBuffer[]]> = grib.meteo.discipline === 0 && grib.meteo.category === 2 && grib.meteo.product === 192
+            ? fetchWindData(grib, getGribList())
+            : Promise.all([
+                Promise.resolve([grib]),
                 fetchBuffer(`${apiHost}/api/grib/binary-chunk/${binaryOffset}/${binaryLength}/${name}`).then(b=>[b]),
                 bitmaskPromise,
             ])
@@ -58,12 +66,11 @@ export const GribFile: Component<{
             cachedMessages = messages
             cachedBuffers = binaryBuffers.map(b => new Uint8Array(b))
             cachedBitmasks = bitmasks.map(b => new Uint8Array(b))
-            const colors: [string, string] = ['#0000ff', '#ffff00']
             const cropBounds = isCrop[0]() ? CROP_BOUNDS : undefined 
-            drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, colors, cropBounds)
+            drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds)
         })
         .catch(err => console.warn(err.message))
-        // .finally(() => setIsLoading(false))
+        .finally(() => setIsLoading(false))
     }
 
     return <li
@@ -72,7 +79,7 @@ export const GribFile: Component<{
     >
         <div class={styles.name}>{ trimName(name) }</div>
         <ul class={styles.meteoParams}>
-            { getStructure()
+            { getGribList()
                 .sort((a, b) => a.title > b.title ? 1 : -1)
                 .map((grib, i) => 
                 <li onClick={() => onParamClick(i)}>{ grib.title }</li>

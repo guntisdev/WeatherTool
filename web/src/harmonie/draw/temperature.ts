@@ -1,5 +1,5 @@
 import { valueToColorInterpolated, valueToColorThreshold } from '../../helpers/interpolateColors'
-import { MeteoConversion } from '../../interfaces/interfaces'
+import { MeteoConversion } from '../interfaces'
 import { TEMPERATURES } from './constants'
 
 
