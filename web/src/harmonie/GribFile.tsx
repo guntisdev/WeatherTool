@@ -82,7 +82,7 @@ export const GribFile: Component<{
             { getGribList()
                 .sort((a, b) => a.title > b.title ? 1 : -1)
                 .map((grib, i) => 
-                <li onClick={() => onParamClick(i)}>{ grib.title }</li>
+                <li onClick={() => onParamClick(i)}>{ grib.title.replace('meteorology, ', '') }</li>
             )}
         </ul>
     </li>
