@@ -29,7 +29,7 @@ object FileName {
       .withNano(0)
   }
 
-  // TODO make default count to 62 or 60
+  // TODO make default count to 61
   def generateTimeList(initialTime: ZonedDateTime, interval: Int = 1, count: Int = 5): List[ZonedDateTime] = {
     (0 until count).map(id => initialTime.plusHours(id * interval)).toList
   }

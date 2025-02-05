@@ -4,6 +4,7 @@ import cats.effect._
 import fs2.io.file.{Files, Path}
 
 import java.nio.ByteBuffer
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.{ZoneOffset, ZonedDateTime}
 
@@ -116,7 +117,7 @@ object GribParser {
       meteoParam = MeteoParam(discipline, category, product, subtype, levelType, levelValue)
       forecastTime = if (bytes(8) == 1) {
         val leadTime = ByteBuffer.wrap(bytes.slice(20, 22)).getShort
-        referenceTime.toInstant.plus(leadTime, ChronoUnit.HOURS)
+        referenceTime.plus(leadTime, ChronoUnit.HOURS)
       } else {
         val year = ByteBuffer.wrap(bytes.slice(37, 39)).getShort
         val month = bytes(39)
@@ -128,9 +129,9 @@ object GribParser {
           year, month, day,
           hour, minute, second, 0, // last 0 is nanos
           ZoneOffset.UTC // This is what 'Z' represents - UTC/Zero offset
-        ).toInstant
+        )
       }
-      time = GribTime(referenceTime.toString, forecastTime.toString)
+      time = GribTime(referenceTime.format(formatter), forecastTime.format(formatter))
     } yield (meteoParam, time, length)
   }
 
@@ -165,4 +166,5 @@ object GribParser {
       .compile
       .to(Array)
   }
+  private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmmX")
 }
