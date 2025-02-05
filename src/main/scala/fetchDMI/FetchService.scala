@@ -78,5 +78,4 @@ class FetchService(log: Logger[IO]) {
       } yield fileNameStr
     }
   }
-
 }
