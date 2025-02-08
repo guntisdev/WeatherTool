@@ -9,8 +9,11 @@ import org.http4s._
 import org.http4s.ember.client.EmberClientBuilder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import io.circe.parser.decode
+import io.circe.Json
 
 import java.time.ZonedDateTime
+import scala.util.Try
 
 
 final case class HarmonieServerConfig(
@@ -25,9 +28,19 @@ object FetchService {
 }
 
 class FetchService(log: Logger[IO]) {
-  private val harmonieServerConfig: HarmonieServerConfig = (
+  private val edrConfig: HarmonieServerConfig = (
     sys.env.get("HARMONIE_EDR_API_KEY"),
     sys.env.get("HARMONIE_EDR_URL"),
+  ) match {
+    case (Some(api_key), Some(url)) =>
+      HarmonieServerConfig(api_key, url)
+    case _ =>
+      throw new RuntimeException("Unable to load harmonie config: Missing required environment variables")
+  }
+
+  private val stacConfig: HarmonieServerConfig = (
+    sys.env.get("HARMONIE_STAC_API_KEY"),
+    sys.env.get("HARMONIE_STAC_URL"),
   ) match {
     case (Some(api_key), Some(url)) =>
       HarmonieServerConfig(api_key, url)
@@ -42,7 +55,8 @@ class FetchService(log: Logger[IO]) {
   &api-key=b12d36c7-d7ba-4dca-9bc9-de0c9c27435f
    */
 
-  private val baseUrl: IO[Uri] = IO(Uri.unsafeFromString(harmonieServerConfig.url))
+  private val edrBaseUrl: IO[Uri] = IO(Uri.unsafeFromString(edrConfig.url))
+  private val stacBaseUrl: IO[Uri] = IO(Uri.unsafeFromString(stacConfig.url))
 
   def fetchFromList(timeList: List[ZonedDateTime]): IO[List[String]] = {
     timeList.traverse { time =>
@@ -53,12 +67,12 @@ class FetchService(log: Logger[IO]) {
   private def fetchFromDateTime(time: ZonedDateTime): IO[String] = {
     EmberClientBuilder.default[IO].build.use { client =>
       for {
-        base <- baseUrl
+        base <- edrBaseUrl
         queryParams = Query.fromPairs(
           // https://opendatadocs.dmi.govcloud.dk/Data/Forecast_Data_Weather_Model_HARMONIE_DINI_EDR
           "parameter-name" -> "temperature-2m,total-precipitation,precipitation-type,wind-speed,gust-wind-speed-10m,wind-10m-u,wind-10m-v",
           "datetime" -> time.toString,
-          "api-key" -> harmonieServerConfig.api_key,
+          "api-key" -> edrConfig.api_key,
         )
         urlWithParams = Uri.unsafeFromString(s"${base.toString}?${queryParams.toString}")
         request = Request[IO](Method.GET, urlWithParams)
@@ -78,4 +92,42 @@ class FetchService(log: Logger[IO]) {
       } yield fileNameStr
     }
   }
+
+  def fetchAvailableForecasts(): IO[(ZonedDateTime, List[ZonedDateTime])] = {
+    EmberClientBuilder.default[IO].build.use { client =>
+      for {
+        base <- stacBaseUrl
+        queryParams = Query.fromPairs(
+          "api-key" -> stacConfig.api_key,
+        )
+        urlWithParams = Uri.unsafeFromString(s"${base.toString}?${queryParams.toString}")
+        request = Request[IO](Method.GET, urlWithParams).withHeaders(org.http4s.headers.Accept(org.http4s.MediaType.application.json))
+        response <- client.expect[String](request)
+        json <- IO.fromEither(decode[Json](response))
+        result <- IO {
+          val features = json.hcursor.downField("features").values.getOrElse(List.empty)
+
+          val dateTimePairs = features.flatMap { feature =>
+            for {
+              properties <- feature.hcursor.downField("properties").focus
+              modelRun <- properties.hcursor.downField("modelRun").as[String].toOption
+              datetime <- properties.hcursor.downField("datetime").as[String].toOption
+              parsedModelRun <- Try(ZonedDateTime.parse(modelRun)).toOption
+              parsedDateTime <- Try(ZonedDateTime.parse(datetime)).toOption
+            } yield (parsedModelRun, parsedDateTime)
+          }
+
+          val latestModelRun = dateTimePairs.map(_._1).max
+          val datetimesForLatestRun = dateTimePairs
+            .filter(_._1 == latestModelRun)
+            .map(_._2)
+            .toList
+            .sorted
+
+          (latestModelRun, datetimesForLatestRun)
+        }
+      } yield result
+    }
+  }
+
 }
