@@ -30,3 +30,4 @@ logs/
 .env-fly
 data/*
 !project/assembly.sbt
+!src/main/scala/data
