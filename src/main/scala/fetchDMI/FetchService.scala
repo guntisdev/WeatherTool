@@ -87,10 +87,32 @@ class FetchService(log: Logger[IO]) {
         gribTime = gribList.head.time
         fileName = Path(s"${DataService.FOLDER}/harmonie_${gribTime.referenceTime}_${gribTime.forecastTime}.grib".replace(":", ""))
         _ <- Files[IO].move(tmpPath, fileName, CopyFlags.apply(CopyFlag.ReplaceExisting))
-        _ <- log.info(fileName.toString)
-        fileNameStr = fileName.toString
-      } yield fileNameStr
+        fileSizeBytes <- Files[IO].size(fileName)
+        fileSizeMB = fileSizeBytes.toDouble / (1024 * 1024)
+        _ <- log.info(s" ${"%.1f".format(fileSizeMB)} MB - ${fileName.fileName}")
+      } yield fileName.toString
     }
+  }
+
+  /**
+   * get latest model run from STAC API
+   * check local forecast grib files not to download them again
+   * fetch those forecasts
+   */
+  def fetchRecentForecasts(): IO[Unit] = {
+    for {
+      dateTimeList <- generateFetchList()
+      resultList <- fetchFromList(dateTimeList)
+    } yield ()
+  }
+
+  def generateFetchList(): IO[List[ZonedDateTime]] = {
+    for {
+      availableResult <- fetchAvailableForecasts()
+      (modelRun, forecastDateList) = availableResult
+      localForecasts <- DataService.getForecasts()
+      toFetchList = forecastDateList.filter(dateTime => !localForecasts.contains((modelRun, dateTime)))
+    } yield toFetchList
   }
 
   def fetchAvailableForecasts(): IO[(ZonedDateTime, List[ZonedDateTime])] = {

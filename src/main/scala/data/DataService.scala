@@ -4,7 +4,7 @@ import cats.effect.IO
 import fs2.io.file.{Files, Path}
 import grib.{Grib, GribParser}
 
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.{ZoneId, ZoneOffset, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import scala.io.Source
 import scala.util.Try
@@ -54,8 +54,8 @@ object DataService {
       val start = filename.slice(9, 25) // gets "2025-02-05T1500Z"
       val end = filename.slice(26, 42) // gets "2025-02-05T1800Z"
       (
-        ZonedDateTime.parse(start, formatter),
-        ZonedDateTime.parse(end, formatter)
+        ZonedDateTime.parse(start, formatter).toInstant.atZone(ZoneOffset.UTC),
+        ZonedDateTime.parse(end, formatter).toInstant.atZone(ZoneOffset.UTC)
       )
     }.toOption
   }

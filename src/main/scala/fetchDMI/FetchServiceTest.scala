@@ -8,7 +8,27 @@ import java.time.{ZoneOffset, ZonedDateTime}
 object FetchServiceTest {
   def main(args: Array[String]): Unit = {
 //    fetchFromTimeList().unsafeRunSync()
-    fetchAvailableForecasts.unsafeRunSync()
+//    fetchAvailableForecasts.unsafeRunSync()
+//    generateFetchList().unsafeRunSync()
+    fetchRecentForecasts().unsafeRunSync()
+  }
+
+  private def fetchRecentForecasts(): IO[Unit] = {
+    val program = for {
+      fetch <- FetchService.of
+      result <- fetch.fetchRecentForecasts()
+      _ <- IO.println("-=fetch finished=-")
+    } yield ()
+    program
+  }
+
+  private def generateFetchList(): IO[Unit] = {
+    val program = for {
+      fetch <- FetchService.of
+      list <- fetch.generateFetchList()
+      _ <- IO.println(list)
+    } yield ()
+    program
   }
 
   private def fetchAvailableForecasts(): IO[Unit] = {
