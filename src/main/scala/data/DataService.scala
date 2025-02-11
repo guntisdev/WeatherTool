@@ -1,6 +1,7 @@
 package data
 
 import cats.effect.IO
+import cats.implicits.toTraverseOps
 import fs2.io.file.{Files, Path}
 import grib.{Grib, GribParser}
 
@@ -46,6 +47,22 @@ object DataService {
       .map { fileNameList =>
         fileNameList.flatMap(getTimeFromName)
       }
+  }
+
+  def deleteOldForecasts(maxHours: Int = 9): IO[List[String]] = {
+    val nowUTC = ZonedDateTime.now(ZoneOffset.UTC)
+    val oldThreshold = nowUTC.minusHours(maxHours)
+
+    for {
+      fileList <- getFileList()
+      fileDateList = fileList.flatMap(fileName =>
+        getTimeFromName(fileName).map(extracted => (fileName, extracted._1))
+      )
+      deleteList = fileDateList.filter(_._2.isBefore(oldThreshold)).map(_._1)
+      _ <- deleteList.traverse(name => Files[IO].delete(Path(s"$FOLDER/${name}")))
+      // TODO change to log
+      _ <- deleteList.traverse(name => IO.println(s"delete: $name"))
+    } yield deleteList
   }
 
   private def getTimeFromName(filename: String): Option[(ZonedDateTime, ZonedDateTime)] = {
