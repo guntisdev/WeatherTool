@@ -99,11 +99,11 @@ class FetchService(log: Logger[IO]) {
    * check local forecast grib files not to download them again
    * fetch those forecasts
    */
-  def fetchRecentForecasts(): IO[Unit] = {
+  def fetchRecentForecasts(): IO[List[String]] = {
     for {
       dateTimeList <- generateFetchList()
       resultList <- fetchFromList(dateTimeList)
-    } yield ()
+    } yield resultList
   }
 
   def generateFetchList(): IO[List[ZonedDateTime]] = {

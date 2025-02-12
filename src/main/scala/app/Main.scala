@@ -1,7 +1,7 @@
 package app
 
 import cats.effect._
-import cats.implicits.catsSyntaxTuple3Parallel
+import cats.implicits.catsSyntaxTuple4Parallel
 import data.DataService
 import db.{DBConnection, PostgresService}
 import fetch.{FetchService, FileFetchScheduler}
@@ -16,27 +16,19 @@ object Main extends IOApp {
 
       fetch <- FetchService.of
       fileFetchScheduler <- FileFetchScheduler.of(postgresService, fetch)
-      schedulerTask = fileFetchScheduler.run.compile.drain
-
-
-//      scheduler <- fetchDMI.Scheduler.of("Grib", List(3, 27, 39, 51))
-//      simpleTask = IO.delay {
-//        val timeNow = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-//        List(s"Task executed at $timeNow")
-//      }
-//      simpleScheduler = scheduler.scheduleTask(simpleTask).compile.drain
-
+      fetchCsvTask = fileFetchScheduler.run.compile.drain
 
       scheduler <- fetchDMI.Scheduler.of("Cleanup", List(1))
-      cleanupTask = DataService.deleteOldForecasts()
-      cleanupScheduler = scheduler.scheduleTask(cleanupTask).compile.drain
+      cleanupTask = scheduler.scheduleTask(DataService.deleteOldForecasts()).compile.drain
 
-
+      scheduler <- fetchDMI.Scheduler.of("Fetch Grib", List(2))
+      fetchGrib <- fetchDMI.FetchService.of
+      fetchGribTask = scheduler.scheduleTask(fetchGrib.fetchRecentForecasts()).compile.drain
 
       server <- Server.of(postgresService, fetch)
       serverTask = server.run
 
-      exitCode <- (serverTask, schedulerTask, cleanupScheduler).parMapN((_, _, _) => ExitCode.Success)
+      exitCode <- (serverTask, fetchCsvTask, cleanupTask, fetchGribTask).parMapN((_, _, _, _) => ExitCode.Success)
     } yield exitCode
   }
 }
