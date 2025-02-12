@@ -34,7 +34,7 @@ class Scheduler(log: Logger[IO]) {
 
   def scheduleTask(task: IO[Either[Throwable, (String, String)]]): Stream[IO, Either[Throwable, (String, String)]] = {
     Stream.eval(durationToNextHalfHour).flatMap { delay => {
-      Stream.eval(log.info(s"Scheduler started with delay: ${delay.toMinutes} min")) *>
+      Stream.eval(log.info(s"CSV scheduler started with delay: ${delay.toMinutes} min")) *>
       (Stream.sleep[IO](delay) ++ Stream.awakeEvery[IO](1.hour))
         .evalMap(_ => task)
     }}
