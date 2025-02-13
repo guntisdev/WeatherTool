@@ -54,13 +54,13 @@ object DataService {
     val oldThreshold = nowUTC.minusHours(maxHours)
 
     for {
+      _ <- IO.println("start cleanup")
       fileList <- getFileList()
       fileDateList = fileList.flatMap(fileName =>
         getTimeFromName(fileName).map(extracted => (fileName, extracted._1))
       )
       deleteList = fileDateList.filter(_._2.isBefore(oldThreshold)).map(_._1)
       _ <- deleteList.traverse(name => Files[IO].delete(Path(s"$FOLDER/${name}")))
-      // TODO change to log
       _ <- deleteList.traverse(name => IO.println(s"delete: $name"))
     } yield deleteList
   }
