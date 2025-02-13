@@ -62,5 +62,11 @@ fly scale count 0
 ```
 
 ```
+// check display
+fly ssh console
+df -h
+```
+
+```
 fly scale memory 512
 ```

@@ -62,7 +62,6 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
     case GET -> Root / "show" / "grib-list" =>
       dataService.getFileList().flatMap(fileList => Ok(fileList.asJson))
 
-      // TODO implement binary-chunk/ get request
     case GET -> Root / "grib" / "binary-chunk" / ValidateInt(binaryOffset) / ValidateInt(binaryLength) / fileName =>
       dataService.getBinaryChunk(binaryOffset, binaryLength, fileName).flatMap(buffer => Ok(buffer))
 
