@@ -12,12 +12,10 @@ object GribParserTest {
     val gribTitle = Codes.codesToString(0, 0, 2)
     println(gribTitle)
 
-
-//    val fileName = s"${DataService.FOLDER}/HARMONIE_DINI_SF_2025-01-24T030000Z_2025-01-26T010000Z.grib"
-    val fileName = s"${DataService.FOLDER}/harmonie_2025-02-01T1500Z_2025-02-01T180000Z.grib"
-    val path = Path(fileName)
-
     val program = for {
+      dataService <- DataService.of
+      fileName = s"${dataService.GRIB_FOLDER}/harmonie_2025-02-01T1500Z_2025-02-01T180000Z.grib"
+      path = Path(fileName)
       gribList <- GribParser.parseFile(path)
       json = gribList.asJson
       _ <- IO.println(json.spaces2)

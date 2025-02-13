@@ -19,12 +19,14 @@ object Main extends IOApp {
       fetchCsvTask = fileFetchScheduler.run.compile.drain
 
       scheduler <- fetchDMI.Scheduler.of
-      cleanupTask = scheduler.scheduleTask("Cleanup", List(1), DataService.deleteOldForecasts()).compile.drain
+      dataService <- DataService.of
 
-      fetchGrib <- fetchDMI.FetchService.of
+      cleanupTask = scheduler.scheduleTask("Cleanup", List(1), dataService.deleteOldForecasts()).compile.drain
+
+      fetchGrib <- fetchDMI.FetchService.of(dataService)
       fetchGribTask = scheduler.scheduleTask("Fetch Grib", List(2), fetchGrib.fetchRecentForecasts()).compile.drain
 
-      server <- Server.of(postgresService, fetch)
+      server <- Server.of(postgresService, dataService, fetch)
       serverTask = server.run
 
       exitCode <- (serverTask, fetchCsvTask, cleanupTask, fetchGribTask).parMapN((_, _, _, _) => ExitCode.Success)

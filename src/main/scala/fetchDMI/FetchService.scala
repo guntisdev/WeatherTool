@@ -22,12 +22,12 @@ final case class HarmonieServerConfig(
 )
 
 object FetchService {
-  def of: IO[FetchService] = {
-    Slf4jLogger.create[IO].map(logger => new FetchService(logger))
+  def of(dataService: DataService): IO[FetchService] = {
+    Slf4jLogger.create[IO].map(logger => new FetchService(dataService, logger))
   }
 }
 
-class FetchService(log: Logger[IO]) {
+class FetchService(dataService: DataService, log: Logger[IO]) {
   private val edrConfig: HarmonieServerConfig = (
     sys.env.get("HARMONIE_EDR_API_KEY"),
     sys.env.get("HARMONIE_EDR_URL"),
@@ -35,7 +35,7 @@ class FetchService(log: Logger[IO]) {
     case (Some(api_key), Some(url)) =>
       HarmonieServerConfig(api_key, url)
     case _ =>
-      throw new RuntimeException("Unable to load harmonie config: Missing required environment variables")
+      throw new RuntimeException("Unable to load harmonie edr config: Missing required environment variables")
   }
 
   private val stacConfig: HarmonieServerConfig = (
@@ -45,7 +45,7 @@ class FetchService(log: Logger[IO]) {
     case (Some(api_key), Some(url)) =>
       HarmonieServerConfig(api_key, url)
     case _ =>
-      throw new RuntimeException("Unable to load harmonie config: Missing required environment variables")
+      throw new RuntimeException("Unable to load harmonie stac config: Missing required environment variables")
   }
 
   /*
@@ -77,7 +77,8 @@ class FetchService(log: Logger[IO]) {
         urlWithParams = Uri.unsafeFromString(s"${base.toString}?${queryParams.toString}")
         request = Request[IO](Method.GET, urlWithParams)
 
-        tmpPath = Path(s"${DataService.FOLDER}/tmp.grib")
+        // TODO proly better to call dataService method than property
+        tmpPath = Path(s"${dataService.GRIB_FOLDER}/tmp.grib")
         _ <- client.stream(request)
           .flatMap(_.body)
           .through(Files[IO].writeAll(tmpPath))
@@ -85,7 +86,7 @@ class FetchService(log: Logger[IO]) {
           .drain
         gribList <- GribParser.parseFile(tmpPath)
         gribTime = gribList.head.time
-        fileName = Path(s"${DataService.FOLDER}/harmonie_${gribTime.referenceTime}_${gribTime.forecastTime}.grib".replace(":", ""))
+        fileName = Path(s"${dataService.GRIB_FOLDER}/harmonie_${gribTime.referenceTime}_${gribTime.forecastTime}.grib".replace(":", ""))
         _ <- Files[IO].move(tmpPath, fileName, CopyFlags.apply(CopyFlag.ReplaceExisting))
         fileSizeBytes <- Files[IO].size(fileName)
         fileSizeMB = fileSizeBytes.toDouble / (1024 * 1024)
@@ -111,7 +112,7 @@ class FetchService(log: Logger[IO]) {
     for {
       availableResult <- fetchAvailableForecasts()
       (modelRun, forecastDateList) = availableResult
-      localForecasts <- DataService.getForecasts()
+      localForecasts <- dataService.getForecasts()
       toFetchList = forecastDateList.filter(dateTime => !localForecasts.contains((modelRun, dateTime)))
     } yield toFetchList
   }

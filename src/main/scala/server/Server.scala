@@ -31,14 +31,14 @@ import scala.concurrent.duration.DurationInt
 
 
 object Server {
-  def of(postgresService: PostgresService, fetch: FetchService): IO[Server] = {
+  def of(postgresService: PostgresService, dataService: DataService, fetch: FetchService): IO[Server] = {
     Slf4jLogger.create[IO].map {
-      new Server(postgresService, fetch, _)
+      new Server(postgresService, dataService, fetch, _)
     }
   }
 }
 
-class Server(postgresService: PostgresService, fetch: FetchService, log: Logger[IO]) {
+class Server(postgresService: PostgresService, dataService: DataService, fetch: FetchService, log: Logger[IO]) {
 
   // Define the extension method `pretty` for Json
   implicit class JsonPrettyPrinter(json: Json) {
@@ -54,17 +54,17 @@ class Server(postgresService: PostgresService, fetch: FetchService, log: Logger[
     // http://0.0.0.0:8080/api/show/grib-name/harmonie_2025-02-01T1500Z_2025-02-01T180000Z.grib
     case GET -> Root / "show" / "grib" / fileName =>
 //      val fileName = "data/HARMONIE_DINI_SF_2025-01-24T030000Z_2025-01-26T010000Z.grib"
-      DataService.getGribStucture(fileName).flatMap(response => Ok(response.asJson.pretty))
+      dataService.getGribStucture(fileName).flatMap(response => Ok(response.asJson.pretty))
 
     case GET -> Root / "show" / "gribName" => Ok("{\"fileName\":\"TODO replace this fake name\"}")
 
     // http://0.0.0.0:8080/api/show/grib-list
     case GET -> Root / "show" / "grib-list" =>
-      DataService.getFileList().flatMap(fileList => Ok(fileList.asJson))
+      dataService.getFileList().flatMap(fileList => Ok(fileList.asJson))
 
       // TODO implement binary-chunk/ get request
     case GET -> Root / "grib" / "binary-chunk" / ValidateInt(binaryOffset) / ValidateInt(binaryLength) / fileName =>
-      DataService.getBinaryChunk(binaryOffset, binaryLength, fileName).flatMap(buffer => Ok(buffer))
+      dataService.getBinaryChunk(binaryOffset, binaryLength, fileName).flatMap(buffer => Ok(buffer))
 
 
 
