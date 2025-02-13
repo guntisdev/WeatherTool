@@ -2,6 +2,7 @@ package fetchDMI;
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
+import data.DataService
 
 import java.time.{ZoneOffset, ZonedDateTime}
 
@@ -15,7 +16,8 @@ object FetchServiceTest {
 
   private def fetchRecentForecasts(): IO[Unit] = {
     val program = for {
-      fetch <- FetchService.of
+      dataService <- DataService.of
+      fetch <- FetchService.of(dataService)
       result <- fetch.fetchRecentForecasts()
       _ <- IO.println("-=fetch finished=-")
     } yield ()
@@ -24,7 +26,8 @@ object FetchServiceTest {
 
   private def generateFetchList(): IO[Unit] = {
     val program = for {
-      fetch <- FetchService.of
+      dataService <- DataService.of
+      fetch <- FetchService.of(dataService)
       list <- fetch.generateFetchList()
       _ <- IO.println(list)
     } yield ()
@@ -33,7 +36,8 @@ object FetchServiceTest {
 
   private def fetchAvailableForecasts(): IO[Unit] = {
     val program = for {
-      fetch <- FetchService.of
+      dataService <- DataService.of
+      fetch <- FetchService.of(dataService)
       result <- fetch.fetchAvailableForecasts()
       (modelRun, forecastTimes) = result
       _ <- IO.println(modelRun)
@@ -48,7 +52,8 @@ object FetchServiceTest {
       nowUTC <- IO(ZonedDateTime.now(ZoneOffset.UTC))
       referenceTime = FileName.getClosestReferenceTime(nowUTC)
       timeList = FileName.generateTimeList(referenceTime)
-      fetch <- FetchService.of
+      dataService <- DataService.of
+      fetch <- FetchService.of(dataService)
       nameList <- fetch.fetchFromList(timeList)
       _ <- IO.println(nameList)
     } yield ()

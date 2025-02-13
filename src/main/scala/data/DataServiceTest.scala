@@ -12,8 +12,9 @@ object DataServiceTest {
 
   private def deleteOldForecasts(): IO[Unit] = {
     val program = for {
-      deleteList <- DataService.deleteOldForecasts()
-//      _ <- IO.println(deleteList.asJson)
+      dataService <- DataService.of
+      deleteList <- dataService.deleteOldForecasts()
+      _ <- IO.println(deleteList.asJson)
     } yield ()
 
     program
@@ -21,7 +22,8 @@ object DataServiceTest {
 
   private def getForecasts(): IO[Unit] = {
     val program = for {
-      forecasts <- DataService.getForecasts()
+      dataService <- DataService.of
+      forecasts <- dataService.getForecasts()
       _ <- IO.println(forecasts.asJson)
     } yield ()
 

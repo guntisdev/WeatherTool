@@ -4,26 +4,49 @@ import cats.effect.IO
 import cats.implicits.toTraverseOps
 import fs2.io.file.{Files, Path}
 import grib.{Grib, GribParser}
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
+import java.nio.file.Paths
 import java.time.{ZoneId, ZoneOffset, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import scala.io.Source
 import scala.util.Try
 
 object DataService {
-  val FOLDER = "data"
+  def of: IO[DataService] = {
+    for {
+      logger <- Slf4jLogger.create[IO]
+      service = new DataService(logger)
+      _ <- service.init
+    } yield service
+  }
+}
+
+
+class DataService(log: Logger[IO]) {
+  val BASE_FOLDER = "data"
+  val GRIB_FOLDER = s"$BASE_FOLDER/grib"
+
+  def init: IO[Unit] = {
+    for {
+      _ <- fs2.io.file.Files[IO].createDirectories(fs2.io.file.Path(BASE_FOLDER))
+      _ <- fs2.io.file.Files[IO].createDirectories(fs2.io.file.Path(GRIB_FOLDER))
+      _ <- log.info(s"Created directories: $BASE_FOLDER and $GRIB_FOLDER")
+    } yield ()
+  }
 
   def getFileList(): IO[List[String]] =
     Files[IO]
-      .list(Path(FOLDER))
+      .list(Path(GRIB_FOLDER))
       .map(_.toString)
       .filter(_.endsWith(".grib"))
-      .map(_.replace(s"$FOLDER/", ""))
+      .map(_.replace(s"$GRIB_FOLDER/", ""))
       .compile
       .toList
 
   def getGribStucture(fileName: String): IO[List[Grib]] = {
-    val filePath = Path(s"$FOLDER/$fileName")
+    val filePath = Path(s"$GRIB_FOLDER/$fileName")
 
     Files[IO].exists(filePath).flatMap {
       case true => GribParser.parseFile(filePath)
@@ -33,7 +56,7 @@ object DataService {
 
   def getBinaryChunk(offset: Int, length: Int, fileName: String): IO[Array[Byte]] = {
     IO {
-      val source = Source.fromFile(s"$FOLDER/$fileName", "ISO-8859-1")
+      val source = Source.fromFile(s"$GRIB_FOLDER/$fileName", "ISO-8859-1")
       try {
         source.slice(offset, offset + length).map(_.toByte).toArray
       } finally {
@@ -54,14 +77,14 @@ object DataService {
     val oldThreshold = nowUTC.minusHours(maxHours)
 
     for {
-      _ <- IO.println("start cleanup")
+      _ <- log.info("start cleanup")
       fileList <- getFileList()
       fileDateList = fileList.flatMap(fileName =>
         getTimeFromName(fileName).map(extracted => (fileName, extracted._1))
       )
       deleteList = fileDateList.filter(_._2.isBefore(oldThreshold)).map(_._1)
-      _ <- deleteList.traverse(name => Files[IO].delete(Path(s"$FOLDER/${name}")))
-      _ <- deleteList.traverse(name => IO.println(s"delete: $name"))
+      _ <- deleteList.traverse(name => Files[IO].delete(Path(s"$GRIB_FOLDER/${name}")))
+      _ <- deleteList.traverse(name => log.info(s"delete: $name"))
     } yield deleteList
   }
 

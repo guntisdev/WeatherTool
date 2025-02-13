@@ -13,8 +13,9 @@ primary_region = "waw"
   auto_start_machines = true
 
 [[mounts]]
-  source = "data_volume"
-  destination = "/data"
+  source = "file_volume"
+  destination = "/app/data"
+  size_gb = 10
 
 [[vm]]
   memory = 512
@@ -22,5 +23,5 @@ primary_region = "waw"
   cpus = 1
 
 [scale]
-  count = 0
+  count = 1
   idle_timeout = 0
