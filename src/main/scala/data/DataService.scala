@@ -55,7 +55,7 @@ class DataService(log: Logger[IO]) {
   }
 
   def getBinaryChunk(offset: Int, length: Int, fileName: String): IO[Array[Byte]] = {
-    IO {
+    IO.blocking {
       val source = Source.fromFile(s"$GRIB_FOLDER/$fileName", "ISO-8859-1")
       try {
         source.slice(offset, offset + length).map(_.toByte).toArray
