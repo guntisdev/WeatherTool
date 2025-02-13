@@ -103,6 +103,7 @@ class FetchService(log: Logger[IO]) {
     for {
       dateTimeList <- generateFetchList()
       resultList <- fetchFromList(dateTimeList)
+      _ <- IO.println("finish grib downloads")
     } yield resultList
   }
 

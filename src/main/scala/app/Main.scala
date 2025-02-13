@@ -18,12 +18,11 @@ object Main extends IOApp {
       fileFetchScheduler <- FileFetchScheduler.of(postgresService, fetch)
       fetchCsvTask = fileFetchScheduler.run.compile.drain
 
-      scheduler <- fetchDMI.Scheduler.of("Cleanup", List(1))
-      cleanupTask = scheduler.scheduleTask(DataService.deleteOldForecasts()).compile.drain
+      scheduler <- fetchDMI.Scheduler.of
+      cleanupTask = scheduler.scheduleTask("Cleanup", List(1), DataService.deleteOldForecasts()).compile.drain
 
-      scheduler <- fetchDMI.Scheduler.of("Fetch Grib", List(2))
       fetchGrib <- fetchDMI.FetchService.of
-      fetchGribTask = scheduler.scheduleTask(fetchGrib.fetchRecentForecasts()).compile.drain
+      fetchGribTask = scheduler.scheduleTask("Fetch Grib", List(2), fetchGrib.fetchRecentForecasts()).compile.drain
 
       server <- Server.of(postgresService, fetch)
       serverTask = server.run
