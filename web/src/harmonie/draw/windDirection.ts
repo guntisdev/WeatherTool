@@ -149,7 +149,7 @@ export function fetchWindData(
 
     const section7u = windU.sections.find(section => section.id === 7)
     const section7v = windV.sections.find(section => section.id === 7)
-    if (!section7u || !section7v) throw new Error('Didnt found binaru section for wind u/v')
+    if (!section7u || !section7v) throw new Error('Didnt found binary section for wind u/v')
 
     const uBinaryOffset = section7u.offset + 5
     const uBinaryLength = section7u.size - 5
@@ -161,9 +161,6 @@ export function fetchWindData(
         fetchBuffer(`${apiHost}/api/grib/binary-chunk/${uBinaryOffset}/${uBinaryLength}/${fileName}`),
         fetchBuffer(`${apiHost}/api/grib/binary-chunk/${vBinaryOffset}/${vBinaryLength}/${fileName}`),
     ]).then(([bufferU, bufferV]) => {
-        const buffer = new Uint8Array(bufferU.byteLength + bufferV.byteLength)
-        buffer.set(new Uint8Array(bufferU))
-        buffer.set(new Uint8Array(bufferV), bufferU.byteLength)
         const messages = [customMessage, windU, windV]
         const buffers = [bufferU, bufferU, bufferV]
         return [messages, buffers, []]
@@ -175,7 +172,11 @@ function toInt(bytes: Uint8Array): number {
 }
 
 export function isWindSpeed(grib: GribMessage): boolean {
-    return grib.meteo.discipline===0 && grib.meteo.category===2 && grib.meteo.product===1
+    return grib.meteo.discipline === 0 && grib.meteo.category === 2 && grib.meteo.product === 1
+}
+
+export function isCalculatedWindDirection(grib: GribMessage): boolean {
+    return grib.meteo.discipline === 0 && grib.meteo.category === 2 && grib.meteo.product === 192
 }
 
 export function getFakeWindDirection(windSpeed: GribMessage): GribMessage {

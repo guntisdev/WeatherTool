@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner'
 import { GribMessage } from './interfaces'
 import { fetchJson } from '../helpers/fetch'
 import { getFakeWindDirection, isWindSpeed } from './draw/windDirection'
+import { getFakeHourPrecipitation, isPrecipitation } from './draw/precipitation'
 
 export const Harmonie: Component<{}> = () => {
     const [getFileList, setFileList] = createSignal<string[]>([])
@@ -30,6 +31,7 @@ export const Harmonie: Component<{}> = () => {
                 setGribList([
                     ...gribList,
                     ...gribList.filter(isWindSpeed).map(getFakeWindDirection),
+                    ...gribList.filter(isPrecipitation).map(getFakeHourPrecipitation),
                 ].sort((a, b) => a.title > b.title ? 1 : -1))
             })
             .finally(() => setIsLoading(false))
@@ -60,7 +62,8 @@ export const Harmonie: Component<{}> = () => {
                         name={fileName}
                         getCanvas={getCanvas}
                         setIsLoading={setIsLoading}
-                        getGribList={() => getCurrentGribList(fileName)}
+                        getFileGribList={() => getCurrentGribList(fileName)}
+                        getAllGribLists={getGribList}
                         getIsCrop={getIsCrop}
                         onClick={() => onGribMessageClick(fileName)}
                     />
