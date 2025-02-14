@@ -74,7 +74,7 @@ class DataService(log: Logger[IO]) {
 
   def deleteOldForecasts(maxHours: Int = 9): IO[List[String]] = {
     val nowUTC = ZonedDateTime.now(ZoneOffset.UTC)
-    val oldThreshold = nowUTC.minusHours(maxHours)
+    val ageThreshold = nowUTC.minusHours(maxHours)
 
     for {
       _ <- log.info("start cleanup")
@@ -82,7 +82,8 @@ class DataService(log: Logger[IO]) {
       fileDateList = fileList.flatMap(fileName =>
         getTimeFromName(fileName).map(extracted => (fileName, extracted._1))
       )
-      deleteList = fileDateList.filter(_._2.isBefore(oldThreshold)).map(_._1)
+      keepList = fileDateList.filter(_._2.isAfter(ageThreshold)).map(_._1)
+      deleteList = fileList.filter(!keepList.contains(_))
       _ <- deleteList.traverse(name => Files[IO].delete(Path(s"$GRIB_FOLDER/${name}")))
       _ <- deleteList.traverse(name => log.info(s"delete: $name"))
     } yield deleteList
