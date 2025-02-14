@@ -1,48 +1,34 @@
-import { Accessor, Component, createEffect, createMemo, createSignal, Setter } from 'solid-js'
+import { Accessor, Component, createEffect, createSignal, Setter } from 'solid-js'
 
 import styles from './harmonie.module.css'
 import { apiHost } from '../consts'
 import { GribMessage } from './interfaces'
 import { fetchBuffer } from '../helpers/fetch'
 import { drawGrib } from './draw/drawGrib'
-import { fetchWindData, getFakeWindDirection } from './draw/windDirection'
+import { fetchWindData } from './draw/windDirection'
 
 const CROP_BOUNDS = { x: 1906-1-400, y: 950, width: 400, height: 300 }
 
 export const GribFile: Component<{
     name: string,
-    isActive: Accessor<boolean>,
     getCanvas: Accessor<HTMLCanvasElement | undefined>,
     setIsLoading: Setter<boolean>,
+    getGribList: Accessor<GribMessage[]>
     getIsCrop: Accessor<boolean>,
     onClick: (name: string) => void,
 }> = ({
     name,
-    isActive,
     getCanvas,
     setIsLoading,
+    getGribList,
     getIsCrop,
     onClick,
 }) => {
-    const [getGribList, setGribList] = createSignal<GribMessage[]>([])
-
-    function onFileClick() {
-        onClick(name)
-
-        if (getGribList().length === 0) {
-            fetch(`${apiHost}/api/show/grib/${name}`)
-                .then(re => re.json())
-                .then((gribList: GribMessage[]) => {
-                    const windSpeed = gribList.find(m => m.meteo.discipline===0 && m.meteo.category===2 && m.meteo.product===1)
-                    if (windSpeed) gribList.push(getFakeWindDirection(windSpeed))
-                    setGribList(gribList)
-                })
-        }
-    }
-
     let cachedMessages: GribMessage[] = []
     let cachedBuffers: Uint8Array[] = []
     let cachedBitmasks: Uint8Array[] = []
+
+    const [getIsActive, setIsActive] = createSignal(false)
 
     createEffect(async () => {
         setIsLoading(true)
@@ -89,14 +75,13 @@ export const GribFile: Component<{
     }
 
     return <li
-        class={isActive() ? styles.active : ''}
-        onClick={onFileClick}
+        class={getIsActive() ? styles.active : ''}
+        onClick={() => onClick(name)}
     >
-        <div class={styles.name}>{ trimName(name) }</div>
+        <div class={styles.name} onClick={() => setIsActive(!getIsActive())}>{ trimName(name) }</div>
         <ul class={styles.meteoParams}>
             { getGribList()
-                .sort((a, b) => a.title > b.title ? 1 : -1)
-                .map((grib, i) => 
+                .map((grib, i) =>
                 <li onClick={() => onParamClick(i)}>{ grib.title.replace('meteorology, ', '') }</li>
             )}
         </ul>

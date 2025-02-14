@@ -54,6 +54,13 @@ class DataService(log: Logger[IO]) {
     }
   }
 
+  def getAllFileStructure(): IO[List[Grib]] = {
+    for {
+      fileList <- getFileList()
+      allStructure <- fileList.traverse(getGribStucture)
+    } yield allStructure.flatten
+  }
+
   def getBinaryChunk(offset: Int, length: Int, fileName: String): IO[Array[Byte]] = {
     IO.blocking {
       val source = Source.fromFile(s"$GRIB_FOLDER/$fileName", "ISO-8859-1")

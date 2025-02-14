@@ -51,16 +51,19 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
   private case class ResponseWrapper(result: Map[String, Option[Aggregate.AggregateValue]], query: UserQuery)
 
   private val apiRoutes = HttpRoutes.of[IO] {
-    // http://0.0.0.0:8080/api/show/grib-name/harmonie_2025-02-01T1500Z_2025-02-01T180000Z.grib
-    case GET -> Root / "show" / "grib" / fileName =>
-//      val fileName = "data/HARMONIE_DINI_SF_2025-01-24T030000Z_2025-01-26T010000Z.grib"
-      dataService.getGribStucture(fileName).flatMap(response => Ok(response.asJson.pretty))
-
     case GET -> Root / "show" / "gribName" => Ok("{\"fileName\":\"TODO replace this fake name\"}")
+
+    // http://0.0.0.0:8080/api/show/grib-all-structure
+    case GET -> Root / "show" / "grib-all-structure" =>
+      dataService.getAllFileStructure().flatMap(gribList => Ok(gribList.asJson))
 
     // http://0.0.0.0:8080/api/show/grib-list
     case GET -> Root / "show" / "grib-list" =>
       dataService.getFileList().flatMap(fileList => Ok(fileList.asJson))
+
+    // http://0.0.0.0:8080/api/show/grib-name/harmonie_2025-02-01T1500Z_2025-02-01T180000Z.grib
+    case GET -> Root / "show" / "grib" / fileName =>
+      dataService.getGribStucture(fileName).flatMap(response => Ok(response.asJson.pretty))
 
     case GET -> Root / "grib" / "binary-chunk" / ValidateInt(binaryOffset) / ValidateInt(binaryLength) / fileName =>
       dataService.getBinaryChunk(binaryOffset, binaryLength, fileName).flatMap(buffer => Ok(buffer))

@@ -174,6 +174,10 @@ function toInt(bytes: Uint8Array): number {
     return bytes.reduce((acc, curr) => acc * 256 + curr)
 }
 
+export function isWindSpeed(grib: GribMessage): boolean {
+    return grib.meteo.discipline===0 && grib.meteo.category===2 && grib.meteo.product===1
+}
+
 export function getFakeWindDirection(windSpeed: GribMessage): GribMessage {
     const modifiedWindSpeed = structuredClone(windSpeed)
     modifiedWindSpeed.meteo = {...modifiedWindSpeed.meteo, product: 192}

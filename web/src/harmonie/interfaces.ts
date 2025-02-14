@@ -26,6 +26,7 @@ export type GribMessage = {
     title: string,
     meteo: MeteoParam,
     grid: MeteoGrid,
+    time: GribTime,
     bitsPerDataPoint: number,
     subType: string,
     conversion: MeteoConversion,
@@ -36,4 +37,9 @@ export type GribSection = {
     offset: number,
     size: number,
     id: number,
+}
+
+export type GribTime = {
+    referenceTime: string,
+    forecastTime: string,
 }
