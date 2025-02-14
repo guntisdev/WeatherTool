@@ -1,10 +1,10 @@
-package app
-
 import cats.effect._
 import cats.implicits.catsSyntaxTuple4Parallel
 import data.DataService
 import db.{DBConnection, PostgresService}
-import fetch.{FetchService, FileFetchScheduler}
+import fetch.csv.{FetchService, FileNameService}
+import fetch.dmi
+import scheduler.Scheduler
 import server.Server
 
 object Main extends IOApp {
@@ -14,19 +14,19 @@ object Main extends IOApp {
       postgresService <- PostgresService.of(transactor)
       _ <- postgresService.createWeatherTable // create table if it does not exists
 
-      fetch <- FetchService.of
-      fileFetchScheduler <- FileFetchScheduler.of(postgresService, fetch)
-      fetchCsvTask = fileFetchScheduler.run.compile.drain
-
-      scheduler <- fetchDMI.Scheduler.of
+      scheduler <- Scheduler.of
       dataService <- DataService.of
+      fetchService <- FetchService.of
+
+      fetchCsvList = new FileNameService().generateCurrentHour.flatMap(fetchService.fetchSingleFile)
+      fetchCsvTask = scheduler.scheduleTask("Fetch CSV", List(31), fetchCsvList).compile.drain
 
       cleanupTask = scheduler.scheduleTask("Cleanup", List(1), dataService.deleteOldForecasts()).compile.drain
 
-      fetchGrib <- fetchDMI.FetchService.of(dataService)
+      fetchGrib <- dmi.FetchService.of(dataService)
       fetchGribTask = scheduler.scheduleTask("Fetch Grib", List(2), fetchGrib.fetchRecentForecasts()).compile.drain
 
-      server <- Server.of(postgresService, dataService, fetch)
+      server <- Server.of(postgresService, dataService, fetchService)
       serverTask = server.run
 
       exitCode <- (serverTask, fetchCsvTask, cleanupTask, fetchGribTask).parMapN((_, _, _, _) => ExitCode.Success)

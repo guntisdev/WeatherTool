@@ -1,8 +1,8 @@
 package server
 
 import cats.data.NonEmptyList
-import parse.Aggregate.AggregateKey
-import parse.WeatherData
+import parse.csv.Aggregate.AggregateKey
+import parse.csv.WeatherData
 
 import java.time.{LocalDate, LocalDateTime, ZonedDateTime}
 import java.time.format.DateTimeFormatter

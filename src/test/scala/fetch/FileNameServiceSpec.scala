@@ -1,8 +1,8 @@
 import cats.Applicative
 import cats.effect.unsafe.implicits.global
-import fetch.FileNameService
 import org.scalatest.funsuite.AnyFunSuite
 import cats.effect.{Clock, IO}
+import fetch.csv.FileNameService
 
 import java.util.concurrent.TimeUnit
 import java.time.LocalDateTime

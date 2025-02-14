@@ -1,11 +1,11 @@
-package grib
+package parse.grib
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
+import data.DataService
 import fs2.io.file.Path
 import io.circe.generic.auto._
 import io.circe.syntax._
-import cats.effect.unsafe.implicits.global
-import data.DataService
 
 object GribParserTest {
   def main(args: Array[String]): Unit = {

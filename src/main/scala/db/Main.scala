@@ -7,13 +7,13 @@ import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import io.circe.syntax.EncoderOps
-import parse.Aggregate.{AggregateKey, UserQuery}
-import parse.Aggregate.AggregateValueImplicits.aggregateValueEncoder
-import parse.Aggregate.userQueryEncoder
+import parse.csv.Aggregate.{AggregateKey, UserQuery}
+import parse.csv.Aggregate.AggregateValueImplicits.aggregateValueEncoder
+import parse.csv.Aggregate.userQueryEncoder
 import io.circe.{Json, Printer}
 import io.circe.generic.auto._
 import io.circe.syntax._
-import parse.Aggregate
+import parse.csv.Aggregate
 
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter

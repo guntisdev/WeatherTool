@@ -1,4 +1,4 @@
-package parse
+package parse.csv
 
 import java.time.LocalDateTime
 import scala.reflect.runtime.universe._

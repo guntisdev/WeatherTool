@@ -1,16 +1,16 @@
-package fetchDMI
+package fetch.dmi
 
 import cats.effect._
 import cats.implicits.toTraverseOps
 import data.DataService
 import fs2.io.file.{CopyFlag, CopyFlags, Files, Path}
-import grib.GribParser
+import io.circe.Json
+import io.circe.parser.decode
 import org.http4s._
 import org.http4s.ember.client.EmberClientBuilder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import io.circe.parser.decode
-import io.circe.Json
+import parse.grib.GribParser
 
 import java.time.ZonedDateTime
 import scala.util.Try

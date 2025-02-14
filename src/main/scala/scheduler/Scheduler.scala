@@ -1,4 +1,4 @@
-package fetchDMI
+package scheduler
 
 import cats.effect._
 import cats.implicits.catsSyntaxApply
@@ -28,8 +28,8 @@ class Scheduler(log: Logger[IO]) {
     }
   }
 
-  def scheduleTask(name: String, minutes: List[Int], task: IO[List[String]]): Stream[IO, List[String]] = {
-    def streamForMinute(minute: Int): Stream[IO, List[String]] = {
+  def scheduleTask[A](name: String, minutes: List[Int], task: IO[A]): Stream[IO, A] = {
+    def streamForMinute(minute: Int): Stream[IO, A] = {
       Stream.eval(durationToNext(minute)).flatMap { delay =>
       Stream.eval(log.info(s"$name scheduler in: ${delay.toMinutes} min")) *>
         (Stream.sleep[IO](delay) ++ Stream.awakeEvery[IO](1.hour))
