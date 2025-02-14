@@ -1,5 +1,4 @@
-package grib
-
+package parse.grib
 
 object Codes {
   def codesToString(discipline: Int, category: Int, product: Int): String = {

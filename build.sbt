@@ -5,7 +5,7 @@ ThisBuild / scalaVersion := "2.13.10"
 lazy val root = (project in file("."))
   .settings(
     name := "WeatherTool",
-    Compile / mainClass := Some("app.Main")
+    Compile / mainClass := Some("Main")
   )
 
 val doobieVersion = "1.0.0-RC1"

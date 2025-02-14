@@ -11,10 +11,10 @@ import java.time.{LocalDate, LocalDateTime, OffsetDateTime}
 import doobie.postgres.implicits._
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import parse.Aggregate.{AggregateKey, AggregateValue, DistinctStringList, DoubleValue, TimeDoubleList, UserQuery}
-import parse.{Parser, WeatherStationData}
-import shapeless.syntax.std.tuple.productTupleOps
+import parse.csv.Aggregate.{AggregateKey, AggregateValue, DistinctStringList, DoubleValue, TimeDoubleList, UserQuery}
+import parse.csv.{Parser, WeatherStationData}
 
+import shapeless.syntax.std.tuple.productTupleOps
 import io.circe._
 import io.circe.parser._
 

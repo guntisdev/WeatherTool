@@ -1,8 +1,7 @@
-package parse
+package parse.csv
 
 import cats.data.NonEmptyList
 import cats.implicits.{catsSyntaxOptionId, toFoldableOps}
-import io.circe.generic.semiauto.deriveEncoder
 import io.circe.syntax.EncoderOps
 import io.circe.{Encoder, Json}
 

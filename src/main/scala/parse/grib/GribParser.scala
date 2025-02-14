@@ -1,4 +1,4 @@
-package grib
+package parse.grib
 
 import cats.effect._
 import fs2.io.file.{Files, Path}

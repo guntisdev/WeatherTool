@@ -1,9 +1,9 @@
-package fetch
+package fetch.csv
 
 import cats.effect._
 
-import java.time.format.DateTimeFormatter
 import java.time.{Duration, LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.format.DateTimeFormatter
 
 
 class FileNameService {

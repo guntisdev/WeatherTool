@@ -1,11 +1,11 @@
-package fetch
+package fetch.csv
 
 import cats.effect._
 import cats.implicits._
 import org.http4s._
 import org.http4s.client.Client
-import org.http4s.headers.Authorization
 import org.http4s.ember.client.EmberClientBuilder
+import org.http4s.headers.Authorization
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 

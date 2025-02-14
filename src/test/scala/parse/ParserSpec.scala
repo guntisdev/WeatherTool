@@ -4,7 +4,7 @@ import cats.effect.unsafe.implicits.global
 //import db.FileService
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
-import parse.Aggregate.{AggregateKey, DoubleValue, TimeDoubleList, UserQuery}
+import parse.csv.Aggregate.{AggregateKey, DoubleValue, TimeDoubleList, UserQuery}
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

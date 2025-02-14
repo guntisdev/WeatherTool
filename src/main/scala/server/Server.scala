@@ -1,12 +1,11 @@
 package server
 
 import cats.effect._
-import cats.implicits.{catsSyntaxApplicativeError, toTraverseOps}
+import cats.implicits.toTraverseOps
 import com.comcast.ip4s.IpLiteralSyntax
 import data.DataService
 import db.PostgresService
-import fetch.FetchService
-import parse.Aggregate
+import fetch.csv.FetchService
 import server.ValidateRoutes.{AggFieldList, AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateInt, ValidateMonths, ValidateZonedDateTime}
 import io.circe.{Json, Printer}
 import org.http4s._
@@ -19,16 +18,16 @@ import org.http4s.server.staticcontent.FileService
 import org.http4s.ember.server.EmberServerBuilder
 import io.circe.generic.auto._
 import io.circe.syntax._
-import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
-import parse.Aggregate.AggregateValueImplicits.aggregateValueEncoder
-import parse.Aggregate.userQueryEncoder
-import parse.Aggregate.{AggregateKey, UserQuery}
+import parse.csv.Aggregate.AggregateValueImplicits.aggregateValueEncoder
+import parse.csv.Aggregate.userQueryEncoder
+import parse.csv.Aggregate.{AggregateKey, UserQuery}
 import org.http4s.circe.jsonEncoder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import fs2.io.file.Path
+import parse.csv.Aggregate
 
 import scala.concurrent.duration.DurationInt
-import scala.reflect.io.File
 
 
 object Server {
@@ -137,8 +136,9 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
   private val apiRoutesCors = CORS(apiRoutes, corsConfig)
 
   private val httpApp = Router(
-    "/api" -> apiRoutesCors,
     "/" -> staticcontent.fileService[IO](FileService.Config("./web/dist")),
+    "/api" -> apiRoutesCors,
+
     // TODO rewrite in more generic way
     "/station" -> staticcontent.fileService[IO](FileService.Config("./web/dist")),
     "/cities" -> staticcontent.fileService[IO](FileService.Config("./web/dist")),

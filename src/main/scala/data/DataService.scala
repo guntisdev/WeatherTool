@@ -3,9 +3,9 @@ package data
 import cats.effect.IO
 import cats.implicits.toTraverseOps
 import fs2.io.file.{Files, Path}
-import grib.{Grib, GribParser}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import parse.grib.{Grib, GribParser}
 
 import java.nio.file.Paths
 import java.time.{ZoneId, ZoneOffset, ZonedDateTime}

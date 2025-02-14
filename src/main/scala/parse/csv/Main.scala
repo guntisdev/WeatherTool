@@ -1,15 +1,8 @@
-package parse
-
-import cats.data.NonEmptyList
-import cats.effect.unsafe.implicits.global
+package parse.csv
 //import db.FileService
-import io.circe.syntax.EncoderOps
-import parse.Aggregate.{AggregateKey, UserQuery}
-
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import parse.Aggregate.AggregateValueImplicits.aggregateValueEncoder
 
 // TODO remake this as a test with different granularities and especially check avg value calculations
 object Main {

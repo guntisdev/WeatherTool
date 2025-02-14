@@ -1,4 +1,4 @@
-package fetchDMI
+package fetch.dmi
 
 import java.time.{ZoneOffset, ZonedDateTime}
 

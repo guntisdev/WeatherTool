@@ -1,4 +1,5 @@
-package grib
+package parse.grib
+
 case class Grib(
    version: Int,
    length: Long,
