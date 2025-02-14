@@ -5,7 +5,8 @@ import { apiHost } from '../consts'
 import { GribMessage } from './interfaces'
 import { fetchBuffer } from '../helpers/fetch'
 import { drawGrib } from './draw/drawGrib'
-import { fetchWindData } from './draw/windDirection'
+import { fetchWindData, isCalculatedWindDirection } from './draw/windDirection'
+import { fetchHourPrecipitationData, isCalculatedHourPrecipitation } from './draw/precipitation'
 
 const CROP_BOUNDS = { x: 1906-1-400, y: 950, width: 400, height: 300 }
 
@@ -13,14 +14,16 @@ export const GribFile: Component<{
     name: string,
     getCanvas: Accessor<HTMLCanvasElement | undefined>,
     setIsLoading: Setter<boolean>,
-    getGribList: Accessor<GribMessage[]>
+    getFileGribList: Accessor<GribMessage[]> // specific reference and forecast time (in one file)
+    getAllGribLists: Accessor<GribMessage[]>
     getIsCrop: Accessor<boolean>,
     onClick: (name: string) => void,
 }> = ({
     name,
     getCanvas,
     setIsLoading,
-    getGribList,
+    getFileGribList,
+    getAllGribLists,
     getIsCrop,
     onClick,
 }) => {
@@ -42,7 +45,7 @@ export const GribFile: Component<{
 
     function onParamClick(paramId: number) {
         setIsLoading(true);
-        const grib = getGribList()[paramId]
+        const grib = getFileGribList()[paramId]
         const bitmaskSection = grib.sections.find(section => section.id === 6)
         const binarySection = grib.sections.find(section => section.id === 7)
         if (!bitmaskSection || !binarySection) return;
@@ -55,13 +58,14 @@ export const GribFile: Component<{
 
         const binaryOffset = binarySection.offset + 5
         const binaryLength = binarySection.size - 5
-        const fetchPromise: Promise<[GribMessage[], ArrayBuffer[], ArrayBuffer[]]> = grib.meteo.discipline === 0 && grib.meteo.category === 2 && grib.meteo.product === 192
-            ? fetchWindData(grib, getGribList(), name)
-            : Promise.all([
+        let fetchPromise: Promise<[GribMessage[], ArrayBuffer[], ArrayBuffer[]]> = Promise.all([
                 Promise.resolve([grib]),
                 fetchBuffer(`${apiHost}/api/grib/binary-chunk/${binaryOffset}/${binaryLength}/${name}`).then(b=>[b]),
                 bitmaskPromise,
             ])
+
+        if(isCalculatedWindDirection(grib)) fetchPromise = fetchWindData(grib, getFileGribList(), name)
+        if(isCalculatedHourPrecipitation(grib)) fetchPromise = fetchHourPrecipitationData(grib, getAllGribLists())
         
         fetchPromise.then(([messages, binaryBuffers, bitmasks]) => {
             cachedMessages = messages
@@ -80,7 +84,7 @@ export const GribFile: Component<{
     >
         <div class={styles.name} onClick={() => setIsActive(!getIsActive())}>{ trimName(name) }</div>
         <ul class={styles.meteoParams}>
-            { getGribList()
+            { getFileGribList()
                 .map((grib, i) =>
                 <li onClick={() => onParamClick(i)}>{ grib.title.replace('meteorology, ', '') }</li>
             )}

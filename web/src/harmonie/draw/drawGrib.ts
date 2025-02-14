@@ -3,9 +3,9 @@ import { GribMessage, MeteoParam } from '../interfaces'
 import { applyBitmask } from './bitmask'
 import { extractFromBounds } from './bounds'
 import { categoricalRainColors } from './categoricalRain'
-import { precipitationColors } from './precipitation'
+import { hourPrecipitationColors, isCalculatedHourPrecipitation, precipitationColors } from './precipitation'
 import { temperatureColors } from './temperature'
-import { windDirectionArrows, windDirectionColors, windSpeedColors } from './windDirection'
+import { isCalculatedWindDirection, windDirectionArrows, windDirectionColors, windSpeedColors } from './windDirection'
 
 export type CropBounds = { x: number, y: number, width: number, height: number }
 
@@ -41,7 +41,7 @@ export function drawGrib(
     let imgData = ctx.createImageData(cols, rows)
     
     fillImageData(imgData, messages, modifiedBuffers)
-    if (grib.meteo.discipline === 0 && grib.meteo.category === 2 && grib.meteo.product === 192) {
+    if (isCalculatedWindDirection(grib)) {
         imgData = windDirectionArrows(imgData, messages, modifiedBuffers)
     }
 
@@ -60,6 +60,7 @@ export function drawGrib(
 
 const CATEGORICAL_RAIN = [0, 1, 192]
 const TOTAL_PRECIPITATION = [0, 1, 52]
+const HOUR_PRECIPITATION = [0, 1, 236]
 const RAIN_PRECIPITATION = [0, 1, 65]
 const TEMPERATURE = [0, 0, 0]
 const WIND_DIRECTION = [0, 2, 192]
@@ -97,6 +98,13 @@ function fillImageData(
             }
             else if (isMeteoEqual(meteo, TOTAL_PRECIPITATION)) {
                 color = precipitationColors(encodedValue, conversion)
+            }
+            else if (isMeteoEqual(meteo, HOUR_PRECIPITATION)) {
+                const [, nowPrec, prevPrec] = buffers
+                const encodedValNow = toInt(nowPrec.slice(bufferI, bufferI+bitsPerDataPoint/8))
+                const encodedValPrev = toInt(prevPrec.slice(bufferI, bufferI+bitsPerDataPoint/8))
+                const [, metaNow, metaPrev] = messages
+                color = hourPrecipitationColors(encodedValNow, metaNow.conversion, encodedValPrev, metaPrev.conversion)
             }
             else if (isMeteoEqual(meteo, RAIN_PRECIPITATION)) {
                 color = precipitationColors(encodedValue, conversion)
