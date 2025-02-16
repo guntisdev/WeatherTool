@@ -17,6 +17,7 @@ export const GribFile: Component<{
     getFileGribList: Accessor<GribMessage[]> // specific reference and forecast time (in one file)
     getAllGribLists: Accessor<GribMessage[]>
     getIsCrop: Accessor<boolean>,
+    getIsContour: Accessor<boolean>,
     onClick: (name: string) => void,
 }> = ({
     name,
@@ -25,6 +26,7 @@ export const GribFile: Component<{
     getFileGribList,
     getAllGribLists,
     getIsCrop,
+    getIsContour,
     onClick,
 }) => {
     let cachedMessages: GribMessage[] = []
@@ -36,10 +38,11 @@ export const GribFile: Component<{
     createEffect(async () => {
         setIsLoading(true)
         const cropBounds = getIsCrop() ? CROP_BOUNDS : undefined
+        const contour = getIsContour()
         // hack to show loading spinner
         await new Promise(resolve => setTimeout(resolve, 100))
         if (cachedMessages.length === 0) return;
-        drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds)
+        drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds, contour)
         setIsLoading(false)
     })
 
@@ -72,7 +75,7 @@ export const GribFile: Component<{
             cachedBuffers = binaryBuffers.map(b => new Uint8Array(b))
             cachedBitmasks = bitmasks.map(b => new Uint8Array(b))
             const cropBounds = getIsCrop() ? CROP_BOUNDS : undefined 
-            drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds)
+            drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds, getIsContour())
         })
         .catch(err => console.warn(err.message))
         .finally(() => setIsLoading(false))

@@ -3,9 +3,14 @@ import { GribMessage, MeteoParam } from '../interfaces'
 import { applyBitmask } from './bitmask'
 import { extractFromBounds } from './bounds'
 import { categoricalRainColors } from './categoricalRain'
-import { hourPrecipitationColors, isCalculatedHourPrecipitation, precipitationColors } from './precipitation'
+import { hourPrecipitationColors, precipitationColors } from './precipitation'
 import { temperatureColors } from './temperature'
 import { isCalculatedWindDirection, windDirectionArrows, windDirectionColors, windSpeedColors } from './windDirection'
+
+import latvia_border from '../../assets/latvia_contour.webp'
+const latviaBoderImg = new Image()
+latviaBoderImg.onload = () => console.log('latvia_contour loaded')
+latviaBoderImg.src = latvia_border
 
 export type CropBounds = { x: number, y: number, width: number, height: number }
 
@@ -15,6 +20,7 @@ export function drawGrib(
     buffers: Uint8Array[],
     bitmasks: Uint8Array[],
     cropBounds: CropBounds | undefined,
+    isContour: boolean,
 ): void {
     // normally we have one message/buffer/bitmask?. special cases have multiple like wind direction
     const [grib] = messages
@@ -56,6 +62,10 @@ export function drawGrib(
     ctx.drawImage(tempCanvas, 0, -canvas.height)
     // ctx.drawImage(tempCanvas, 0, 0)
     ctx.restore()
+
+    if (isContour && !!cropBounds) {
+        drawContour(canvas, ctx) // draw latvia contour only on cropped image
+    }
 }
 
 const CATEGORICAL_RAIN = [0, 1, 192]
@@ -135,6 +145,24 @@ function fillImageData(
             imgData.data[index + 3] = color[3]
         }
     }
+}
+
+function drawContour(
+    canvas: HTMLCanvasElement,
+    ctx: CanvasRenderingContext2D,
+): void {
+    ctx.save()
+    ctx.translate(canvas.width/2 + 8, canvas.height/2 - 5)
+    const angle = -26
+    ctx.rotate(angle * Math.PI / 180)
+    const scale = 5.3
+    const scaledWidth = latviaBoderImg.width/scale
+    const scaledHeight = latviaBoderImg.height/scale
+    ctx.drawImage(latviaBoderImg, 
+        -scaledWidth/2, -scaledHeight/2,
+        scaledWidth, scaledHeight
+    )
+    ctx.restore()
 }
 
 
