@@ -14,6 +14,7 @@ export const Harmonie: Component<{}> = () => {
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>()
     const [getIsLoading, setIsLoading] = createSignal(true)
     const [getIsCrop, setIsCrop] = createSignal(true)
+    const [getIsContour, setIsContour] = createSignal(false)
     const [getGribList, setGribList] = createSignal<GribMessage[]>([])
 
     fetchJson(`${apiHost}/api/show/grib-list`)
@@ -56,6 +57,11 @@ export const Harmonie: Component<{}> = () => {
                 Crop Latvia
                 <input type='checkbox' checked={getIsCrop()} onChange={()=>setIsCrop(!getIsCrop())} />
             </label>
+            &nbsp;
+            <label>
+                Contour
+                <input type='checkbox' checked={getIsContour()} onChange={()=>setIsContour(!getIsContour())} />
+            </label>
             <ul class={styles.fileList}>
                 {getFileList().map(fileName =>
                     <GribFile 
@@ -65,6 +71,7 @@ export const Harmonie: Component<{}> = () => {
                         getFileGribList={() => getCurrentGribList(fileName)}
                         getAllGribLists={getGribList}
                         getIsCrop={getIsCrop}
+                        getIsContour={getIsContour}
                         onClick={() => onGribMessageClick(fileName)}
                     />
                 )}
