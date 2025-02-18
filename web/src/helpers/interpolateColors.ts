@@ -1,4 +1,4 @@
-import { ColorEntry } from '../grib/draw/constants'
+import { ColorEntry } from '../harmonie/draw/constants'
 
 type RGBu8 = [number, number, number]
 type RGBAu8 = [number, number, number, number]

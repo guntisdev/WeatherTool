@@ -1,6 +1,6 @@
 import { apiHost } from '../../consts'
 import { fetchBuffer } from '../../helpers/fetch'
-import { valueToColorInterpolated } from '../../helpers/interpolateColors'
+import { valueToColorInterpolated, valueToColorThreshold } from '../../helpers/interpolateColors'
 import { GribMessage, MeteoConversion } from '../interfaces'
 import { WIND_SPEED } from './constants'
 import { rotateWind } from './windRotate'
@@ -122,20 +122,26 @@ export function windDirectionColors(
     encodedV: number,
     convU: MeteoConversion,
     convV: MeteoConversion,
+    isInterpolated: boolean,
 ) {
     const windSpeedU = (convU.reference + encodedU * Math.pow(2, convU.binaryScale)) * Math.pow(10, -convU.decimalScale)
     const windSpeedV = (convV.reference + encodedV * Math.pow(2, convV.binaryScale)) * Math.pow(10, -convV.decimalScale)
     const windSpeed = Math.sqrt(Math.pow(windSpeedU, 2) + Math.pow(windSpeedV, 2))
 
-    return valueToColorInterpolated(windSpeed, WIND_SPEED)
+    return isInterpolated
+        ? valueToColorInterpolated(windSpeed, WIND_SPEED)
+        : valueToColorThreshold(windSpeed, WIND_SPEED)
 }
 
 export function windSpeedColors(
     encodedValue: number,
     { reference, binaryScale, decimalScale}: MeteoConversion,
+    isInterpolated: boolean,
 ) {
     const windSpeed = (reference + encodedValue * Math.pow(2, binaryScale)) * Math.pow(10, -decimalScale)
-    return valueToColorInterpolated(windSpeed, WIND_SPEED)
+    return isInterpolated
+        ? valueToColorInterpolated(windSpeed, WIND_SPEED)
+        : valueToColorThreshold(windSpeed, WIND_SPEED)
 }
 
 export function fetchWindData(
