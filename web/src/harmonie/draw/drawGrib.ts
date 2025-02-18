@@ -9,7 +9,7 @@ import { isCalculatedWindDirection, windDirectionArrows, windDirectionColors, wi
 
 import latvia_border from '../../assets/latvia_contour.webp'
 const latviaBoderImg = new Image()
-latviaBoderImg.onload = () => console.log('latvia_contour loaded')
+latviaBoderImg.onload = () => console.log('latvia_contour loaded...')
 latviaBoderImg.src = latvia_border
 
 export type CropBounds = { x: number, y: number, width: number, height: number }
@@ -70,7 +70,7 @@ export function drawGrib(
     ctx.restore()
 
     if (cropBounds) {
-        drawRotate(canvas, ctx)
+        drawRotate(canvas, ctx, isInterpolated)
     }
 
     if (isContour && cropBounds) {
@@ -161,8 +161,8 @@ function fillImageData(
 function drawRotate(
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D,
+    isInterpolated = false,
     angleDegrees = 26,
-    // angleDegrees = 0,
 ) {
     const tempCanvas = document.createElement('canvas')
     tempCanvas.width = canvas.width
@@ -179,6 +179,13 @@ function drawRotate(
     // canvas.height = 165
     canvas.width = 1365
     canvas.height = 576
+    // console.log(ctx.imageSmoothingEnabled, ctx.imageSmoothingQuality)
+    if (isInterpolated) {
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = 'high' // Options: 'low', 'medium', 'high'
+    } else {
+        ctx.imageSmoothingEnabled = false
+    }
     ctx.save()
     ctx.translate(canvas.width/2, canvas.height/2)
     ctx.scale(3.5, 3.5)
