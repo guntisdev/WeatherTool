@@ -3,11 +3,11 @@ import { Component, createSignal } from 'solid-js'
 import { apiHost } from '../consts'
 import styles from './harmonie.module.css'
 import { GribFile } from './GribFile'
-import { LoadingSpinner } from '../components/LoadingSpinner'
 import { GribMessage } from './interfaces'
 import { fetchJson } from '../helpers/fetch'
 import { getFakeWindDirection, isWindSpeed } from './draw/windDirection'
 import { getFakeHourPrecipitation, isPrecipitation } from './draw/precipitation'
+import { DrawView } from './DrawView'
 
 export const Harmonie: Component<{}> = () => {
     const [getFileList, setFileList] = createSignal<string[]>([])
@@ -17,6 +17,10 @@ export const Harmonie: Component<{}> = () => {
     const [getIsContour, setIsContour] = createSignal(true)
     const [getIsInterpolated, setIsInterpolated] = createSignal(true)
     const [getGribList, setGribList] = createSignal<GribMessage[]>([])
+
+    const cachedMessagesSignal = createSignal<GribMessage[]>([])
+    const cachedBuffersSignal = createSignal<Uint8Array[]>([])
+    const cachedBitmasksSignal = createSignal<Uint8Array[]>([])
 
     fetchJson(`${apiHost}/api/show/grib-list`)
         .then(fileList => {
@@ -79,15 +83,22 @@ export const Harmonie: Component<{}> = () => {
                         setIsLoading={setIsLoading}
                         getFileGribList={() => getCurrentGribList(fileName)}
                         getAllGribLists={getGribList}
-                        options={{ getIsCrop: getIsCrop, getIsContour: getIsContour, getIsInterpolated: getIsInterpolated }}
                         onClick={() => onGribMessageClick(fileName)}
+                        cachedMessagesSignal={cachedMessagesSignal}
+                        cachedBuffersSignal={cachedBuffersSignal}
+                        cachedBitmasksSignal={cachedBitmasksSignal}
                     />
                 )}
             </ul>
         </div>
         <div class={styles.column}>
-            { getIsLoading() && <LoadingSpinner text='' />}
-            <canvas ref={setCanvas} style={{ display: getIsLoading() ? 'none' : 'block' }} />
+            <DrawView
+                isLoadingSignal={[getIsLoading, setIsLoading]}
+                options={{ getIsCrop: getIsCrop, getIsContour: getIsContour, getIsInterpolated: getIsInterpolated }}
+                cachedMessagesSignal={cachedMessagesSignal}
+                cachedBuffersSignal={cachedBuffersSignal}
+                cachedBitmasksSignal={cachedBitmasksSignal}
+            />
         </div>
     </div>
 }
