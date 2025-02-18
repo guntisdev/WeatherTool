@@ -8,7 +8,7 @@ import { drawGrib } from './draw/drawGrib'
 import { fetchWindData, isCalculatedWindDirection } from './draw/windDirection'
 import { fetchHourPrecipitationData, isCalculatedHourPrecipitation } from './draw/precipitation'
 
-const CROP_BOUNDS = { x: 1906-1-400, y: 950, width: 400, height: 300 }
+const CROP_BOUNDS = { x: 1906-1-440, y: 895, width: 440, height: 380 }
 
 export const GribFile: Component<{
     name: string,
@@ -80,6 +80,16 @@ export const GribFile: Component<{
         .catch(err => console.warn(err.message))
         .finally(() => setIsLoading(false))
     }
+
+    ///// HACK - delete this
+    // createEffect(() => {
+    //     if (
+    //         getFileGribList().length
+    //         && name === 'harmonie_2025-02-18T0900Z_2025-02-18T1900Z.grib'
+    //     ) {
+    //         onParamClick(5)
+    //     }
+    // })
 
     return <li
         class={getIsActive() ? styles.active : ''}
