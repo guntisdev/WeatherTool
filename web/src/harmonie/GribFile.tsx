@@ -1,49 +1,33 @@
-import { Accessor, Component, createEffect, createSignal, Setter } from 'solid-js'
+import { Accessor, batch, Component, createSignal, Setter, Signal } from 'solid-js'
 
 import styles from './harmonie.module.css'
 import { apiHost } from '../consts'
-import { DrawOptions, GribMessage } from './interfaces'
+import { GribMessage } from './interfaces'
 import { fetchBuffer } from '../helpers/fetch'
-import { drawGrib } from './draw/drawGrib'
 import { fetchWindData, isCalculatedWindDirection } from './draw/windDirection'
 import { fetchHourPrecipitationData, isCalculatedHourPrecipitation } from './draw/precipitation'
-
-const CROP_BOUNDS = { x: 1906-1-440, y: 895, width: 440, height: 380 }
 
 export const GribFile: Component<{
     name: string,
     getCanvas: Accessor<HTMLCanvasElement | undefined>,
     setIsLoading: Setter<boolean>,
-    getFileGribList: Accessor<GribMessage[]> // specific reference and forecast time (in one file)
-    getAllGribLists: Accessor<GribMessage[]>
-    options: DrawOptions;
+    getFileGribList: Accessor<GribMessage[]>, // specific reference and forecast time (in one file)
+    getAllGribLists: Accessor<GribMessage[]>,
     onClick: (name: string) => void,
+    cachedMessagesSignal: Signal<GribMessage[]>,
+    cachedBuffersSignal: Signal<Uint8Array[]>,
+    cachedBitmasksSignal: Signal<Uint8Array[]>,
 }> = ({
     name,
-    getCanvas,
     setIsLoading,
     getFileGribList,
     getAllGribLists,
-    options,
     onClick,
+    cachedMessagesSignal: [, setCachedMessages],
+    cachedBuffersSignal: [, setCachedBuffers],
+    cachedBitmasksSignal: [, setCachedBitmasks],
 }) => {
-    let cachedMessages: GribMessage[] = []
-    let cachedBuffers: Uint8Array[] = []
-    let cachedBitmasks: Uint8Array[] = []
-
     const [getIsActive, setIsActive] = createSignal(false)
-
-    createEffect(async () => {
-        setIsLoading(true)
-        const cropBounds = options.getIsCrop() ? CROP_BOUNDS : undefined
-        const contour = options.getIsContour()
-        const isInterpolated = options.getIsInterpolated()
-        // hack to show loading spinner
-        await new Promise(resolve => setTimeout(resolve, 100))
-        if (cachedMessages.length === 0) return;
-        drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds, contour, isInterpolated)
-        setIsLoading(false)
-    })
 
     function onParamClick(paramId: number) {
         setIsLoading(true);
@@ -70,11 +54,11 @@ export const GribFile: Component<{
         if(isCalculatedHourPrecipitation(grib)) fetchPromise = fetchHourPrecipitationData(grib, getAllGribLists())
         
         fetchPromise.then(([messages, binaryBuffers, bitmasks]) => {
-            cachedMessages = messages
-            cachedBuffers = binaryBuffers.map(b => new Uint8Array(b))
-            cachedBitmasks = bitmasks.map(b => new Uint8Array(b))
-            const cropBounds = options.getIsCrop() ? CROP_BOUNDS : undefined 
-            drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds, options.getIsContour(), options.getIsInterpolated())
+            batch(() => {
+                setCachedMessages(messages)
+                setCachedBuffers(binaryBuffers.map(b => new Uint8Array(b)))
+                setCachedBitmasks(bitmasks.map(b => new Uint8Array(b)))
+            })
         })
         .catch(err => console.warn(err.message))
         .finally(() => setIsLoading(false))
