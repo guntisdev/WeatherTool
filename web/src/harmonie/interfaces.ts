@@ -1,3 +1,5 @@
+import { Accessor } from 'solid-js'
+
 export type MeteoParam = {
     discipline: number, // 0=meteo, 1=hydro, 2=land surface, 3=space products
     category: number, // 0=temperature, 1=moisture, 6=cloud, 19=atmospheric
@@ -42,4 +44,10 @@ export type GribSection = {
 export type GribTime = {
     referenceTime: string,
     forecastTime: string,
+}
+
+export type DrawOptions = {
+    getIsCrop: Accessor<boolean>,
+    getIsContour: Accessor<boolean>,
+    getIsInterpolated: Accessor<boolean>,
 }

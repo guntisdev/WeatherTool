@@ -26,6 +26,7 @@ export function drawGrib(
     bitmasks: Uint8Array[],
     cropBounds: CropBounds | undefined,
     isContour: boolean,
+    isInterpolated: boolean,
 ): void {
     // normally we have one message/buffer/bitmask?. special cases have multiple like wind direction
     const [grib] = messages
@@ -52,7 +53,7 @@ export function drawGrib(
     const ctx = canvas.getContext('2d')!
     let imgData = ctx.createImageData(cols, rows)
     
-    fillImageData(imgData, messages, modifiedBuffers)
+    fillImageData(imgData, messages, modifiedBuffers, isInterpolated)
     if (isCalculatedWindDirection(grib)) {
         imgData = windDirectionArrows(imgData, messages, modifiedBuffers)
     }
@@ -90,6 +91,7 @@ function fillImageData(
     imgData: ImageData,
     messages: GribMessage[],
     buffers: Uint8Array[],
+    isInterpolated: boolean,
 ) {
     const [grib] = messages
     const [buffer] = buffers
@@ -116,33 +118,33 @@ function fillImageData(
                 color = categoricalRainColors(firstByte)
             }
             else if (isMeteoEqual(meteo, TOTAL_PRECIPITATION)) {
-                color = precipitationColors(encodedValue, conversion)
+                color = precipitationColors(encodedValue, conversion, isInterpolated)
             }
             else if (isMeteoEqual(meteo, HOUR_PRECIPITATION)) {
                 const [, nowPrec, prevPrec] = buffers
                 const encodedValNow = toInt(nowPrec.slice(bufferI, bufferI+bitsPerDataPoint/8))
                 const encodedValPrev = toInt(prevPrec.slice(bufferI, bufferI+bitsPerDataPoint/8))
                 const [, metaNow, metaPrev] = messages
-                color = hourPrecipitationColors(encodedValNow, metaNow.conversion, encodedValPrev, metaPrev.conversion)
+                color = hourPrecipitationColors(encodedValNow, metaNow.conversion, encodedValPrev, metaPrev.conversion, isInterpolated)
             }
             else if (isMeteoEqual(meteo, RAIN_PRECIPITATION)) {
-                color = precipitationColors(encodedValue, conversion)
+                color = precipitationColors(encodedValue, conversion, isInterpolated)
             }
             else if (isMeteoEqual(meteo, TEMPERATURE)) {
-                color = temperatureColors(encodedValue, conversion)
+                color = temperatureColors(encodedValue, conversion, isInterpolated)
             }
             else if (isMeteoEqual(meteo, WIND_DIRECTION)) {
                 const [, bufferU, bufferV] = buffers
                 const encodedValU = toInt(bufferU.slice(bufferI, bufferI+bitsPerDataPoint/8))
                 const encodedValV = toInt(bufferV.slice(bufferI, bufferI+bitsPerDataPoint/8))
                 const [, metaU, metaV] = messages // first message fake one 0-2-192
-                color = windDirectionColors(encodedValU, encodedValV, metaU!.conversion, metaV!.conversion)
+                color = windDirectionColors(encodedValU, encodedValV, metaU!.conversion, metaV!.conversion, isInterpolated)
             }
             else if (isMeteoEqual(meteo, WIND_SPEED)) {
-                color = windSpeedColors(encodedValue, conversion)
+                color = windSpeedColors(encodedValue, conversion, isInterpolated)
             }
             else if (isMeteoEqual(meteo, WIND_SPEED_GUST)) {
-                color = windSpeedColors(encodedValue, conversion)
+                color = windSpeedColors(encodedValue, conversion, isInterpolated)
             }
             else {
                 color = interpolateColors(firstByte, fromColor, toColor)

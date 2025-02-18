@@ -2,7 +2,7 @@ import { Accessor, Component, createEffect, createSignal, Setter } from 'solid-j
 
 import styles from './harmonie.module.css'
 import { apiHost } from '../consts'
-import { GribMessage } from './interfaces'
+import { DrawOptions, GribMessage } from './interfaces'
 import { fetchBuffer } from '../helpers/fetch'
 import { drawGrib } from './draw/drawGrib'
 import { fetchWindData, isCalculatedWindDirection } from './draw/windDirection'
@@ -16,8 +16,7 @@ export const GribFile: Component<{
     setIsLoading: Setter<boolean>,
     getFileGribList: Accessor<GribMessage[]> // specific reference and forecast time (in one file)
     getAllGribLists: Accessor<GribMessage[]>
-    getIsCrop: Accessor<boolean>,
-    getIsContour: Accessor<boolean>,
+    options: DrawOptions;
     onClick: (name: string) => void,
 }> = ({
     name,
@@ -25,8 +24,7 @@ export const GribFile: Component<{
     setIsLoading,
     getFileGribList,
     getAllGribLists,
-    getIsCrop,
-    getIsContour,
+    options,
     onClick,
 }) => {
     let cachedMessages: GribMessage[] = []
@@ -37,12 +35,13 @@ export const GribFile: Component<{
 
     createEffect(async () => {
         setIsLoading(true)
-        const cropBounds = getIsCrop() ? CROP_BOUNDS : undefined
-        const contour = getIsContour()
+        const cropBounds = options.getIsCrop() ? CROP_BOUNDS : undefined
+        const contour = options.getIsContour()
+        const isInterpolated = options.getIsInterpolated()
         // hack to show loading spinner
         await new Promise(resolve => setTimeout(resolve, 100))
         if (cachedMessages.length === 0) return;
-        drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds, contour)
+        drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds, contour, isInterpolated)
         setIsLoading(false)
     })
 
@@ -74,8 +73,8 @@ export const GribFile: Component<{
             cachedMessages = messages
             cachedBuffers = binaryBuffers.map(b => new Uint8Array(b))
             cachedBitmasks = bitmasks.map(b => new Uint8Array(b))
-            const cropBounds = getIsCrop() ? CROP_BOUNDS : undefined 
-            drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds, getIsContour())
+            const cropBounds = options.getIsCrop() ? CROP_BOUNDS : undefined 
+            drawGrib(getCanvas()!, cachedMessages, cachedBuffers, cachedBitmasks, cropBounds, options.getIsContour(), options.getIsInterpolated())
         })
         .catch(err => console.warn(err.message))
         .finally(() => setIsLoading(false))
