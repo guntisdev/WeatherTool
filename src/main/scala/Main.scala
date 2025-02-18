@@ -22,7 +22,7 @@ object Main extends IOApp {
         .flatMap(fetchService.fetchSingleFile)
         .flatMap {
           case Right((name, content)) => postgresService.save(name, content)
-          case Left(error) => IO.raiseError(error)
+          case Left(_) => IO.unit // ignore error
         }
       fetchCsvTask = scheduler.scheduleTask("Fetch CSV", List(31), fetchCsvList).compile.drain
 

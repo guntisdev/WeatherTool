@@ -14,6 +14,11 @@ latviaBoderImg.src = latvia_border
 
 export type CropBounds = { x: number, y: number, width: number, height: number }
 
+/*
+* final cropped size should be 1365x576px - divided by 3 (455x192) or 3.5 (390x165)
+* image should be rotade 26 degrees
+* currently image is 400x300px 
+*/
 export function drawGrib(
     canvas: HTMLCanvasElement,
     messages: GribMessage[],
@@ -41,8 +46,9 @@ export function drawGrib(
 
     canvas.width = cols
     canvas.height = rows
-    canvas.style.width = '100%'
-    canvas.style.minWidth = '1280px'
+    // canvas.style.width = '100%'
+    // canvas.style.minWidth = '1365px'
+    // canvas.style.border = '1px solid red'
     const ctx = canvas.getContext('2d')!
     let imgData = ctx.createImageData(cols, rows)
     
@@ -60,10 +66,13 @@ export function drawGrib(
     ctx.save()
     ctx.scale(1, -1)
     ctx.drawImage(tempCanvas, 0, -canvas.height)
-    // ctx.drawImage(tempCanvas, 0, 0)
     ctx.restore()
 
-    if (isContour && !!cropBounds) {
+    if (cropBounds) {
+        drawRotate(canvas, ctx)
+    }
+
+    if (isContour && cropBounds) {
         drawContour(canvas, ctx) // draw latvia contour only on cropped image
     }
 }
@@ -147,15 +156,42 @@ function fillImageData(
     }
 }
 
+function drawRotate(
+    canvas: HTMLCanvasElement,
+    ctx: CanvasRenderingContext2D,
+    angleDegrees = 26,
+    // angleDegrees = 0,
+) {
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = canvas.width
+    tempCanvas.height = canvas.height
+    const tempCtx = tempCanvas.getContext('2d')!
+    tempCtx.save()
+    tempCtx.translate(tempCanvas.width/2, tempCanvas.height/2)
+    tempCtx.rotate(angleDegrees * Math.PI/180)
+    tempCtx.drawImage(canvas, -canvas.width/2, -canvas.height/2)
+    tempCtx.restore()
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    // canvas.width = 390
+    // canvas.height = 165
+    canvas.width = 1365
+    canvas.height = 576
+    ctx.save()
+    ctx.translate(canvas.width/2, canvas.height/2)
+    ctx.scale(3.5, 3.5)
+    ctx.drawImage(tempCanvas, -tempCanvas.width/2, -tempCanvas.height/2)
+    ctx.restore()
+}
+
 function drawContour(
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D,
 ): void {
     ctx.save()
-    ctx.translate(canvas.width/2 + 8, canvas.height/2 - 5)
-    const angle = -26
-    ctx.rotate(angle * Math.PI / 180)
-    const scale = 5.3
+    ctx.translate(canvas.width/2 +120, canvas.height/2 -20)
+    // TODO create contour image exact scale when sizes will be accepted
+    const scale = 5.3/3.5
     const scaledWidth = latviaBoderImg.width/scale
     const scaledHeight = latviaBoderImg.height/scale
     ctx.drawImage(latviaBoderImg, 

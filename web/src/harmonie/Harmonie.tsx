@@ -14,13 +14,16 @@ export const Harmonie: Component<{}> = () => {
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>()
     const [getIsLoading, setIsLoading] = createSignal(true)
     const [getIsCrop, setIsCrop] = createSignal(true)
-    const [getIsContour, setIsContour] = createSignal(false)
+    const [getIsContour, setIsContour] = createSignal(true)
     const [getGribList, setGribList] = createSignal<GribMessage[]>([])
 
     fetchJson(`${apiHost}/api/show/grib-list`)
         .then(fileList => {
             fileList.sort((a: string, b: string) => a < b ? 1 : -1)
             setFileList(fileList)
+
+            // HACK - remove this
+            // onGribMessageClick('teeest')
         })
         .finally(() => setIsLoading(false))
 
