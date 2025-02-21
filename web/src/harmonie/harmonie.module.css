@@ -54,3 +54,18 @@
 .meteoParams li:hover {
     text-decoration: underline;
 }
+
+
+.dateList {
+    padding-left: 0;
+}
+
+.dateList li {
+    color: #ddd;
+    background-color: #333;
+    padding: 5px 0 5px 10px;
+}
+
+.dateList li .controls {
+    padding: 10px 3px;
+}

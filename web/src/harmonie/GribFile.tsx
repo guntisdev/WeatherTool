@@ -9,7 +9,6 @@ import { fetchHourPrecipitationData, isCalculatedHourPrecipitation } from './dra
 
 export const GribFile: Component<{
     name: string,
-    getCanvas: Accessor<HTMLCanvasElement | undefined>,
     setIsLoading: Setter<boolean>,
     getFileGribList: Accessor<GribMessage[]>, // specific reference and forecast time (in one file)
     getAllGribLists: Accessor<GribMessage[]>,
