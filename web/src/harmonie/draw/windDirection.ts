@@ -145,12 +145,13 @@ export function windSpeedColors(
 }
 
 export function fetchWindData(
-    customMessage: GribMessage,
-    gribArr: GribMessage[],
-    fileName: string,
+    grib: GribMessage,
+    gribList: GribMessage[],
 ): Promise<[GribMessage[], ArrayBuffer[], ArrayBuffer[]]> {
-    const windU = gribArr.find(m => m.meteo.discipline===0 && m.meteo.category===2 && m.meteo.product===2 && m.meteo.levelType===103 && m.meteo.levelValue===10)
-    const windV = gribArr.find(m => m.meteo.discipline===0 && m.meteo.category===2 && m.meteo.product===3 && m.meteo.levelType===103 && m.meteo.levelValue===10)
+    const fileName = `harmonie_${grib.time.referenceTime}_${grib.time.forecastTime}.grib`
+    const sameDateGribList = gribList.filter(g => g.time.referenceTime === grib.time.referenceTime && g.time.forecastTime === grib.time.forecastTime)
+    const windU = sameDateGribList.find(m => m.meteo.discipline===0 && m.meteo.category===2 && m.meteo.product===2 && m.meteo.levelType===103 && m.meteo.levelValue===10)
+    const windV = sameDateGribList.find(m => m.meteo.discipline===0 && m.meteo.category===2 && m.meteo.product===3 && m.meteo.levelType===103 && m.meteo.levelValue===10)
     if (!windU || !windV) throw new Error('Didnt found u/v components of wind')
 
     const section7u = windU.sections.find(section => section.id === 7)
@@ -167,7 +168,7 @@ export function fetchWindData(
         fetchBuffer(`${apiHost}/api/grib/binary-chunk/${uBinaryOffset}/${uBinaryLength}/${fileName}`),
         fetchBuffer(`${apiHost}/api/grib/binary-chunk/${vBinaryOffset}/${vBinaryLength}/${fileName}`),
     ]).then(([bufferU, bufferV]) => {
-        const messages = [customMessage, windU, windV]
+        const messages = [grib, windU, windV]
         const buffers = [bufferU, bufferU, bufferV]
         return [messages, buffers, []]
     })

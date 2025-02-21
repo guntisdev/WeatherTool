@@ -1,13 +1,10 @@
 import { Component, createSignal } from 'solid-js'
 
-import { apiHost } from '../consts'
 import { GribFile } from './GribFile'
 import { GribMessage } from './interfaces'
-import { fetchJson } from '../helpers/fetch'
-import { getFakeWindDirection, isWindSpeed } from './draw/windDirection'
-import { getFakeHourPrecipitation, isPrecipitation } from './draw/precipitation'
 import { DrawView } from './DrawView'
 import { ReferenceTimes } from './ReferenceTimes'
+import { fetchGribList, fetchGribListStructure } from './fetchGrib'
 
 import styles from './harmonie.module.css'
 
@@ -23,28 +20,16 @@ export const Harmonie: Component<{}> = () => {
     const cachedBuffersSignal = createSignal<Uint8Array[]>([])
     const cachedBitmasksSignal = createSignal<Uint8Array[]>([])
 
-    fetchJson(`${apiHost}/api/show/grib-list`)
-        .then(fileList => {
-            fileList.sort((a: string, b: string) => a < b ? 1 : -1)
-            setFileList(fileList)
-
-            // HACK - remove this
-            // onGribMessageClick('teeest')
-        })
+    fetchGribList()
+        .then(setFileList)
         .finally(() => setIsLoading(false))
 
     function getAllGribStructure() {
         if(!getGribList().length) {
             setIsLoading(true)
-            fetchJson(`${apiHost}/api/show/grib-all-structure`)
-            .then((gribList: GribMessage[]) => {
-                setGribList([
-                    ...gribList,
-                    ...gribList.filter(isWindSpeed).map(getFakeWindDirection),
-                    ...gribList.filter(isPrecipitation).map(getFakeHourPrecipitation),
-                ].sort((a, b) => a.title > b.title ? 1 : -1))
-            })
-            .finally(() => setIsLoading(false))
+            fetchGribListStructure()
+                .then(setGribList)
+                .finally(() => setIsLoading(false))
         }
     }
 

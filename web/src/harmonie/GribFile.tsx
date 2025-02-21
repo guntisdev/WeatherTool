@@ -1,11 +1,8 @@
 import { Accessor, batch, Component, createSignal, Setter, Signal } from 'solid-js'
 
 import styles from './harmonie.module.css'
-import { apiHost } from '../consts'
 import { GribMessage } from './interfaces'
-import { fetchBuffer } from '../helpers/fetch'
-import { fetchWindData, isCalculatedWindDirection } from './draw/windDirection'
-import { fetchHourPrecipitationData, isCalculatedHourPrecipitation } from './draw/precipitation'
+import { fetchGribBinaries } from './fetchGrib'
 
 export const GribFile: Component<{
     name: string,
@@ -31,28 +28,8 @@ export const GribFile: Component<{
     function onParamClick(paramId: number) {
         setIsLoading(true);
         const grib = getFileGribList()[paramId]
-        const bitmaskSection = grib.sections.find(section => section.id === 6)
-        const binarySection = grib.sections.find(section => section.id === 7)
-        if (!bitmaskSection || !binarySection) return;
 
-        const bitmaskOffset = bitmaskSection.offset + 6
-        const bitmaskLength = bitmaskSection.size - 6
-        const bitmaskPromise = bitmaskSection.size > 6
-            ? fetchBuffer(`${apiHost}/api/grib/binary-chunk/${bitmaskOffset}/${bitmaskLength}/${name}`).then(b=>[b])
-            : Promise.resolve([])
-
-        const binaryOffset = binarySection.offset + 5
-        const binaryLength = binarySection.size - 5
-        let fetchPromise: Promise<[GribMessage[], ArrayBuffer[], ArrayBuffer[]]> = Promise.all([
-                Promise.resolve([grib]),
-                fetchBuffer(`${apiHost}/api/grib/binary-chunk/${binaryOffset}/${binaryLength}/${name}`).then(b=>[b]),
-                bitmaskPromise,
-            ])
-
-        if(isCalculatedWindDirection(grib)) fetchPromise = fetchWindData(grib, getFileGribList(), name)
-        if(isCalculatedHourPrecipitation(grib)) fetchPromise = fetchHourPrecipitationData(grib, getAllGribLists())
-        
-        fetchPromise.then(([messages, binaryBuffers, bitmasks]) => {
+        fetchGribBinaries(grib, getAllGribLists()).then(([messages, binaryBuffers, bitmasks]) => {
             batch(() => {
                 setCachedMessages(messages)
                 setCachedBuffers(binaryBuffers.map(b => new Uint8Array(b)))
