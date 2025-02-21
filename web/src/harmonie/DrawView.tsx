@@ -4,23 +4,23 @@ import { LoadingSpinner } from '../components/LoadingSpinner'
 import { DrawOptions, GribMessage } from './interfaces'
 import { drawGrib } from './draw/drawGrib'
 
-const CROP_BOUNDS = { x: 1906-1-440, y: 895, width: 440, height: 380 }
+export const CROP_BOUNDS = { x: 1906-1-440, y: 895, width: 440, height: 380 }
 
 export const DrawView: Component<{
     isLoadingSignal: Signal<boolean>,
     options: DrawOptions;
+    canvasSignal: Signal<HTMLCanvasElement | undefined>,
     cachedMessagesSignal: Signal<GribMessage[]>,
     cachedBuffersSignal: Signal<Uint8Array[]>,
     cachedBitmasksSignal: Signal<Uint8Array[]>,
 }> = ({
     isLoadingSignal: [getIsLoading, setIsLoading],
     options,
+    canvasSignal: [getCanvas, setCanvas],
     cachedMessagesSignal: [getCachedMessages],
     cachedBuffersSignal: [getCachedBuffers],
     cachedBitmasksSignal: [getCachedBitmasks],
 }) => {
-    const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>()
-
     createEffect(async () => {
         setIsLoading(true)
         const canvas = getCanvas()!

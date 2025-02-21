@@ -69,3 +69,8 @@
 .dateList li .controls {
     padding: 10px 3px;
 }
+
+.slideShow li {
+    display: inline;
+    padding: 3px 5px;
+}

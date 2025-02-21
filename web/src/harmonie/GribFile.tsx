@@ -32,8 +32,8 @@ export const GribFile: Component<{
         fetchGribBinaries(grib, getAllGribLists()).then(([messages, binaryBuffers, bitmasks]) => {
             batch(() => {
                 setCachedMessages(messages)
-                setCachedBuffers(binaryBuffers.map(b => new Uint8Array(b)))
-                setCachedBitmasks(bitmasks.map(b => new Uint8Array(b)))
+                setCachedBuffers(binaryBuffers)
+                setCachedBitmasks(bitmasks)
             })
         })
         .catch(err => console.warn(err.message))

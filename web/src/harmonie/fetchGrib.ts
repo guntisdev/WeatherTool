@@ -27,7 +27,7 @@ export function fetchGribListStructure(): Promise<GribMessage[]> {
 export function fetchGribBinaries(
     grib: GribMessage,
     gribList: GribMessage[],
-) {
+): Promise<[GribMessage[], Uint8Array[], Uint8Array[]]> {
     const fileName = `harmonie_${grib.time.referenceTime}_${grib.time.forecastTime}.grib`
     const bitmaskSection = grib.sections.find(section => section.id === 6)
     const binarySection = grib.sections.find(section => section.id === 7)
@@ -51,4 +51,9 @@ export function fetchGribBinaries(
     if(isCalculatedHourPrecipitation(grib)) fetchPromise = fetchHourPrecipitationData(grib, gribList)
     
     return fetchPromise
+        .then(([messages, buffers, bitmasks]) => [
+            messages,
+            buffers.map(b => new Uint8Array(b)),
+            bitmasks.map(b => new Uint8Array(b)),
+        ])
 }
