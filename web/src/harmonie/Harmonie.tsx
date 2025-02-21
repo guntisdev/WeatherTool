@@ -7,6 +7,7 @@ import { ReferenceTimes } from './ReferenceTimes'
 import { fetchGribList, fetchGribListStructure } from './fetchGrib'
 
 import styles from './harmonie.module.css'
+import { SlideShow } from './SlideShow'
 
 export const Harmonie: Component<{}> = () => {
     const [getFileList, setFileList] = createSignal<string[]>([])
@@ -15,6 +16,8 @@ export const Harmonie: Component<{}> = () => {
     const [getIsContour, setIsContour] = createSignal(true)
     const [getIsInterpolated, setIsInterpolated] = createSignal(true)
     const [getGribList, setGribList] = createSignal<GribMessage[]>([])
+    const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>()
+    const [getImgList, setImgList] = createSignal<[string, ImageBitmap][]>([])
 
     const cachedMessagesSignal = createSignal<GribMessage[]>([])
     const cachedBuffersSignal = createSignal<Uint8Array[]>([])
@@ -62,8 +65,12 @@ export const Harmonie: Component<{}> = () => {
                 <input type='checkbox' checked={getIsInterpolated()} onChange={()=>setIsInterpolated(!getIsInterpolated())} />
             </label>
             <ReferenceTimes
+                setIsLoading={setIsLoading}
                 getFileList={getFileList}
                 getGribList={getGribList}
+                getCanvas={getCanvas}
+                options={{ getIsCrop: getIsCrop, getIsContour: getIsContour, getIsInterpolated: getIsInterpolated }}
+                setImgList={setImgList}
                 onClick={getAllGribStructure}
             />
             <ul class={styles.fileList}>
@@ -82,9 +89,14 @@ export const Harmonie: Component<{}> = () => {
             </ul>
         </div>
         <div class={styles.column}>
+            <SlideShow
+                getCanvas={getCanvas}
+                getImgList={getImgList}
+            />
             <DrawView
                 isLoadingSignal={[getIsLoading, setIsLoading]}
                 options={{ getIsCrop: getIsCrop, getIsContour: getIsContour, getIsInterpolated: getIsInterpolated }}
+                canvasSignal={[getCanvas, setCanvas]}
                 cachedMessagesSignal={cachedMessagesSignal}
                 cachedBuffersSignal={cachedBuffersSignal}
                 cachedBitmasksSignal={cachedBitmasksSignal}
