@@ -1,17 +1,18 @@
 import { Component, createSignal } from 'solid-js'
 
 import { apiHost } from '../consts'
-import styles from './harmonie.module.css'
 import { GribFile } from './GribFile'
 import { GribMessage } from './interfaces'
 import { fetchJson } from '../helpers/fetch'
 import { getFakeWindDirection, isWindSpeed } from './draw/windDirection'
 import { getFakeHourPrecipitation, isPrecipitation } from './draw/precipitation'
 import { DrawView } from './DrawView'
+import { ReferenceTimes } from './ReferenceTimes'
+
+import styles from './harmonie.module.css'
 
 export const Harmonie: Component<{}> = () => {
     const [getFileList, setFileList] = createSignal<string[]>([])
-    const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>()
     const [getIsLoading, setIsLoading] = createSignal(true)
     const [getIsCrop, setIsCrop] = createSignal(true)
     const [getIsContour, setIsContour] = createSignal(true)
@@ -32,7 +33,7 @@ export const Harmonie: Component<{}> = () => {
         })
         .finally(() => setIsLoading(false))
 
-    function onGribMessageClick(fileName: string) {
+    function getAllGribStructure() {
         if(!getGribList().length) {
             setIsLoading(true)
             fetchJson(`${apiHost}/api/show/grib-all-structure`)
@@ -75,15 +76,19 @@ export const Harmonie: Component<{}> = () => {
                 Interpolate
                 <input type='checkbox' checked={getIsInterpolated()} onChange={()=>setIsInterpolated(!getIsInterpolated())} />
             </label>
+            <ReferenceTimes
+                getFileList={getFileList}
+                getGribList={getGribList}
+                onClick={getAllGribStructure}
+            />
             <ul class={styles.fileList}>
                 {getFileList().map(fileName =>
                     <GribFile 
                         name={fileName}
-                        getCanvas={getCanvas}
                         setIsLoading={setIsLoading}
                         getFileGribList={() => getCurrentGribList(fileName)}
                         getAllGribLists={getGribList}
-                        onClick={() => onGribMessageClick(fileName)}
+                        onClick={getAllGribStructure}
                         cachedMessagesSignal={cachedMessagesSignal}
                         cachedBuffersSignal={cachedBuffersSignal}
                         cachedBitmasksSignal={cachedBitmasksSignal}
