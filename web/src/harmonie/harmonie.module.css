@@ -70,17 +70,34 @@
     padding: 10px 3px;
 }
 
-.slideShow {
+
+
+.slideShowControls {
+    display: flex;
+    justify-content: space-between;
+}
+
+.slideShowControls .leftButtons {
+    display: flex;
+    gap: 5px;
+}
+
+.slideShowList {
     padding: 0;
 }
 
-.slideShow li {
+.slideShowList li {
     display: inline;
     font-size: 14px;
-    padding: 3px 3px;
+    padding: 3px 1px;
     border-radius: 5px;
+    border: 2px solid transparent;
 }
 
 .withImg {
-    background-color: rgb(187, 247, 187);
+    background-color: rgb(213, 248, 213);
+}
+
+.slideShowList li.active {
+    border: 2px solid green;
 }
