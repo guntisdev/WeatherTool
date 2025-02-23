@@ -25,9 +25,13 @@ export const ReferenceTimes: Component<{
     onClick,
 }) => {
     const [getActiveDate, setActiveDate] = createSignal('')
-    const dateList = () => {
+    const dateList = (): [string, number][] => {
         const datesStr = getFileList().map(f => f.replace('harmonie_', '').split('_')[0])
-        return [...new Set(datesStr)]
+        const uniqueDates = [...new Set(datesStr)]
+        return uniqueDates.map(dateStr => [
+            dateStr,
+            datesStr.filter(d => d === dateStr).length
+        ])
     }
 
     function onActiveDate(date: string) {
@@ -58,7 +62,6 @@ export const ReferenceTimes: Component<{
         Promise.all(promiseList)
             .then(imgList => {
                 imgList.sort((a, b) => a[0] > b[0] ? 1 : -1)
-                console.log(imgList)
                 setImgList(imgList)
             })
             .finally(() => {
@@ -70,10 +73,10 @@ export const ReferenceTimes: Component<{
     }
 
     return <ul class={styles.dateList}>
-        { dateList().map(dateStr =>
+        { dateList().map(([dateStr, count]) =>
             <li>
                 <div onClick={() => onActiveDate(dateStr)}>
-                    { dateStr }
+                    { dateStr } ({ count })
                 </div>
                 <div
                     class={styles.controls}
