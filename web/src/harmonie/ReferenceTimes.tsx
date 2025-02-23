@@ -1,4 +1,4 @@
-import { Accessor, Component, createSignal, resetErrorBoundaries, Setter } from 'solid-js'
+import { Accessor, Component, createSignal, resetErrorBoundaries, Setter, Signal } from 'solid-js'
 
 import { DrawOptions, GribMessage } from './interfaces'
 import { fetchGribBinaries } from './fetchGrib'
@@ -6,6 +6,7 @@ import { drawGrib } from './draw/drawGrib'
 import { CROP_BOUNDS } from './DrawView'
 
 import styles from './harmonie.module.css'
+import { handleProgressivePromises } from '../helpers/progressivePromises'
 
 export const ReferenceTimes: Component<{
     setIsLoading: Setter<boolean>,
@@ -13,7 +14,7 @@ export const ReferenceTimes: Component<{
     getGribList: Accessor<GribMessage[]>,
     getCanvas: Accessor<HTMLCanvasElement | undefined>,
     options: DrawOptions,
-    setImgList: Setter<[string, ImageBitmap][]>,
+    imgListSignal: Signal<[string, ImageBitmap | undefined][]>,
     onClick: () => void,
 }> = ({
     setIsLoading,
@@ -21,7 +22,7 @@ export const ReferenceTimes: Component<{
     getGribList,
     getCanvas,
     options,
-    setImgList,
+    imgListSignal: [getImgList, setImgList],
     onClick,
 }) => {
     const [getActiveDate, setActiveDate] = createSignal('')
@@ -40,16 +41,19 @@ export const ReferenceTimes: Component<{
         setActiveDate(newValue)
     }
 
-    async function getImgList(dateStr: string) {
+    async function fetchDrawImgList(refDateStr: string) {
         setIsLoading(true)
         const canvas = getCanvas()!
         const cropBounds = options.getIsCrop() ? CROP_BOUNDS : undefined
         const contour = options.getIsContour()
         const isInterpolated = options.getIsInterpolated()
         const forecastList = getGribList()
-            .filter(g => g.time.referenceTime === dateStr)
+            .filter(g => g.time.referenceTime === refDateStr)
             .filter(g => g.meteo.discipline === 0 && g.meteo.category === 1 && g.meteo.product === 192)
-            // .slice(0, 5) // TODO remove this
+        const emptyImgList: [string, undefined][] = forecastList
+            .map((grib): [string, undefined] => [grib.time.forecastTime, undefined])
+            .sort((a, b) => a[0] > b[0] ? 1 : -1)
+        setImgList(emptyImgList)
         const promiseList = forecastList.map(async (grib): Promise<[string, ImageBitmap]> => {
             const [messages, buffers, bitmasks] = await fetchGribBinaries(grib, getGribList())
             drawGrib(canvas, messages, buffers, bitmasks, cropBounds, contour, isInterpolated)
@@ -59,17 +63,20 @@ export const ReferenceTimes: Component<{
             return [grib.time.forecastTime, img]
         })
 
-        Promise.all(promiseList)
-            .then(imgList => {
-                imgList.sort((a, b) => a[0] > b[0] ? 1 : -1)
-                setImgList(imgList)
-            })
-            .finally(() => {
-                const ctx = canvas.getContext('2d')!
-                ctx.clearRect(0, 0, canvas.width, canvas.height)
-                setIsLoading(false)
-            })
-
+        handleProgressivePromises(
+            promiseList,
+            ([forecastDate, img]) => {
+                const udpdatedImgList = [...getImgList()]
+                const idx = udpdatedImgList.findIndex(([d]) => forecastDate === d)
+                if (idx >= 0) udpdatedImgList[idx][1] = img
+                setImgList(udpdatedImgList)
+            },
+        ).finally(() => {
+            console.log("FINALLLY")
+            const ctx = canvas.getContext('2d')!
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            setIsLoading(false)
+        })
     }
 
     return <ul class={styles.dateList}>
@@ -81,7 +88,7 @@ export const ReferenceTimes: Component<{
                 <div
                     class={styles.controls}
                     style={{ display: getActiveDate() === dateStr ? 'block' : 'none'}}
-                    onClick={() => getImgList(dateStr)}
+                    onClick={() => fetchDrawImgList(dateStr)}
                 >
                     {
                         getGribList().some(g => g.time.referenceTime === dateStr)

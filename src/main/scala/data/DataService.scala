@@ -27,12 +27,14 @@ object DataService {
 class DataService(log: Logger[IO]) {
   val BASE_FOLDER = "data"
   val GRIB_FOLDER = s"$BASE_FOLDER/grib"
+  val TMP_FOLDER = s"$BASE_FOLDER/tmp"
 
   def init: IO[Unit] = {
     for {
       _ <- fs2.io.file.Files[IO].createDirectories(fs2.io.file.Path(BASE_FOLDER))
       _ <- fs2.io.file.Files[IO].createDirectories(fs2.io.file.Path(GRIB_FOLDER))
-      _ <- log.info(s"Created directories: $BASE_FOLDER and $GRIB_FOLDER")
+      _ <- fs2.io.file.Files[IO].createDirectories(fs2.io.file.Path(TMP_FOLDER))
+      _ <- log.info(s"Created directories: $BASE_FOLDER, $GRIB_FOLDER, ${TMP_FOLDER}")
     } yield ()
   }
 

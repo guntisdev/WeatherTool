@@ -78,7 +78,7 @@ class FetchService(dataService: DataService, log: Logger[IO]) {
         request = Request[IO](Method.GET, urlWithParams)
 
         // TODO proly better to call dataService method than property
-        tmpPath = Path(s"${dataService.GRIB_FOLDER}/tmp.grib")
+        tmpPath = Path(s"${dataService.TMP_FOLDER}/tmp.grib")
         _ <- client.stream(request)
           .flatMap(_.body)
           .through(Files[IO].writeAll(tmpPath))

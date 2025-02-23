@@ -70,7 +70,17 @@
     padding: 10px 3px;
 }
 
+.slideShow {
+    padding: 0;
+}
+
 .slideShow li {
     display: inline;
+    font-size: 14px;
     padding: 3px 3px;
+    border-radius: 5px;
+}
+
+.withImg {
+    background-color: rgb(187, 247, 187);
 }
