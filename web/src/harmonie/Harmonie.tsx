@@ -90,6 +90,7 @@ export const Harmonie: Component<{}> = () => {
         </div>
         <div class={styles.column}>
             <SlideShow
+                getIsLoading={getIsLoading}
                 getCanvas={getCanvas}
                 getImgList={getImgList}
             />
