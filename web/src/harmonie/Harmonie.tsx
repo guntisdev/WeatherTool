@@ -17,7 +17,7 @@ export const Harmonie: Component<{}> = () => {
     const [getIsInterpolated, setIsInterpolated] = createSignal(true)
     const [getGribList, setGribList] = createSignal<GribMessage[]>([])
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>()
-    const [getImgList, setImgList] = createSignal<[string, ImageBitmap][]>([])
+    const [getImgList, setImgList] = createSignal<[string, ImageBitmap | undefined][]>([])
 
     const cachedMessagesSignal = createSignal<GribMessage[]>([])
     const cachedBuffersSignal = createSignal<Uint8Array[]>([])
@@ -70,7 +70,7 @@ export const Harmonie: Component<{}> = () => {
                 getGribList={getGribList}
                 getCanvas={getCanvas}
                 options={{ getIsCrop: getIsCrop, getIsContour: getIsContour, getIsInterpolated: getIsInterpolated }}
-                setImgList={setImgList}
+                imgListSignal={[getImgList, setImgList]}
                 onClick={getAllGribStructure}
             />
             <ul class={styles.fileList}>
