@@ -1,16 +1,21 @@
 package data
 
 import cats.effect.IO
-import cats.implicits.toTraverseOps
+import cats.effect.implicits.concurrentParTraverseOps
+import cats.effect.kernel.Resource
+import cats.effect.std.Semaphore
+import cats.effect.unsafe.implicits.global
+import cats.implicits._
 import fs2.io.file.{Files, Path}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import parse.grib.{Grib, GribParser}
 
-import java.nio.file.Paths
+import java.io.RandomAccessFile
 import java.time.{ZoneId, ZoneOffset, ZonedDateTime}
 import java.time.format.DateTimeFormatter
-import scala.io.Source
+import java.util.concurrent.Executors
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 object DataService {
@@ -59,17 +64,27 @@ class DataService(log: Logger[IO]) {
   def getAllFileStructure(): IO[List[Grib]] = {
     for {
       fileList <- getFileList()
-      allStructure <- fileList.traverse(getGribStucture)
+      allStructure <- fileList.parTraverseN(4)(getGribStucture) // limit concurrency to 4
     } yield allStructure.flatten
   }
 
+//  private val blockingEC = ExecutionContext.fromExecutorService(
+//    Executors.newFixedThreadPool(4) // limit concurrency to 4
+//  )
+//
+//  private val semaphore = Semaphore[IO](4).unsafeRunSync()
+
   def getBinaryChunk(offset: Int, length: Int, fileName: String): IO[Array[Byte]] = {
-    IO.blocking {
-      val source = Source.fromFile(s"$GRIB_FOLDER/$fileName", "ISO-8859-1")
-      try {
-        source.slice(offset, offset + length).map(_.toByte).toArray
-      } finally {
-        source.close()
+    val fileResource = Resource.make(
+      IO.blocking(new RandomAccessFile(s"$GRIB_FOLDER/$fileName", "r"))
+    )(file => IO.blocking(file.close()))
+
+    fileResource.use { file =>
+      IO.blocking {
+        val buffer = new Array[Byte](length)
+        file.seek(offset)
+        file.readFully(buffer)
+        buffer
       }
     }
   }
