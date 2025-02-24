@@ -1,6 +1,6 @@
 import { Accessor, Component, createSignal, Setter, Signal } from 'solid-js'
 
-import { DrawOptions, GribMessage } from './interfaces'
+import { DrawOptions, GribMessage, MeteoParam } from './interfaces'
 import { fetchGribBinaries } from './fetchGrib'
 import { drawGrib } from './draw/drawGrib'
 import { CROP_BOUNDS } from './DrawView'
@@ -8,11 +8,19 @@ import { CROP_BOUNDS } from './DrawView'
 import styles from './harmonie.module.css'
 import { handleProgressivePromises } from '../helpers/progressivePromises'
 
+const METEO_PARAMS: [string, MeteoParam][] = [
+    ['temperature', { discipline: 0, category: 0, product: 0, levelType: -1, levelValue: -1, subType: 'now' }],
+    ['precipitation', { discipline: 0, category: 1, product: 236, levelType: -1, levelValue: -1, subType: 'now' }],
+    ['categorical precipitation', { discipline: 0, category: 1, product: 192, levelType: -1, levelValue: -1, subType: 'now' }],
+    ['wind speed', { discipline: 0, category: 2, product: 1, levelType: -1, levelValue: -1, subType: 'now' }],
+    ['wind speed gust', { discipline: 0, category: 2, product: 22, levelType: -1, levelValue: -1, subType: 'now' }],
+    ['wind direction', { discipline: 0, category: 2, product: 192, levelType: -1, levelValue: -1, subType: 'now' }],
+]
+
 export const ReferenceTimes: Component<{
     setIsLoading: Setter<boolean>,
     getFileList: Accessor<string[]>,
     getGribList: Accessor<GribMessage[]>,
-    getCanvas: Accessor<HTMLCanvasElement | undefined>,
     options: DrawOptions,
     imgListSignal: Signal<[string, ImageBitmap | undefined][]>,
     setRefDate: Setter<string>,
@@ -21,7 +29,6 @@ export const ReferenceTimes: Component<{
     setIsLoading,
     getFileList,
     getGribList,
-    getCanvas,
     options,
     imgListSignal: [getImgList, setImgList],
     setRefDate,
@@ -43,20 +50,20 @@ export const ReferenceTimes: Component<{
         setActiveDate(newValue)
     }
 
-    async function fetchDrawImgList(refDateStr: string) {
+    async function fetchDrawImgList(refDateStr: string, param: MeteoParam) {
         setIsLoading(true)
-        const canvas = getCanvas()!
         const cropBounds = options.getIsCrop() ? CROP_BOUNDS : undefined
         const contour = options.getIsContour()
         const isInterpolated = options.getIsInterpolated()
         const forecastList = getGribList()
             .filter(g => g.time.referenceTime === refDateStr)
-            .filter(g => g.meteo.discipline === 0 && g.meteo.category === 1 && g.meteo.product === 192)
+            .filter(g => g.meteo.discipline === param.discipline && g.meteo.category === param.category && g.meteo.product === param.product)
         const emptyImgList: [string, undefined][] = forecastList
             .map((grib): [string, undefined] => [grib.time.forecastTime, undefined])
             .sort((a, b) => a[0] > b[0] ? 1 : -1)
         setImgList(emptyImgList)
         const promiseList = forecastList.map(async (grib): Promise<[string, ImageBitmap]> => {
+            const canvas = document.createElement('canvas')
             const [messages, buffers, bitmasks] = await fetchGribBinaries(grib, getGribList())
             drawGrib(canvas, messages, buffers, bitmasks, cropBounds, contour, isInterpolated)
             // just to be sure that draws
@@ -74,10 +81,7 @@ export const ReferenceTimes: Component<{
                 setImgList(udpdatedImgList)
             },
         ).finally(() => {
-            console.log("FINALLLY")
             setRefDate(refDateStr)
-            const ctx = canvas.getContext('2d')!
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
             setIsLoading(false)
         })
     }
@@ -86,18 +90,18 @@ export const ReferenceTimes: Component<{
         { dateList().map(([dateStr, count]) =>
             <li>
                 <div onClick={() => onActiveDate(dateStr)}>
-                    { dateStr } ({ count })
+                    <b>{ dateStr }</b> ({ count })
                 </div>
-                <div
+                <ul
                     class={styles.controls}
                     style={{ display: getActiveDate() === dateStr ? 'block' : 'none'}}
-                    onClick={() => fetchDrawImgList(dateStr)}
                 >
-                    {
-                        getGribList().some(g => g.time.referenceTime === dateStr)
-                        && <>TODO: download all forecasts</>
-                    }
-                </div>
+                    { METEO_PARAMS.map(([paramName, param]) =>
+                        <li onClick={() => fetchDrawImgList(dateStr, param)}>
+                            { paramName }
+                        </li>
+                    )}
+                </ul>
             </li>)}
     </ul>
 }
