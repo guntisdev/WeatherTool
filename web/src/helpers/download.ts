@@ -1,46 +1,65 @@
-export async function downloadImagesAsZip(images: [string, ImageBitmap][]) {
-    downloadCompressedImage(images[0][1], '00.gzip')
+import JSZip from 'jszip'
+
+export async function downloadImagesAsZip(
+    images: [string, ImageBitmap][],
+    filename = 'images',
+): Promise<void> {
+    filename = filename + '.zip'
+    const strBlobArr = await Promise.all(
+        images.map(async ([bitmapName, bitmap]): Promise<[string, Blob]> => {
+            const blob = await bitmapToBlob(bitmap)
+            return [bitmapName+'.webp', blob]
+        })
+    )
+
+    const content = await createZip(strBlobArr)
+
+    download(content, filename)
 }
 
-async function compressImage(bitmap: ImageBitmap): Promise<Blob> {
-    // First convert ImageBitmap to WebP using canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
+function bitmapToBlob( bitmap: ImageBitmap): Promise<Blob> {
+    const canvas = document.createElement('canvas')
+    canvas.width = bitmap.width
+    canvas.height = bitmap.height
+    const ctx = canvas.getContext('2d')!
+    ctx.drawImage(bitmap, 0, 0)
     
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get canvas context');
-    
-    ctx.drawImage(bitmap, 0, 0);
-    
-    // Get WebP blob
-    const webpBlob = await new Promise<Blob>((resolve) => {
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-      }, 'image/webp', 0.8); // Quality 0.8, adjust as needed
-    });
-  
-    // Convert Blob to ReadableStream
-    const webpStream = webpBlob.stream();
-    
-    // Apply GZIP compression
-    const compressedStream = webpStream.pipeThrough(
-      new CompressionStream('gzip')
-    );
-  
-    // Return as Blob
-    return new Response(compressedStream).blob();
-  }
-  
-  // Usage example:
-  async function downloadCompressedImage(bitmap: ImageBitmap, filename: string) {
-    const compressedBlob = await compressImage(bitmap);
-    
-    const url = URL.createObjectURL(compressedBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    
-    URL.revokeObjectURL(url);
-  }
+    return new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+            (blob) => {
+                if (blob) resolve(blob)
+                else reject(new Error(`Failed to convert blob to WebP`))
+            },
+            'image/webp',
+            0.8
+        )
+    })
+}
+
+export async function createZip(blobs: [string, Blob][]) {
+    const zip = new JSZip()
+
+    blobs.forEach(([name, blob]) => {
+        zip.file(name, blob)
+    })
+
+    return await zip.generateAsync({
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: {
+            level: 6
+        }
+    })
+}
+
+export function download(content: Blob, name: string) {
+    const downloadUrl = URL.createObjectURL(content)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = name
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    URL.revokeObjectURL(downloadUrl)
+}
