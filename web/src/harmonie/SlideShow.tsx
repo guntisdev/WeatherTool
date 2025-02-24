@@ -1,4 +1,4 @@
-import { Accessor, Component, createSignal } from 'solid-js'
+import { Accessor, Component, createEffect, createSignal, onMount } from 'solid-js'
 
 import styles from './harmonie.module.css'
 import { downloadImagesAsZip } from '../helpers/download'
@@ -17,13 +17,26 @@ export const SlideShow: Component<{
     const [getActive, setActive] = createSignal(-1)
     const [getIsPlaying, setIsPlaying] = createSignal(false)
 
+    let canvas: HTMLCanvasElement
+    let ctx: CanvasRenderingContext2D
+    function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height) }
+
+    onMount(() => {
+        canvas = getCanvas()!
+        ctx = canvas.getContext('2d')!
+    })
+    createEffect(() => getImgList() && clearCanvas())
+
     function draw(i: number) {
-        const canvas = getCanvas()!
-        const ctx = canvas.getContext('2d')!
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        clearCanvas()
         setActive(i)
         const img = getImgList()[i][1]
         if (!img) return;
+
+        if (img.width !== canvas.width && img.height !== canvas.height) {
+            canvas.width = img.width
+            canvas.height = img.height
+        }
 
         ctx.drawImage(img, 0, 0)
     }

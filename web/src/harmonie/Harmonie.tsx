@@ -69,7 +69,6 @@ export const Harmonie: Component<{}> = () => {
                 setIsLoading={setIsLoading}
                 getFileList={getFileList}
                 getGribList={getGribList}
-                getCanvas={getCanvas}
                 options={{ getIsCrop: getIsCrop, getIsContour: getIsContour, getIsInterpolated: getIsInterpolated }}
                 imgListSignal={[getImgList, setImgList]}
                 setRefDate={setRefDate}
