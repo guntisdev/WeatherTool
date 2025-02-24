@@ -1,4 +1,4 @@
-import { Accessor, Component, createSignal, resetErrorBoundaries, Setter, Signal } from 'solid-js'
+import { Accessor, Component, createSignal, Setter, Signal } from 'solid-js'
 
 import { DrawOptions, GribMessage } from './interfaces'
 import { fetchGribBinaries } from './fetchGrib'
@@ -15,6 +15,7 @@ export const ReferenceTimes: Component<{
     getCanvas: Accessor<HTMLCanvasElement | undefined>,
     options: DrawOptions,
     imgListSignal: Signal<[string, ImageBitmap | undefined][]>,
+    setRefDate: Setter<string>,
     onClick: () => void,
 }> = ({
     setIsLoading,
@@ -23,6 +24,7 @@ export const ReferenceTimes: Component<{
     getCanvas,
     options,
     imgListSignal: [getImgList, setImgList],
+    setRefDate,
     onClick,
 }) => {
     const [getActiveDate, setActiveDate] = createSignal('')
@@ -73,6 +75,7 @@ export const ReferenceTimes: Component<{
             },
         ).finally(() => {
             console.log("FINALLLY")
+            setRefDate(refDateStr)
             const ctx = canvas.getContext('2d')!
             ctx.clearRect(0, 0, canvas.width, canvas.height)
             setIsLoading(false)

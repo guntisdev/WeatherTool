@@ -7,10 +7,12 @@ export const SlideShow: Component<{
     getIsLoading: Accessor<boolean>,
     getCanvas: Accessor<HTMLCanvasElement | undefined>,
     getImgList: Accessor<[string, ImageBitmap | undefined][]>,
+    getRefDate: Accessor<string>,
 }> = ({
     getIsLoading,
     getCanvas,
-    getImgList
+    getImgList,
+    getRefDate,
 }) => {
     const [getActive, setActive] = createSignal(-1)
     const [getIsPlaying, setIsPlaying] = createSignal(false)
@@ -60,7 +62,7 @@ export const SlideShow: Component<{
 
     function download() {
         const imgs = getImgList().filter(([,img]) => !!img) as [string, ImageBitmap][]
-        downloadImagesAsZip(imgs)
+        downloadImagesAsZip(imgs, getRefDate())
     }
 
     return <>
@@ -70,7 +72,7 @@ export const SlideShow: Component<{
                 <input type='button' value={getIsPlaying()?'pause':'play'} onClick={play} />
                 <input type='button' value='next' onClick={() => next()} />
             </div>
-            <input type='button' value='download all' onClick={download} />
+            <input type='button' value='download .zip' onClick={download} />
         </div>
         <ul class={styles.slideShowList}>
             { getImgList().map(([forecastDate, img], i) =>

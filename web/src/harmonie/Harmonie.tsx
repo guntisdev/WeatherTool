@@ -18,6 +18,7 @@ export const Harmonie: Component<{}> = () => {
     const [getGribList, setGribList] = createSignal<GribMessage[]>([])
     const [getCanvas, setCanvas] = createSignal<HTMLCanvasElement>()
     const [getImgList, setImgList] = createSignal<[string, ImageBitmap | undefined][]>([])
+    const [getRefDate, setRefDate] = createSignal('')
 
     const cachedMessagesSignal = createSignal<GribMessage[]>([])
     const cachedBuffersSignal = createSignal<Uint8Array[]>([])
@@ -71,6 +72,7 @@ export const Harmonie: Component<{}> = () => {
                 getCanvas={getCanvas}
                 options={{ getIsCrop: getIsCrop, getIsContour: getIsContour, getIsInterpolated: getIsInterpolated }}
                 imgListSignal={[getImgList, setImgList]}
+                setRefDate={setRefDate}
                 onClick={getAllGribStructure}
             />
             <ul class={styles.fileList}>
@@ -93,6 +95,7 @@ export const Harmonie: Component<{}> = () => {
                 getIsLoading={getIsLoading}
                 getCanvas={getCanvas}
                 getImgList={getImgList}
+                getRefDate={getRefDate}
             />
             <DrawView
                 isLoadingSignal={[getIsLoading, setIsLoading]}
