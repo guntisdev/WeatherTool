@@ -64,29 +64,40 @@ class DataService(log: Logger[IO]) {
   def getAllFileStructure(): IO[List[Grib]] = {
     for {
       fileList <- getFileList()
-      allStructure <- fileList.parTraverseN(4)(getGribStucture) // limit concurrency to 4
+      allStructure <- fileList.parTraverseN(4)(getGribStucture) // limit concurrency
     } yield allStructure.flatten
   }
 
-//  private val blockingEC = ExecutionContext.fromExecutorService(
-//    Executors.newFixedThreadPool(4) // limit concurrency to 4
-//  )
-//
-//  private val semaphore = Semaphore[IO](4).unsafeRunSync()
+  private val semaphore = Semaphore[IO](4).unsafeRunSync()
+
+  private val blockingEC = ExecutionContext.fromExecutorService(
+    Executors.newFixedThreadPool(4) // limit concurrency
+  )
 
   def getBinaryChunk(offset: Int, length: Int, fileName: String): IO[Array[Byte]] = {
     val fileResource = Resource.make(
       IO.blocking(new RandomAccessFile(s"$GRIB_FOLDER/$fileName", "r"))
     )(file => IO.blocking(file.close()))
 
-    fileResource.use { file =>
-      IO.blocking {
-        val buffer = new Array[Byte](length)
-        file.seek(offset)
-        file.readFully(buffer)
-        buffer
-      }
+    val logMemory = IO {
+      val runtime = Runtime.getRuntime
+      val usedMemoryMB = (runtime.totalMemory - runtime.freeMemory) / 1024 / 1024
+      val maxMemoryMB = runtime.maxMemory / 1024 / 1024
+      println(s"Memory usage before reading $fileName: $usedMemoryMB MB / $maxMemoryMB MB max")
     }
+
+    for {
+      _ <- logMemory
+      result <- fileResource.use { file =>
+        IO.blocking {
+          val buffer = new Array[Byte](length)
+          file.seek(offset)
+          file.readFully(buffer)
+          buffer
+        }.evalOn(blockingEC)
+      }
+      _ <- IO { System.gc() }
+    } yield result
   }
 
   def getForecasts(): IO[List[(ZonedDateTime, ZonedDateTime)]] = {
