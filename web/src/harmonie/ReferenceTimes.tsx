@@ -6,7 +6,7 @@ import { drawGrib } from './draw/drawGrib'
 import { CROP_BOUNDS } from './DrawView'
 
 import styles from './harmonie.module.css'
-import { handleProgressivePromises } from '../helpers/progressivePromises'
+import { processPromisesInBatches } from '../helpers/progressivePromises'
 
 const METEO_PARAMS: [string, MeteoParam][] = [
     ['temperature', { discipline: 0, category: 0, product: 0, levelType: -1, levelValue: -1, subType: 'now' }],
@@ -62,7 +62,7 @@ export const ReferenceTimes: Component<{
             .map((grib): [string, undefined] => [grib.time.forecastTime, undefined])
             .sort((a, b) => a[0] > b[0] ? 1 : -1)
         setImgList(emptyImgList)
-        const promiseList = forecastList.map(async (grib): Promise<[string, ImageBitmap]> => {
+        const promiseFnsList = forecastList.map((grib): () => Promise<[string, ImageBitmap]> => async () => {
             const canvas = document.createElement('canvas')
             const [messages, buffers, bitmasks] = await fetchGribBinaries(grib, getGribList())
             drawGrib(canvas, messages, buffers, bitmasks, cropBounds, contour, isInterpolated)
@@ -72,8 +72,8 @@ export const ReferenceTimes: Component<{
             return [grib.time.forecastTime, img]
         })
 
-        handleProgressivePromises(
-            promiseList,
+        processPromisesInBatches(
+            promiseFnsList,
             ([forecastDate, img]) => {
                 const udpdatedImgList = [...getImgList()]
                 const idx = udpdatedImgList.findIndex(([d]) => forecastDate === d)

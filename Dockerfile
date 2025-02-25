@@ -7,4 +7,8 @@ COPY ./target/scala-2.13/WeatherTool-assembly-0.1.1-SNAPSHOT.jar app.jar
 
 VOLUME /app/data
 
-CMD ["java", "-jar", "app.jar"]
+
+# flags setting heap to 256mb and max 384mb, plus g1 garbage collector
+# CMD ["java", "-Xms256m", "-Xmx384m", "-XX:+UseG1GC", "-jar", "app.jar"]
+# CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-Xms512m", "-Xmx600m", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=200", "-jar", "app.jar"]
