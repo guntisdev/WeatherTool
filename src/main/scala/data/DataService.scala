@@ -87,7 +87,7 @@ class DataService(log: Logger[IO]) {
     }
 
     for {
-      _ <- logMemory
+//      _ <- logMemory
       result <- fileResource.use { file =>
         IO.blocking {
           val buffer = new Array[Byte](length)
