@@ -27,7 +27,6 @@ export async function processPromisesInBatches<T>(
     while(await promiseFns.length > 0) {
         const size = Math.min(batchSize, promiseFns.length)
         const batchPromises = promiseFns.splice(0, size)
-        console.log('process:', batchPromises.length)
         const batchResults = await processPromises(batchPromises, onProgress)
         results.push(...batchResults)
     }
