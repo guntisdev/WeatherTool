@@ -1,13 +1,13 @@
 services:
   node:
-    image: node:16.13.1
+    image: node:22.14.0
     working_dir: /app/web
     volumes:
       - ./web:/app/web
     command: sh -c "npm install && npm run build"
 
   postgres:
-    image: postgres:16.1
+    image: postgres:17.4
     ports:
       - "5432:5432"
     healthcheck:
@@ -31,6 +31,11 @@ services:
       METEO_USER: ${METEO_USER}
       METEO_PASSWORD: ${METEO_PASSWORD}
       METEO_URL: ${METEO_URL}
+      HARMONIE_EDR_API_KEY: ${HARMONIE_EDR_API_KEY}
+      HARMONIE_EDR_URL: ${HARMONIE_EDR_URL}
+      HARMONIE_STAC_API_KEY: ${HARMONIE_STAC_API_KEY}
+      HARMONIE_STAC_URL: ${HARMONIE_STAC_URL}
+
     build:
       context: .
       dockerfile: Dockerfile.local
