@@ -7,7 +7,7 @@ services:
     command: sh -c "npm install && npm run build"
 
   postgres:
-    image: postgres:17.4
+    image: postgres:16.1
     ports:
       - "5432:5432"
     healthcheck:
@@ -35,7 +35,6 @@ services:
       HARMONIE_EDR_URL: ${HARMONIE_EDR_URL}
       HARMONIE_STAC_API_KEY: ${HARMONIE_STAC_API_KEY}
       HARMONIE_STAC_URL: ${HARMONIE_STAC_URL}
-
     build:
       context: .
       dockerfile: Dockerfile.local
