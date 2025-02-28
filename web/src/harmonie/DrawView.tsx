@@ -1,10 +1,8 @@
-import { Component, createEffect, createSignal, Signal } from 'solid-js'
+import { Component, createEffect, Signal } from 'solid-js'
 
 import { LoadingSpinner } from '../components/LoadingSpinner'
-import { DrawOptions, GribMessage } from './interfaces'
+import { CROP_BOUNDS, DrawOptions, GribMessage } from './interfaces'
 import { drawGrib } from './draw/drawGrib'
-
-export const CROP_BOUNDS = { x: 1906-1-440, y: 895, width: 440, height: 380 }
 
 export const DrawView: Component<{
     isLoadingSignal: Signal<boolean>,

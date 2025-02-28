@@ -1,5 +1,5 @@
 import { interpolateColors } from '../../helpers/interpolateColors'
-import { GribMessage, MeteoParam } from '../interfaces'
+import { CropBounds, GribMessage, MeteoParam } from '../interfaces'
 import { applyBitmask } from './bitmask'
 import { extractFromBounds } from './bounds'
 import { categoricalRainColors } from './categoricalRain'
@@ -11,8 +11,6 @@ import latvia_border from '../../assets/latvia_contour.webp'
 const latviaBoderImg = new Image()
 latviaBoderImg.onload = () => console.log('latvia_contour loaded...')
 latviaBoderImg.src = latvia_border
-
-export type CropBounds = { x: number, y: number, width: number, height: number }
 
 /*
 * final cropped size should be 1365x576px - divided by 3 (455x192) or 3.5 (390x165)
@@ -70,7 +68,7 @@ export function drawGrib(
     ctx.restore()
 
     if (cropBounds) {
-        drawRotate(canvas, ctx, isInterpolated)
+        drawRotate(canvas, ctx, cropBounds.angle, isInterpolated)
     }
 
     if (isContour && cropBounds) {
@@ -161,8 +159,8 @@ function fillImageData(
 function drawRotate(
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D,
+    angleDegrees: number,
     isInterpolated = false,
-    angleDegrees = 26,
 ) {
     const tempCanvas = document.createElement('canvas')
     tempCanvas.width = canvas.width

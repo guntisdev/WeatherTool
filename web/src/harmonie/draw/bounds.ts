@@ -1,5 +1,4 @@
-import { GribMessage } from '../interfaces'
-import { CropBounds } from './drawGrib'
+import { CropBounds, GribMessage } from '../interfaces'
 
 export function extractFromBounds(
     grib: GribMessage,
