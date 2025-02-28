@@ -1,9 +1,8 @@
 import { Accessor, Component, createSignal, Setter, Signal } from 'solid-js'
 
-import { DrawOptions, GribMessage, MeteoParam } from './interfaces'
+import { CROP_BOUNDS, DrawOptions, GribMessage, MeteoParam } from './interfaces'
 import { fetchGribBinaries } from './fetchGrib'
 import { drawGrib } from './draw/drawGrib'
-import { CROP_BOUNDS } from './DrawView'
 
 import styles from './harmonie.module.css'
 import { processPromisesInBatches } from '../helpers/progressivePromises'

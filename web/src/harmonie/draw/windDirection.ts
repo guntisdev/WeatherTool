@@ -5,12 +5,11 @@ import { GribMessage, MeteoConversion } from '../interfaces'
 import { WIND_SPEED } from './constants'
 import { rotateWind } from './windRotate'
 
-const CELL_SIZE = 12
-
 export function windDirectionArrows(
     imgData: ImageData,
     messages: GribMessage[],
     buffers: Uint8Array[],
+    cellSize = 16,
 ) {
     const [, metaU, metaV] = messages
     const { conversion: convU } = metaU
@@ -52,17 +51,17 @@ export function windDirectionArrows(
         }
     }
 
-    const gridH = Math.floor(directions.length/CELL_SIZE)
-    const gridW = Math.floor(directions[0].length/CELL_SIZE)
+    const gridH = Math.floor(directions.length/cellSize)
+    const gridW = Math.floor(directions[0].length/cellSize)
     for (let row = 0; row < gridH; row++) {
         for (let col = 0; col < gridW; col++) {
             const directionAvg = true
-                ? getAvgDirection(directions, row, col)
-                : getDirection(directions, row, col)
+                ? getAvgDirection(directions, row, col, cellSize)
+                : getDirection(directions, row, col, cellSize)
 
-            const centerX = col * CELL_SIZE + CELL_SIZE/2
-            const centerY = row * CELL_SIZE + CELL_SIZE/2
-            const arrowLength = CELL_SIZE*0.9
+            const centerX = col * cellSize + cellSize/2
+            const centerY = row * cellSize + cellSize/2
+            const arrowLength = cellSize*0.9
 
             ctx.save()
             ctx.translate(centerX, centerY)
@@ -73,7 +72,7 @@ export function windDirectionArrows(
             ctx.lineTo(arrowLength / 2, 0)
             ctx.stroke()
 
-            const arrowheadSize = CELL_SIZE/4
+            const arrowheadSize = cellSize/3.5
             ctx.beginPath()
             ctx.moveTo(arrowLength / 2, 0)
             ctx.lineTo(arrowLength / 2 - arrowheadSize, -arrowheadSize / 2)
@@ -88,21 +87,21 @@ export function windDirectionArrows(
     return ctx.getImageData(0, 0, imgData.width, imgData.height)
 }
 
-function getDirection(directions: number[][], gridRow: number, gridCol: number) {
-    const directionRow = gridRow * CELL_SIZE + Math.round(CELL_SIZE/2)
-    const directionCol = gridCol * CELL_SIZE + Math.round(CELL_SIZE/2)
+function getDirection(directions: number[][], gridRow: number, gridCol: number, cellSize: number) {
+    const directionRow = gridRow * cellSize + Math.round(cellSize/2)
+    const directionCol = gridCol * cellSize + Math.round(cellSize/2)
     return directions[directionRow][directionCol]
 }
 
 // in radians
-function getAvgDirection(directions: number[][], gridRow: number, gridCol: number) {
+function getAvgDirection(directions: number[][], gridRow: number, gridCol: number, cellSize: number) {
     let sumSin = 0; // Sum of sine components
     let sumCos = 0; // Sum of cosine components
 
-    for (let row = 0; row < CELL_SIZE; row++) {
-        for (let col = 0; col < CELL_SIZE; col++) {
-            const directionRow = gridRow * CELL_SIZE + row;
-            const directionCol = gridCol * CELL_SIZE + col;
+    for (let row = 0; row < cellSize; row++) {
+        for (let col = 0; col < cellSize; col++) {
+            const directionRow = gridRow * cellSize + row;
+            const directionCol = gridCol * cellSize + col;
 
             const directionRad = directions[directionRow][directionCol]
 

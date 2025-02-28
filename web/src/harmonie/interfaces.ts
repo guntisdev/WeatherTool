@@ -51,3 +51,6 @@ export type DrawOptions = {
     getIsContour: Accessor<boolean>,
     getIsInterpolated: Accessor<boolean>,
 }
+
+export const CROP_BOUNDS = { x: 1906-1-440, y: 895, width: 440, height: 380, angle: 26 }
+export type CropBounds = typeof CROP_BOUNDS
