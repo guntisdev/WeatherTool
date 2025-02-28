@@ -1,27 +1,26 @@
 import { apiHost } from '../../consts'
 import { fetchBuffer } from '../../helpers/fetch'
 import { valueToColorInterpolated, valueToColorThreshold } from '../../helpers/interpolateColors'
-import { GribMessage, MeteoConversion } from '../interfaces'
+import { CropBounds, GribMessage, MeteoConversion } from '../interfaces'
 import { WIND_SPEED } from './constants'
+import { drawRotate, flipCanvasV } from './drawGrib'
 import { rotateWind } from './windRotate'
 
 export function windDirectionArrows(
-    imgData: ImageData,
     messages: GribMessage[],
     buffers: Uint8Array[],
-    cellSize = 16,
-) {
+    cols: number,
+    rows: number,
+    cropBounds: CropBounds | undefined,
+): HTMLCanvasElement {
+    const cellSize = cropBounds ? 21 : 16
+    const scale = cropBounds ? 3.5 : 1
+    // const scale = 1
+
     const [, metaU, metaV] = messages
     const { conversion: convU } = metaU
     const { conversion: convV } = metaV
     const [, bufferU, bufferV] = buffers
-    const cols = imgData.width
-    const rows = imgData.height
-    const canvas = document.createElement('canvas')
-    canvas.width = imgData.width
-    canvas.height = imgData.height
-    const ctx = canvas.getContext('2d')!
-    ctx.putImageData(imgData, 0, 0) // draw wind speed color below direction
     const directions: number[][] = []
     const bytesPerPoint = metaU.bitsPerDataPoint/8
 
@@ -51,13 +50,20 @@ export function windDirectionArrows(
         }
     }
 
-    const gridH = Math.floor(directions.length/cellSize)
-    const gridW = Math.floor(directions[0].length/cellSize)
+    const canvas = document.createElement('canvas')!
+    const ctx = canvas.getContext('2d')!
+    canvas.width = cols * scale
+    canvas.height = rows * scale
+
+    const gridH = Math.floor(scale * directions.length/cellSize)
+    const gridW = Math.floor(scale * directions[0].length/cellSize)
     for (let row = 0; row < gridH; row++) {
         for (let col = 0; col < gridW; col++) {
+            const directionCol = Math.floor(col/scale)
+            const directionRow = Math.floor(row/scale)
             const directionAvg = true
-                ? getAvgDirection(directions, row, col, cellSize)
-                : getDirection(directions, row, col, cellSize)
+                ? getAvgDirection(directions, directionRow, directionCol, cellSize)
+                : getDirection(directions, directionRow, directionCol, cellSize)
 
             const centerX = col * cellSize + cellSize/2
             const centerY = row * cellSize + cellSize/2
@@ -83,8 +89,11 @@ export function windDirectionArrows(
             ctx.restore()
         }
     }
-
-    return ctx.getImageData(0, 0, imgData.width, imgData.height)
+    flipCanvasV(canvas, ctx)
+    if (cropBounds) {
+        drawRotate(canvas, ctx, cropBounds.angle, true)
+    }
+    return canvas
 }
 
 function getDirection(directions: number[][], gridRow: number, gridCol: number, cellSize: number) {
