@@ -52,23 +52,16 @@ export function drawGrib(
     let imgData = ctx.createImageData(cols, rows)
     
     fillImageData(imgData, messages, modifiedBuffers, isInterpolated)
-    if (isCalculatedWindDirection(grib)) {
-        imgData = windDirectionArrows(imgData, messages, modifiedBuffers)
-    }
-
-    const tempCanvas = document.createElement('canvas')
-    const tempCtx = tempCanvas.getContext('2d')!
-    tempCanvas.width = imgData.width
-    tempCanvas.height = imgData.height
-    tempCtx.putImageData(imgData, 0, 0)
-
-    ctx.save()
-    ctx.scale(1, -1)
-    ctx.drawImage(tempCanvas, 0, -canvas.height)
-    ctx.restore()
+    ctx.putImageData(imgData, 0, 0)
+    flipCanvasV(canvas, ctx)
 
     if (cropBounds) {
-        drawRotate(canvas, ctx, cropBounds.angle, isInterpolated)
+        drawRotate(canvas, ctx, cropBounds.angle, isInterpolated, 3.5)
+    }
+
+    if (isCalculatedWindDirection(grib)) {
+        const directionArrows = windDirectionArrows(messages, modifiedBuffers, cols, rows, cropBounds)
+        ctx.drawImage(directionArrows, 0, 0)
     }
 
     if (isContour && cropBounds) {
@@ -156,11 +149,30 @@ function fillImageData(
     }
 }
 
-function drawRotate(
+export function flipCanvasV(
+    canvas: HTMLCanvasElement,
+    ctx: CanvasRenderingContext2D,
+) {
+    const tmpCanvas = document.createElement('canvas')!
+    const tmpCtx = tmpCanvas.getContext('2d')!
+    tmpCanvas.width = canvas.width
+    tmpCanvas.height = canvas.height
+
+    tmpCtx.save()
+    tmpCtx.scale(1, -1)
+    tmpCtx.drawImage(canvas, 0, -canvas.height)
+    tmpCtx.restore()
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(tmpCanvas, 0, 0)
+}
+
+export function drawRotate(
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D,
     angleDegrees: number,
     isInterpolated = false,
+    scale = 1,
 ) {
     const tempCanvas = document.createElement('canvas')
     tempCanvas.width = canvas.width
@@ -186,7 +198,7 @@ function drawRotate(
     }
     ctx.save()
     ctx.translate(canvas.width/2, canvas.height/2)
-    ctx.scale(3.5, 3.5)
+    ctx.scale(scale, scale)
     ctx.drawImage(tempCanvas, -tempCanvas.width/2, -tempCanvas.height/2)
     ctx.restore()
 }
