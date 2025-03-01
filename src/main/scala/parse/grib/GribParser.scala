@@ -83,8 +83,10 @@ object GribParser {
       hour = bytes(16)
       minute = bytes(17)
       second = bytes(18)
+      currentMonth = ZonedDateTime.now(ZoneOffset.UTC).getMonthValue()
+      validMonth = if (month < 1 || month > 12) currentMonth else month
       referenceTime = ZonedDateTime.of(
-        year, month, day,
+        year, validMonth, day,
         hour, minute, second, 0, // last 0 is nanos
         ZoneOffset.UTC // This is what 'Z' represents - UTC/Zero offset
       )

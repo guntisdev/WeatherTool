@@ -7,11 +7,9 @@ RUN sbt clean assembly
 
 FROM amazoncorretto:17-alpine
 
-WORKDIR /app
+COPY --from=build /app/web/dist/ /web/dist/
+COPY --from=build /app/target/scala-2.13/app.jar /app.jar
 
-COPY --from=build /app/web/dist/ web/dist/
-COPY --from=build /app/target/scala-2.13/WeatherTool-assembly-0.1.1-SNAPSHOT.jar app.jar
-
-VOLUME /app/data
+VOLUME /data
 
 CMD ["java", "-jar", "app.jar"]

@@ -3,7 +3,7 @@ FROM amazoncorretto:17-alpine
 WORKDIR /app
 
 COPY ./web/dist/ web/dist/
-COPY ./target/scala-2.13/WeatherTool-assembly-0.1.1-SNAPSHOT.jar app.jar
+COPY ./target/scala-2.13/app.jar app.jar
 
 VOLUME /app/data
 
