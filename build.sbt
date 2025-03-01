@@ -5,7 +5,18 @@ ThisBuild / scalaVersion := "2.13.10"
 lazy val root = (project in file("."))
   .settings(
     name := "WeatherTool",
-    Compile / mainClass := Some("Main")
+    Compile / mainClass := Some("Main"),
+
+    // Assembly settings for consistent JAR name
+    assembly / assemblyJarName := "app.jar",
+
+    // Merge strategy for assembly to handle conflicts
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case "module-info.class" => MergeStrategy.discard
+      case x if x.endsWith(".conf") => MergeStrategy.concat
+      case x => MergeStrategy.first
+    }
   )
 
 val doobieVersion = "1.0.0-RC1"
