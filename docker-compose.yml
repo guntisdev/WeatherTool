@@ -39,8 +39,11 @@ services:
       context: .
       dockerfile: Dockerfile.local
     volumes:
-      - ./:/app
+      - scala-data:/data
     ports:
       - "9090:8080"
     depends_on:
       - postgres
+
+volumes:
+  scala-data:
