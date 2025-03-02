@@ -10,8 +10,8 @@ import { apiHost } from './consts';
 import { WeatherIconStub } from './components/weatherIcons/WeatherIconStub';
 import { Harmonie } from './harmonie/Harmonie'
 
-console.log("env:", import.meta.env.MODE);
-console.log("api host:", apiHost);
+console.log("env:", import.meta.env.MODE)
+console.log("api host:", apiHost)
 
 const App: Component = () => {
     const pages = ['station', 'cities', 'latvia', 'database', 'harmonie']

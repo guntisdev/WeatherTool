@@ -1,9 +1,9 @@
 services:
   node:
     image: node:22.14.0
-    working_dir: /app/web
+    working_dir: /web
     volumes:
-      - ./web:/app/web
+      - ./web:/web
     command: sh -c "npm install && npm run build"
 
   postgres:
@@ -40,9 +40,11 @@ services:
       dockerfile: Dockerfile.local
     volumes:
       - scala-data:/data
+      - ./web/dist:/web/dist
     ports:
       - "9090:8080"
     depends_on:
+      - node
       - postgres
 
 volumes:
