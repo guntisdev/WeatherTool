@@ -7,8 +7,7 @@ Rename `.env-sample` to `.env` and fill in credentials
 
 ## Run
 ```
-docker-compose up --build node
-docker-compose up --build scala
+docker-compose up --build
 ```
 
 ## Web
