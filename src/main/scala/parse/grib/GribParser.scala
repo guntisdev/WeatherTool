@@ -7,6 +7,7 @@ import java.nio.ByteBuffer
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.{ZoneOffset, ZonedDateTime}
+import scala.util.Try
 
 object GribParser {
   def parseFile(path: Path): IO[List[Grib]] = {
@@ -83,15 +84,20 @@ object GribParser {
       hour = bytes(16)
       minute = bytes(17)
       second = bytes(18)
-      currentMonth = ZonedDateTime.now(ZoneOffset.UTC).getMonthValue()
-      validMonth = if (month < 1 || month > 12) currentMonth else month
-      referenceTime = ZonedDateTime.of(
-        year, validMonth, day,
+      referenceTime = Try(ZonedDateTime.of(
+        year, month, day,
         hour, minute, second, 0, // last 0 is nanos
         ZoneOffset.UTC // This is what 'Z' represents - UTC/Zero offset
-      )
-//      result = (f"$year%04d-$month%02d-$day%02dT$hour%02d:$minute%02d:$second%02dZ", length)
+      )).recover { case _ => extractDateTime(path) }.get
     } yield (referenceTime, length)
+  }
+
+  def extractDateTime(path: Path): ZonedDateTime = { // Path("data/harmonie_2025-02-28T1800Z_2025-02-28T1800Z.grib")
+    val filename = path.fileName.toString
+    val parts = filename.split("_")
+    val dateTimeStr = parts(1)
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmmX")
+    ZonedDateTime.parse(dateTimeStr, formatter)
   }
 
   private def parse3(path: Path, ptr: Long): IO[(GribGrid, Int)] = {
