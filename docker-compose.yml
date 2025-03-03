@@ -38,6 +38,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.local
+    restart: on-failure:10
     volumes:
       - scala-data:/data
       - ./web/dist:/web/dist
