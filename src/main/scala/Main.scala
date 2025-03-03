@@ -6,10 +6,11 @@ import fetch.csv.{FetchService, FileNameService}
 import fetch.dmi
 import scheduler.Scheduler
 import server.Server
+import scala.concurrent.duration.DurationInt
 
 object Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
-    for {
+    val program = for {
       transactor <- DBConnection.transactor[IO]
       postgresService <- PostgresService.of(transactor)
       _ <- postgresService.createWeatherTable // create table if it does not exists
@@ -36,5 +37,12 @@ object Main extends IOApp {
 
       exitCode <- (serverTask, fetchCsvTask, cleanupTask, fetchGribTask).parMapN((_, _, _, _) => ExitCode.Success)
     } yield exitCode
+
+    program.handleErrorWith { error =>
+      IO.delay {
+        println(s"Fatal error occurred: ${error.getMessage}")
+        error.printStackTrace()
+      } *> IO.sleep(5.seconds) *> run(args)
+    }
   }
 }
