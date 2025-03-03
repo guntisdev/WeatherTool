@@ -7,7 +7,7 @@ import java.nio.ByteBuffer
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.time.{ZoneOffset, ZonedDateTime}
-import scala.util.Try
+import scala.util.{Random, Try}
 
 object GribParser {
   def parseFile(path: Path): IO[List[Grib]] = {
@@ -86,9 +86,10 @@ object GribParser {
       second = bytes(18)
       referenceTime = Try(ZonedDateTime.of(
         year, month, day,
-        hour, minute, second, 0, // last 0 is nanos
+        hour, minute, second, 0,
         ZoneOffset.UTC // This is what 'Z' represents - UTC/Zero offset
-      )).recover { case _ => extractDateTime(path) }.get
+      )).recoverWith { case _ => Try(extractDateTime(path))
+      }.getOrElse(ZonedDateTime.of(2000, 1, 1, Random.nextInt(24), 0, 0, 0, ZoneOffset.UTC))
     } yield (referenceTime, length)
   }
 
