@@ -7,7 +7,7 @@ Rename `.env-sample` to `.env` and fill in credentials
 
 ## Run
 ```
-docker-compose up --build
+docker-compose up --build --no-cache --force-recreate
 ```
 
 ## Web
