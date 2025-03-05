@@ -6,8 +6,9 @@ import com.comcast.ip4s.IpLiteralSyntax
 import data.DataService
 import db.PostgresService
 import fetch.csv.FetchService
+import fs2.io.file.Files
 import server.ValidateRoutes.{AggFieldList, AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateInt, ValidateMonths, ValidateZonedDateTime}
-import io.circe.{Json, Printer}
+import io.circe.{Encoder, Json, Printer}
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.implicits._
@@ -17,6 +18,7 @@ import org.http4s.server.middleware.CORSConfig
 import org.http4s.server.staticcontent.FileService
 import org.http4s.ember.server.EmberServerBuilder
 import io.circe.generic.auto._
+import io.circe.generic.semiauto.deriveEncoder
 import io.circe.syntax._
 import parse.csv.Aggregate.AggregateValueImplicits.aggregateValueEncoder
 import parse.csv.Aggregate.userQueryEncoder
@@ -25,7 +27,9 @@ import org.http4s.circe.jsonEncoder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import parse.csv.Aggregate
+import fs2.io.file.{Files, Path}
 
+import java.time.{ZoneOffset, ZonedDateTime}
 import scala.concurrent.duration.DurationInt
 
 
@@ -71,6 +75,50 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
     case GET -> Root / "grib" / "delete-old-forecasts" =>
       dataService.deleteOldForecasts().flatMap(result => Ok(result.asJson))
 
+    // http://0.0.0.0:8080/api/show/time
+    case GET -> Root / "show" / "time" =>
+      val nowUTC = ZonedDateTime.now(ZoneOffset.UTC)
+      val ageThreshold = nowUTC.minusHours(9)
+      Ok(ageThreshold.toString)
+
+    // http://0.0.0.0:8080/api/show/folder-structure
+    case GET -> Root / "show" / "folder-structure" => {
+      println("folder-structure")
+      case class FileInfo(name: String, isDirectory: Boolean)
+      case class DirectoryStructure(path: String, files: List[FileInfo])
+      case class FolderStructureResponse(
+        current: DirectoryStructure,
+        data: DirectoryStructure,
+        grib: DirectoryStructure
+      )
+
+      implicit val folderStructureResponseEncoder: Encoder[FolderStructureResponse] = deriveEncoder[FolderStructureResponse]
+
+      def getDirectoryStructure(path: Path): IO[DirectoryStructure] = {
+        for {
+          _ <- IO.println(path)
+          absolutePath <- IO(path.toString)
+          files <- Files[IO].list(path).compile.toList
+          fileInfos <- files.traverse { filePath =>
+            Files[IO].isDirectory(filePath).map { isDir =>
+              FileInfo(filePath.fileName.toString, isDir)
+            }
+          }
+        } yield DirectoryStructure(absolutePath, fileInfos)
+      }
+
+      val currentPath = Path(".")
+      val dataPath = Path("data")
+      val gribPath = Path("data/grib")
+
+      for {
+        current <- getDirectoryStructure(currentPath)
+        data <- getDirectoryStructure(dataPath)
+        grib <- getDirectoryStructure(gribPath)
+        response = FolderStructureResponse(current, data, grib)
+        result <- Ok(response.asJson)
+      } yield result
+    }
 
 
     // http://0.0.0.0:8080/api/query/city/Liepāja,Rēzekne/20230414_2200-20230501_1230/hour/tempMax/max
