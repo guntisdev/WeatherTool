@@ -24,7 +24,6 @@ import parse.csv.Aggregate.{AggregateKey, UserQuery}
 import org.http4s.circe.jsonEncoder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import fs2.io.file.Path
 import parse.csv.Aggregate
 
 import scala.concurrent.duration.DurationInt
@@ -68,6 +67,9 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
     case GET -> Root / "grib" / "binary-chunk" / ValidateInt(binaryOffset) / ValidateInt(binaryLength) / fileName =>
       dataService.getBinaryChunk(binaryOffset, binaryLength, fileName).flatMap(buffer => Ok(buffer))
 
+    // http://0.0.0.0:8080/api/grib/delete-old-forecasts
+    case GET -> Root / "grib" / "delete-old-forecasts" =>
+      dataService.deleteOldForecasts().flatMap(result => Ok(result.asJson))
 
 
 
