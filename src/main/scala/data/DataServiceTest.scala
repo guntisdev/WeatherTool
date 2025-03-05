@@ -2,7 +2,8 @@ package data
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import io.circe.syntax.EncoderOps
+import data.DataService.deletionResultEncoder
+import io.circe.syntax._
 
 object DataServiceTest {
   def main(args: Array[String]): Unit = {

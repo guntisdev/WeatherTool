@@ -6,7 +6,10 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Semaphore
 import cats.effect.unsafe.implicits.global
 import cats.implicits._
+import data.DataService.DeletionResult
 import fs2.io.file.{Files, Path}
+import io.circe.Encoder
+import io.circe.generic.semiauto.deriveEncoder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import parse.grib.{Grib, GribParser}
@@ -19,6 +22,10 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 object DataService {
+  case class DeletionResult(fileName: String, success: Boolean, errorMessage: Option[String])
+
+  implicit val deletionResultEncoder: Encoder[DeletionResult] = deriveEncoder[DeletionResult]
+  
   def of: IO[DataService] = {
     for {
       logger <- Slf4jLogger.create[IO]
@@ -107,7 +114,7 @@ class DataService(log: Logger[IO]) {
       }
   }
 
-  def deleteOldForecasts(maxHours: Int = 9): IO[List[String]] = {
+  def deleteOldForecasts(maxHours: Int = 9): IO[List[DeletionResult]] = {
     val nowUTC = ZonedDateTime.now(ZoneOffset.UTC)
     val ageThreshold = nowUTC.minusHours(maxHours)
 
@@ -119,9 +126,15 @@ class DataService(log: Logger[IO]) {
       )
       keepList = fileDateList.filter(_._2.isAfter(ageThreshold)).map(_._1)
       deleteList = fileList.filter(!keepList.contains(_))
-      _ <- deleteList.traverse(name => Files[IO].delete(Path(s"$GRIB_FOLDER/${name}")))
-      _ <- deleteList.traverse(name => log.info(s"delete: $name"))
-    } yield deleteList
+      results <- deleteList.traverse { name =>
+        val path = Path(s"$GRIB_FOLDER/${name}")
+        Files[IO].delete(path).attempt.flatMap {
+          case Right(_) => log.info(s"delete: $name").as(DeletionResult(name, true, None))
+          case Left(error) => log.error(s"Failed to delete $name: ${error.getMessage}")
+            .as(DeletionResult(name, false, Some(error.getMessage)))
+        }
+      }
+    } yield results
   }
 
   private def getTimeFromName(filename: String): Option[(ZonedDateTime, ZonedDateTime)] = {
