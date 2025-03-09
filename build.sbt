@@ -30,6 +30,8 @@ libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-ember-client" % http4sVersion,
   "org.http4s" %% "http4s-circe" % http4sVersion,
 
+  "commons-net" % "commons-net" % "3.9.0",
+
   "org.tpolecat" %% "doobie-core" % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
 
