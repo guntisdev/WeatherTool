@@ -63,7 +63,7 @@ class FetchService(log: Logger[IO]) {
     }
   }
 
-  private def retrieveFileAsString(ftpClient: FTPClient, remotePath: String): IO[String] = IO.blocking {
+  private def retrieveFileAsBytes(ftpClient: FTPClient, remotePath: String): IO[Array[Byte]] = IO.blocking {
     val outputStream = new ByteArrayOutputStream()
 
     val success = ftpClient.retrieveFile(remotePath, outputStream)
@@ -71,16 +71,16 @@ class FetchService(log: Logger[IO]) {
       throw new RuntimeException(s"Failed to retrieve file: $remotePath, reply: ${ftpClient.getReplyString}")
     }
 
-    outputStream.toString("UTF-8")
+    outputStream.toByteArray()
   }.onError(e => log.error(e)(s"Error retrieving file $remotePath"))
 
-  def fetchFile(fileName: String): IO[String] = {
+  def fetchFile(fileName: String): IO[Array[Byte]] = {
     val remotePath = s"/ltv/tabulas/$fileName"
 
     createFtpClient.use { ftpClient =>
       for {
         _ <- log.info(s"Fetching file: $remotePath")
-        content <- retrieveFileAsString(ftpClient, remotePath)
+        content <- retrieveFileAsBytes(ftpClient, remotePath)
         _ <- log.info(s"Successfully fetched file: $fileName")
       } yield content
     }

@@ -25,6 +25,32 @@ export const fetchJson = (url: string, options = {}) => {
     })
 }
 
+export const fetchText = (url: string, options = {}) => {
+    return fetch(url, options).then(async response => {
+        let responseCode = ''
+        if (!response.ok) {
+            responseCode = `error ${response.status}`
+        }
+    
+        let text = ''
+        let responseMessage = ''
+        try {
+            text = await response.text()
+        } catch (err) {
+            responseMessage = 'Invalid TEXT response'
+        }
+
+        if (responseCode) {
+            if (responseMessage) throw new Error(`${responseCode}: ${responseMessage}`)
+            else throw new Error(responseCode)
+        } else if (responseMessage) {
+            throw new Error(responseMessage)
+        }
+
+        return text
+    })
+}
+
 
 export const fetchBuffer = (url: string, options = {}) => {
     return fetch(url, options).then(async response => {

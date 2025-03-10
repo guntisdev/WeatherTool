@@ -9,12 +9,13 @@ import { Station } from './station/Station';
 import { apiHost } from './consts';
 import { WeatherIconStub } from './components/weatherIcons/WeatherIconStub';
 import { Harmonie } from './harmonie/Harmonie'
+import { LvgmcForecast } from './lvgmc-forecast/LvgmcForecast'
 
 console.log("env:", import.meta.env.MODE)
 console.log("api host:", apiHost)
 
 const App: Component = () => {
-    const pages = ['station', 'cities', 'latvia', 'database', 'harmonie']
+    const pages = ['station', 'cities', 'latvia', 'database', 'harmonie', 'lvgmc-forecast']
     return (
         <div>
             <div class="grid-1-1">
@@ -32,6 +33,7 @@ const App: Component = () => {
             <Router>
                 <Route path="/" component={Harmonie} />
                 <Route path="/harmonie" component={Harmonie} />
+                <Route path="/lvgmc-forecast" component={LvgmcForecast} />
                 <Route path="/station" component={Station} />
                 <Route path="/cities" component={Cities} />
                 <Route path="/latvia" component={Country} />
