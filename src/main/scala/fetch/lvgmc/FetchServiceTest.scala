@@ -18,7 +18,7 @@ object FetchServiceTest {
     val program = for {
       fetch <- FetchService.of
       result <- fetch.fetchFile("Latvija_LTV_pilsetas_tekosa_dn.csv")
-      _ <- IO.println(result)
+      _ <- IO.println(s"fetched file, size: ${result.length}")
     } yield ()
     program
   }

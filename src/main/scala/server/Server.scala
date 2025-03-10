@@ -6,6 +6,7 @@ import com.comcast.ip4s.IpLiteralSyntax
 import data.DataService
 import db.PostgresService
 import fetch.csv.FetchService
+import fetch.lvgmc
 import fs2.io.file.Files
 import server.ValidateRoutes.{AggFieldList, AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateInt, ValidateMonths, ValidateZonedDateTime}
 import io.circe.{Encoder, Json, Printer}
@@ -28,6 +29,7 @@ import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import parse.csv.Aggregate
 import fs2.io.file.{Files, Path}
+import org.http4s.headers.`Content-Type`
 
 import java.time.{ZoneOffset, ZonedDateTime}
 import scala.concurrent.duration.DurationInt
@@ -54,6 +56,13 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
   private case class ResponseWrapper(result: Map[String, Option[Aggregate.AggregateValue]], query: UserQuery)
 
   private val apiRoutes = HttpRoutes.of[IO] {
+    // http://0.0.0.0:8080/api/show/lvgmc-forecast/Latvija_LTV_pilsetas_tekosa_dn.csv
+    case GET -> Root / "show" / "lvgmc-forecast" / fileName =>
+      println("lvgmc-forecast GET")
+      lvgmc.FetchService.of.flatMap(f => f.fetchFile(fileName)).flatMap(bytes =>
+        Ok(bytes).map(_.withContentType(`Content-Type`(MediaType.text.csv)))
+      )
+
     case GET -> Root / "show" / "gribName" => Ok("{\"fileName\":\"TODO replace this fake name\"}")
 
     // http://0.0.0.0:8080/api/show/grib-all-structure
@@ -198,6 +207,7 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
     "/latvia" -> staticcontent.fileService[IO](FileService.Config("./web/dist")),
     "/database" -> staticcontent.fileService[IO](FileService.Config("./web/dist")),
     "/harmonie" -> staticcontent.fileService[IO](FileService.Config("./web/dist")),
+    "/lvgmc-forecast" -> staticcontent.fileService[IO](FileService.Config("./web/dist")),
   ).orNotFound
 
   def run: IO[ExitCode] =
