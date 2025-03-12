@@ -15,7 +15,7 @@ export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[
     const weatherIconsSingal = createSignal<{[key: string]: string;}>({});
     const [getWeatherIcons] = weatherIconsSingal;
     
-    let lastCoords: CityData = [];
+    let lastCoords: CityData[] = [];
     const props = resolutionProps[type];
 
     const arrowImg = new Image();
@@ -57,7 +57,7 @@ export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[
     createEffect(() => {
         const ctx = getCanvas()!.getContext("2d")!;
         const weatherIcons = getWeatherIcons();
-        const coordsAndData: CityData = data()
+        const coordsAndData: CityData[] = data()
             .map(([city, value]) => [
                 city,
                 cityCoords[city as keyof typeof cityCoords],
