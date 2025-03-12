@@ -32,4 +32,10 @@ export const cityCoords: {[key: string]: { x: number, y: number}} = {
     "Vičaki": { x: 155, y: 142},
     "Zīlāni": { x: 690, y: 370 },
     "Zosēni": { x: 650, y: 250 },
-};
+
+    // rest of cities (forecasts)
+    "Cēsis": { x: 590, y: 195 },
+    "Valmiera": { x: 600, y: 140 },
+    "Talsi": { x: 250, y: 235 },
+    "Jēkabpils": { x: 690, y: 370 },
+}

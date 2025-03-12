@@ -2,12 +2,12 @@ import { ResolutionPropsValue, WindProps, windProps } from "./mapConsts";
 import { drawRotatedImage, getAngleFromString } from "./windAngles";
 
 // cityName, {x, y}, weatherValue, icon
-export type CityData = [string, {x: number, y: number }, number, string | undefined][];
+export type CityData = [cityName: string, {x: number, y: number }, weatherValue: number, icon: string | undefined]
 
 export function drawOnMap(
     ctx: CanvasRenderingContext2D,
     imgArr: [HTMLImageElement, HTMLImageElement],
-    cityData: CityData,
+    cityData: CityData[],
     windData: [string, string, string, boolean, WindProps],
     props: ResolutionPropsValue,
 ): void {
