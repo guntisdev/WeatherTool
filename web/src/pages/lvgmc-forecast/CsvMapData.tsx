@@ -23,7 +23,7 @@ export const CsvMapData: Component<{
         .then(csv => {
             const csvLines = csv.split('\n')
             const dayOrNight = csvLines[2].split(';')[1]
-            console.log(csvLines)
+            // console.log(csvLines)
             const citiesOffset = 4
             const cityData: CityData[] = csvCityListInOrder
                 .map((city, i): CityData => {

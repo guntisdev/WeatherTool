@@ -18,7 +18,8 @@ export function drawRotatedImage(
     img: HTMLImageElement,
     x: number,
     y: number,
-    angleInDegrees: number): void {
+    angleInDegrees: number,
+): void {
     const angleInRadians = angleInDegrees * (Math.PI / 180);
     ctx.translate(x + img.width / 2, y + img.height / 2);
     ctx.rotate(angleInRadians);
