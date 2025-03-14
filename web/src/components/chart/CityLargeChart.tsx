@@ -3,7 +3,7 @@ import { Chart } from "chart.js";
 
 import "../../css/overlay.css"
 import { createCustomChart } from "./CustomChart";
-import { DataQuery, formatDateString } from "../../cities/helpers";
+import { DataQuery, formatDateString } from "../../pages/cities/helpers";
 
 export const CityLargeChart: Component<{
     city: () => string;

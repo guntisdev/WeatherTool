@@ -2,14 +2,14 @@ import { Component } from 'solid-js'
 import { Route, Router } from '@solidjs/router'
 
 import styles from './css/menu.module.css';
-import { Country } from './country/Country';
-import { Cities } from './cities/Cities';
-import { Database } from './database/Database';
-import { Station } from './station/Station';
+import { Country } from './pages/country/Country';
+import { Cities } from './pages/cities/Cities';
+import { Database } from './pages/database/Database';
+import { Station } from './pages/station/Station';
 import { apiHost } from './consts';
 import { WeatherIconStub } from './components/weatherIcons/WeatherIconStub';
-import { Harmonie } from './harmonie/Harmonie'
-import { LvgmcForecast } from './lvgmc-forecast/LvgmcForecast'
+import { Harmonie } from './pages/harmonie/Harmonie'
+import { LvgmcForecast } from './pages/lvgmc-forecast/LvgmcForecast'
 
 console.log("env:", import.meta.env.MODE)
 console.log("api host:", apiHost)
