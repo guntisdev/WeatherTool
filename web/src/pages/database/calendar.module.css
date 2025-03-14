@@ -4,19 +4,19 @@
     gap: 5px;
   }
 
-  .calendar-top {
+  .calendarTop {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
   }
 
-  .calendar-nav {
+  .calendarNav {
     display: flex;
     align-items: center;
   }
 
-  .calendar-nav button {
+  .calendarNav button {
     margin-right: 5px;
     background-color: #fff;
     border: none;
@@ -24,11 +24,11 @@
     cursor: pointer;
   }
 
-  .calendar-year-month {
+  .calendarYearMonth {
     text-align: center;
   }
 
-  .calendar-cell {
+  .calendarCell {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -36,20 +36,20 @@
     background-color: #fff;
   }
 
-  .prev-month,
-  .next-month {
+  .prevMonth,
+  .nextMonth {
     opacity: 0.3;
   }
 
-  .data-date {
+  .dataDate {
     background-color: #99ccff;
   }
 
-  .current-date {
+  .currentDate {
     background-color: #ffcc66;
   }
 
-  .calendar-cell:hover {
+  .calendarCell:hover {
     background-color: #f2f2f2;
     cursor: pointer;
   }

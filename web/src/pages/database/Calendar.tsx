@@ -1,7 +1,7 @@
-import moment from "moment";
-import { Accessor, Component, Setter } from "solid-js";
+import moment from 'moment'
+import { Accessor, Component, Setter } from 'solid-js'
 
-import "../../css/calendar.css";
+import styles from './calendar.module.css'
 
 export const Calendar: Component<{
     getSelectedDate: Accessor<Date>,
@@ -20,19 +20,19 @@ export const Calendar: Component<{
     return (
         <div>
             <h3>Calendar</h3>
-            <div class="calendar-top">
+            <div class={styles.calendarTop}>
                 <button onClick={() => changeMonths(-1) }>&lt;&lt;</button>
-                <div class="calendar-year-month">
+                <div class={styles.calendarYearMonth}>
                     {moment(getSelectedDate()).format("YYYY, MMM")}
                 </div>
                 <button onclick={() => changeMonths(1)}>&gt;&gt;</button>
             </div>
-            <div class="calendar">
+            <div class={styles.calendar}>
                 { getPaddedMonth(getSelectedDate()).map(d => {
-                    const classArr = ["calendar-cell"];
-                    if (d.getMonth() !== getSelectedDate().getMonth()) classArr.push("prev-month");
-                    if (dateStrArr().includes(d.toDateString())) classArr.push("data-date");
-                    if (d.toDateString() === getSelectedDate().toDateString()) classArr.push("current-date");
+                    const classArr = [styles.calendarCell];
+                    if (d.getMonth() !== getSelectedDate().getMonth()) classArr.push(styles.prevMonth)
+                    if (dateStrArr().includes(d.toDateString())) classArr.push(styles.dataDate)
+                    if (d.toDateString() === getSelectedDate().toDateString()) classArr.push(styles.currentDate)
                     return (
                         <div
                             class={classArr.join(" ")}
