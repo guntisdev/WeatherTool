@@ -1,4 +1,4 @@
-import { ColorEntry } from '../harmonie/draw/constants'
+import { ColorEntry } from '../pages/harmonie/draw/constants'
 
 type RGBu8 = [number, number, number]
 type RGBAu8 = [number, number, number, number]
