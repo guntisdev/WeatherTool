@@ -1,6 +1,4 @@
-import { Component } from 'solid-js'
-import { fetchText } from '../../helpers/fetch'
-import { apiHost } from '../../consts'
+import { Accessor, Component, createEffect } from 'solid-js'
 import { codeToIcon } from '../weatherIcons/iconConsts'
 import rigaBgUrl from '../../assets/bg-riga.webp'
 import arrowUrl from '../../assets/arrow.webp'
@@ -15,9 +13,9 @@ type TableWeather = {
 }
 
 export const Table: Component<{
-    csvUrl: string,
+    getCsvLines: Accessor<string[]>,
 }> = ({
-    csvUrl,
+    getCsvLines,
 }) => {
     let canvas: HTMLCanvasElement | undefined
     const rigaBg = new Image()
@@ -25,29 +23,29 @@ export const Table: Component<{
     const arrowImg = new Image()
     arrowImg.src = arrowUrl
 
-    fetchText(`${apiHost}/api/show/lvgmc-forecast/${csvUrl}`)
-        .then(csv => {
-            const csvLines = csv.split('\n')
-            const dateStr = csvLines[2].split(';')[0].split('.').reverse().join('.')
-            const weekDay = new Date(dateStr).getDay()
-            const weekDayLV = weekDaysLV.get(weekDay)?.toUpperCase() ?? ''
-            const dayOrNight = csvLines[2].split(';')[1]
-            const rigaOffset = dayOrNight === 'DIENA' ? 24 : 51
-            const data: TableWeather[] = csvLines
-                .slice(rigaOffset, rigaOffset+4)
-                .map((line): TableWeather => {
-                    const parts = line.split(';')
-                    const hour = parts[0].slice(6, 11).replace(':', '.')
-                    const temperature = parts[1]
-                    const windDirection = parts[3]
-                    const windSpeed = parts[5]
-                    const iconCode = Number(parts[7])
-                    const icon = codeToIcon(iconCode)
+    createEffect(() => {
+        const csvLines = getCsvLines()
+        if (csvLines.length <= 0) return;
+        const dateStr = csvLines[2].split(';')[0].split('.').reverse().join('.')
+        const weekDay = new Date(dateStr).getDay()
+        const weekDayLV = weekDaysLV.get(weekDay)?.toUpperCase() ?? ''
+        const dayOrNight = csvLines[2].split(';')[1]
+        const rigaOffset = dayOrNight === 'DIENA' ? 24 : 51
+        const data: TableWeather[] = csvLines
+            .slice(rigaOffset, rigaOffset+4)
+            .map((line): TableWeather => {
+                const parts = line.split(';')
+                const hour = parts[0].slice(6, 11).replace(':', '.')
+                const temperature = parts[1]
+                const windDirection = parts[3]
+                const windSpeed = parts[5]
+                const iconCode = Number(parts[7])
+                const icon = codeToIcon(iconCode)
 
-                    return { hour, temperature, windDirection, windSpeed, icon }
-                })
-            drawTable(canvas!, rigaBg, arrowImg, data, weekDayLV)
-        })
+                return { hour, temperature, windDirection, windSpeed, icon }
+            })
+        drawTable(canvas!, rigaBg, arrowImg, data, weekDayLV)
+    })
 
     return <>
         <canvas ref={canvas} width='1040px' height='530px' />
@@ -104,11 +102,11 @@ function drawTable(
 }
 
 const weekDaysLV = new Map([
+    [0, 'svētdiena'],
     [1, 'pirmdiena'],
     [2, 'otrdiena'],
     [3, 'trešdiena'],
     [4, 'ceturtdiena'],
     [5, 'piektdiena'],
     [6, 'sestdiena'],
-    [7, 'svētdiena'],
 ])
