@@ -1,11 +1,13 @@
-import { Component, createEffect, createSignal, Setter } from 'solid-js'
+import { Component, createSignal, Setter } from 'solid-js'
 
 import dayBgMap from '../../assets/map_3840x1440_wind.webp'
 import nightBgMap from '../../assets/map_night_3840x1440_wind.webp'
 import { CsvMapData } from './CsvMapData'
-import { Table } from '../../components/table/Table'
+import { TableFour } from '../../components/table/TableFour'
 import { apiHost } from '../../consts'
 import { fetchText } from '../../helpers/fetch'
+import { TableTwo } from '../../components/table/TableTwo'
+import styles from './lvgmc.module.css'
 
 //  Eiropa_LTV_pilsetas_nakama_dn.csv
 //  Eiropa_LTV_pilsetas_tekosa_dn.csv
@@ -27,13 +29,13 @@ export const LvgmcForecast: Component<{}> = () => {
             .catch(console.warn)
     )
 
-    createEffect(() => {
-        console.log(getMorningLines())
-    })
-    
-
     return <>
         <p>Vakara ēters</p>
+
+        <div class={styles.twoCanvas}>
+            <TableTwo getCsvLines={() => getEveningLines().slice(60, 67)} />
+            <TableTwo getCsvLines={() => getEveningLines().slice(69, 76)} />
+        </div>
         <CsvMapData
             getCityLines={() => getEveningLines().slice(4, 22)}
             getWindLine={() => getEveningLines()[26]}
@@ -44,7 +46,7 @@ export const LvgmcForecast: Component<{}> = () => {
             getWindLine={() => getEveningLines()[57]}
             bgImgUrl={dayBgMap}
         />
-        <Table getCsvLines={() => getEveningLines()} />
+        <TableFour getCsvLines={() => getEveningLines()} />
 
         <p>Rīta ēters</p>
         <CsvMapData
@@ -52,6 +54,10 @@ export const LvgmcForecast: Component<{}> = () => {
             getWindLine={() => getMorningLines()[23]}
             bgImgUrl={dayBgMap}
         />
-        <Table getCsvLines={() => getMorningLines()} />
+        <TableFour getCsvLines={() => getMorningLines()} />
+        <div class={styles.twoCanvas}>
+            <TableTwo getCsvLines={() => getMorningLines().slice(33, 40)} />
+            <TableTwo getCsvLines={() => getMorningLines().slice(42, 49)} />
+        </div>
     </>
 }

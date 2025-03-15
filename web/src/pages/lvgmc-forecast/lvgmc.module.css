@@ -1,0 +1,6 @@
+.twoCanvas {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    width: 1040px;
+}

@@ -1,50 +1,55 @@
 import { Accessor, Component, createEffect } from 'solid-js'
 import { codeToIcon } from '../weatherIcons/iconConsts'
-import rigaBgUrl from '../../assets/bg-riga.webp'
+import table2BgUrl from '../../assets/bg-table2-left.webp'
 import arrowUrl from '../../assets/arrow.webp'
 import { drawRotatedImage, getAngleFromString } from '../map/windAngles'
 
 type TableWeather = {
-    hour: string,
     temperature: string,
     windDirection: string,
     windSpeed: string,
     icon: string,
 }
 
-export const Table: Component<{
+export const TableTwo: Component<{
     getCsvLines: Accessor<string[]>,
 }> = ({
     getCsvLines,
 }) => {
     let canvas: HTMLCanvasElement | undefined
-    const rigaBg = new Image()
-    rigaBg.src = rigaBgUrl
+    const table2Bg = new Image()
+    table2Bg.src = table2BgUrl
     const arrowImg = new Image()
     arrowImg.src = arrowUrl
 
     createEffect(() => {
         const csvLines = getCsvLines()
         if (csvLines.length <= 0) return;
-        const dateStr = csvLines[2].split(';')[0].split('.').reverse().join('.')
+        const dateStr = csvLines[0].split(';')[0].split('.').reverse().join('.')
         const weekDay = new Date(dateStr).getDay()
         const weekDayLV = weekDaysLV.get(weekDay)?.toUpperCase() ?? ''
-        const dayOrNight = csvLines[2].split(';')[1]
-        const rigaOffset = dayOrNight === 'DIENA' ? 24 : 51
-        const data: TableWeather[] = csvLines
-            .slice(rigaOffset, rigaOffset+4)
-            .map((line): TableWeather => {
-                const parts = line.split(';')
-                const hour = parts[0].slice(6, 11).replace(':', '.')
-                const temperature = parts[1]
-                const windDirection = parts[3]
-                const windSpeed = parts[5]
-                const iconCode = Number(parts[7])
-                const icon = codeToIcon(iconCode)
 
-                return { hour, temperature, windDirection, windSpeed, icon }
-            })
-        drawTable(canvas!, rigaBg, arrowImg, data, weekDayLV)
+        const tempParts = csvLines[2].split(';')
+        const iconParts = csvLines[3].split(';')
+        const windDirParts = csvLines[4].split(';')
+        const windSpeedParts = csvLines[5].split(';')
+
+        const data: TableWeather[] = [
+            {
+                temperature: tempParts[2],
+                windDirection: windDirParts[2],
+                windSpeed: windSpeedParts[2],
+                icon: codeToIcon(Number(iconParts[2])),
+            },
+            {
+                temperature: tempParts[5],
+                windDirection: windDirParts[5],
+                windSpeed: windSpeedParts[5],
+                icon: codeToIcon(Number(iconParts[5])),
+            },
+        ]
+
+        drawTable(canvas!, table2Bg, arrowImg, data, weekDayLV)
     })
 
     return <>
@@ -78,17 +83,15 @@ function drawTable(
     data.forEach((weather, i) => {
         const midX = colWidth * (i + 0.5)
         ctx.textAlign = 'center'
-        ctx.font = 'bold 20px Rubik'
         ctx.fillStyle = '#FFFFFF'
-        ctx.fillText(weather.hour, midX, rigaBg.height * 0.2)
 
         ctx.font = `normal 240px Daira by LTV grafika`
-        ctx.fillText(weather.icon, midX, rigaBg.height * 0.5)
+        ctx.fillText(weather.icon, midX, rigaBg.height * 0.4)
 
         ctx.font = 'normal 50px Rubik'
-        ctx.fillText(weather.temperature, midX, rigaBg.height * 0.75)
+        ctx.fillText(weather.temperature, midX, rigaBg.height * 0.7)
 
-        const bottomLineY = rigaBg.height * 0.9
+        const bottomLineY = rigaBg.height * 0.85
         ctx.font = 'bold 30px Rubik'
         ctx.textAlign = 'center'
         ctx.fillText(weather.windDirection, midX, bottomLineY)
