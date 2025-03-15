@@ -4,3 +4,18 @@
     gap: 20px;
     width: 1040px;
 }
+
+.activeButton {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 3px 5px;
+    font-weight: bold;
+}
+
+.button {
+    background-color: #ddd;
+    color: #333;
+    border: none;
+    padding: 3px 10px;
+}
