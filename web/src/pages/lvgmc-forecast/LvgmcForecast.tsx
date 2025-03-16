@@ -63,6 +63,14 @@ export const LvgmcForecast: Component<{}> = () => {
                 <TableTwo getCsvLines={() => getEveningLines().slice(60, 67)} />
                 <TableTwo getCsvLines={() => getEveningLines().slice(69, 76)} />
             </div>
+            <div class={styles.twoCanvas} style={{ display: getEveningLines().length > 93 ? 'flex' : 'none'}}>
+                <TableTwo getCsvLines={() => getEveningLines().slice(78, 85)} />
+                <TableTwo getCsvLines={() => getEveningLines().slice(87, 94)} />
+            </div>
+            <div class={styles.twoCanvas} style={{ display: getEveningLines().length > 111 ? 'flex' : 'none'}}>
+                <TableTwo getCsvLines={() => getEveningLines().slice(96, 103)} />
+                <TableTwo getCsvLines={() => getEveningLines().slice(105, 112)} />
+            </div>
         </div>
 
         <div style={{ display: getActiveSection() === 'morning' ? 'block' : 'none' }}>
