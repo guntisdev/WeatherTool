@@ -10,12 +10,12 @@ object DebugUtils {
   case class FolderStructureResponse(
     current: DirectoryStructure,
     data: DirectoryStructure,
+    tmp: DirectoryStructure,
     grib: DirectoryStructure
   )
 
   private def getDirectoryStructure(path: Path): IO[DirectoryStructure] = {
     for {
-      _ <- IO.println(path)
       absolutePath <- IO(path.toString)
       files <- Files[IO].list(path).compile.toList
       fileInfos <- files.traverse { filePath =>
@@ -29,13 +29,15 @@ object DebugUtils {
   def getFolderStructure: IO[FolderStructureResponse] = {
     val currentPath = Path(".")
     val dataPath = Path("data")
+    val tmpPath = Path("data/tmp")
     val gribPath = Path("data/grib")
 
     for {
       current <- getDirectoryStructure(currentPath)
       data <- getDirectoryStructure(dataPath)
+      tmp <- getDirectoryStructure(tmpPath)
       grib <- getDirectoryStructure(gribPath)
-      response = FolderStructureResponse(current, data, grib)
+      response = FolderStructureResponse(current, data, tmp, grib)
     } yield response
   }
 }

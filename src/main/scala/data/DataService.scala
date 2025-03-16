@@ -120,6 +120,7 @@ class DataService(log: Logger[IO]) {
 
     for {
       _ <- log.info("start cleanup")
+//      _ <- IO.raiseError[Unit](new RuntimeException("Test error in deleteOldForecasts"))
       fileList <- getFileList()
       fileDateList = fileList.flatMap(fileName =>
         getTimeFromName(fileName).map(extracted => (fileName, extracted._1))
@@ -128,6 +129,25 @@ class DataService(log: Logger[IO]) {
       deleteList = fileList.filter(!keepList.contains(_))
       results <- deleteList.traverse { name =>
         val path = Path(s"$GRIB_FOLDER/${name}")
+        Files[IO].delete(path).attempt.flatMap {
+          case Right(_) => log.info(s"delete: $name").as(DeletionResult(name, true, None))
+          case Left(error) => log.error(s"Failed to delete $name: ${error.getMessage}")
+            .as(DeletionResult(name, false, Some(error.getMessage)))
+        }
+      }
+    } yield results
+  }
+
+  def deleteTmp(): IO[List[DeletionResult]] = {
+    for {
+      fileList <- Files[IO]
+        .list(Path(TMP_FOLDER))
+        .map(_.toString)
+        .map(_.replace(s"$TMP_FOLDER/", ""))
+        .compile.toList
+
+      results <- fileList.traverse { name =>
+        val path = Path(s"$TMP_FOLDER/${name}")
         Files[IO].delete(path).attempt.flatMap {
           case Right(_) => log.info(s"delete: $name").as(DeletionResult(name, true, None))
           case Left(error) => log.error(s"Failed to delete $name: ${error.getMessage}")

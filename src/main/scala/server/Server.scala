@@ -7,6 +7,7 @@ import data.DataService
 import db.PostgresService
 import fetch.csv.FetchService
 import fetch.lvgmc
+import fs2.io.file.{Files, Path}
 import server.ValidateRoutes.{AggFieldList, AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateInt, ValidateMonths, ValidateZonedDateTime}
 import io.circe.{Encoder, Json, Printer}
 import org.http4s._
@@ -74,6 +75,10 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
     case GET -> Root / "grib" / "delete-old-forecasts" =>
       dataService.deleteOldForecasts().flatMap(result => Ok(result.asJson))
 
+    // http://0.0.0.0:8080/api/debug/delete-tmp
+    case GET -> Root / "debug" / "delete-tmp" =>
+      dataService.deleteTmp().flatMap(result => Ok(result.asJson))
+
     // http://0.0.0.0:8080/api/debug/time
     case GET -> Root / "debug" / "time" =>
       val nowUTC = ZonedDateTime.now(ZoneOffset.UTC)
@@ -83,6 +88,21 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
     // http://0.0.0.0:8080/api/debug/folder-structure
     case GET -> Root / "debug" / "folder-structure" =>
       DebugUtils.getFolderStructure.flatMap(response => Ok(response.asJson))
+
+    // http://0.0.0.0:8080/api/debug/file/error_2025-03-16_152201.txt
+    case GET -> Root / "debug" / "file" / fileName =>
+      val filePath = Path(s"data/tmp/$fileName")
+
+      Files[IO].exists(filePath).flatMap {
+        case true =>
+          Files[IO].readUtf8(filePath)
+            .compile
+            .string
+            .flatMap(content => Ok(content).map(_.withContentType(`Content-Type`(MediaType.text.plain, Charset.`UTF-8`))))
+            .handleErrorWith(err => InternalServerError(s"Failed to read file: ${err.getMessage}"))
+        case false =>
+          NotFound(s"File not found: $fileName")
+      }
 
     // http://0.0.0.0:8080/api/query/city/Liepāja,Rēzekne/20230414_2200-20230501_1230/hour/tempMax/max
     case GET -> Root / "query" / "city" / CityList(cities) / DateTimeRange(from, to) / Granularity(granularity) / field / AggKey(key) =>
