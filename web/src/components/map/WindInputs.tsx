@@ -18,16 +18,6 @@ export const WindInputs: Component<{signals: WindSignals}> = (
     return (
     <>
         <div>
-            <label>
-                <input
-                    type="checkbox"
-                    checked={getRoundValues()}
-                    onChange={e => setRoundValues(e.target.checked)}
-                />
-                Round values
-            </label>
-        </div>
-        <div>
             <input
                 type="text"
                 onInput={e => setDirection(e.target.value)}

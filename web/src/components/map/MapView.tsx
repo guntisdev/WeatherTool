@@ -84,6 +84,16 @@ export const MapView: Component<{ type: MapResolution, data: () => ResultKeyVal[
         <>
             <div class="grid-1-2">
                 <div>
+                    <div>
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={windSignals.roundValues[0]()}
+                                onChange={e => windSignals.roundValues[1](e.target.checked)}
+                            />
+                            Round values
+                        </label>
+                    </div>
                     { props.showWind && <WindInputs signals={windSignals} /> }
                 </div>
                 <div><IconInputs weatherIconsSingal={weatherIconsSingal} /></div>
