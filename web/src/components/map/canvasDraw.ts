@@ -39,7 +39,7 @@ export function drawOnMap(
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#000000";
-        const numericValue = roundValues ? Math.round(value) : value;
+        const numericValue = roundValues ? Math.round(value) : value.toFixed(1);
         const stringValue = numericValue.toString().replace(".", ",");
         ctx.fillText(stringValue, localX, localY);
 
