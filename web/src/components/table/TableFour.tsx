@@ -36,7 +36,7 @@ export const TableFour: Component<{
             .map((line): TableWeather => {
                 const parts = line.split(';')
                 const hour = parts[0].slice(6, 11).replace(':', '.')
-                const temperature = parts[1]
+                const temperature = parts[1].replace('+', '')
                 const windDirection = parts[3]
                 const windSpeed = parts[5]
                 const iconCode = Number(parts[7])
