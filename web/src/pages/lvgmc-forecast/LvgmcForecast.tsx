@@ -76,7 +76,7 @@ export const LvgmcForecast: Component<{}> = () => {
         <div style={{ display: getActiveSection() === 'morning' ? 'block' : 'none' }}>
             <CsvMapData
                 getCityLines={() => getMorningLines().slice(4, 22)}
-                getWindLine={() => getMorningLines()[23]}
+                getWindLine={() => getMorningLines()[30]}
                 bgImgUrl={dayBgMap}
             />
             <TableFour getCsvLines={() => getMorningLines()} />

@@ -33,18 +33,19 @@ export const TableTwo: Component<{
         const iconParts = csvLines[3].split(';')
         const windDirParts = csvLines[4].split(';')
         const windSpeedParts = csvLines[5].split(';')
+        const windGustParts = csvLines[6].split(';')
 
         const data: TableWeather[] = [
             {
                 temperature: tempParts[2],
                 windDirection: windDirParts[2],
-                windSpeed: windSpeedParts[2],
+                windSpeed: `${windSpeedParts[2]}-${windGustParts[2]}`,
                 icon: codeToIcon(Number(iconParts[2])),
             },
             {
                 temperature: tempParts[5],
                 windDirection: windDirParts[5],
-                windSpeed: windSpeedParts[5],
+                windSpeed: `${windSpeedParts[5]}-${windGustParts[5]}`,
                 icon: codeToIcon(Number(iconParts[5])),
             },
         ]
