@@ -13,6 +13,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import parse.grib.GribParser
 
 import java.time.ZonedDateTime
+import scala.concurrent.duration.DurationInt
 import scala.util.Try
 
 
@@ -65,7 +66,11 @@ class FetchService(dataService: DataService, log: Logger[IO]) {
   }
 
   private def fetchFromDateTime(time: ZonedDateTime): IO[String] = {
-    EmberClientBuilder.default[IO].build.use { client =>
+    val timeout = 60.seconds
+    EmberClientBuilder.default[IO]
+      .withTimeout(timeout)
+      .withIdleConnectionTime(timeout)
+      .build.use { client =>
       for {
         base <- edrBaseUrl
         queryParams = Query.fromPairs(
