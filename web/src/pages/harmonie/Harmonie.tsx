@@ -8,6 +8,8 @@ import { fetchGribList, fetchGribListStructure } from './fetchGrib'
 
 import styles from './harmonie.module.css'
 import { SlideShow } from './SlideShow'
+import { fetchJson } from '../../helpers/fetch'
+import { apiHost } from '../../consts'
 
 export const Harmonie: Component<{}> = () => {
     const [getFileList, setFileList] = createSignal<string[]>([])
@@ -49,6 +51,11 @@ export const Harmonie: Component<{}> = () => {
         )
     }
 
+    function deleteOldGrib(): void {
+        fetchJson(`${apiHost}/api/grib/delete-old-forecasts`)
+            .finally(() => window.location.reload())
+    }
+
     return <div class={styles.container}>
         <div class={styles.column}>
             <label>
@@ -88,6 +95,13 @@ export const Harmonie: Component<{}> = () => {
                     />
                 )}
             </ul>
+            <div class={styles.deleteContainer}>
+                <input
+                    type='button'
+                    value='Delete old grib files'
+                    onClick={deleteOldGrib}
+                />
+            </div>
         </div>
         <div class={styles.column}>
             <SlideShow
