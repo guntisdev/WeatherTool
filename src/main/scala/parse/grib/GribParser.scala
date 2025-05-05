@@ -17,10 +17,14 @@ object GribParser {
         result <- if (ptr >= fileSize) {
           IO.pure(acc.reverse)
         } else {
-          for {
-            grib <- parseGrib(path, ptr)
-            nextResult <- loop(ptr + grib.length, grib :: acc)
-          } yield nextResult
+          parseGrib(path, ptr).attempt.flatMap {
+            case Right(grib) =>
+              loop(ptr + grib.length, grib :: acc)
+            case Left(error) =>
+              // Just log the error and end parsing
+              IO(println(s"Error parsing GRIB at position $ptr: ${error.getMessage}")) >>
+              IO.pure(acc.reverse)
+          }
         }
       } yield result
     }
