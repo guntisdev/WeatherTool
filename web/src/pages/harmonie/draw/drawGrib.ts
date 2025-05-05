@@ -9,7 +9,7 @@ import { isCalculatedWindDirection, windDirectionArrows, windDirectionColors, wi
 
 import latvia_border from '../../../assets/latvia_contour.webp'
 const latviaBoderImg = new Image()
-latviaBoderImg.onload = () => console.log('latvia_contour loaded...')
+latviaBoderImg.onload = () => {}
 latviaBoderImg.src = latvia_border
 
 /*
