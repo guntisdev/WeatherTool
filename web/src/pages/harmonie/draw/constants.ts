@@ -24,8 +24,7 @@ export const PRECIPITATION: ColorEntry[] = [
     { value: 1, color: [40, 109, 246, 255] },
     { value: 0.5, color: [80, 162, 248, 255] },
     { value: 0.2, color: [118, 202, 249, 255] },
-    { value: 0.1, color: [152, 233, 252, 255] },
-    { value: 0.05, color: [255, 255, 255, 255] },
+    { value: 0.1, color: [152, 233, 252, 0] },
 ]
 
 // from ltv
