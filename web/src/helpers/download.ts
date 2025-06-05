@@ -8,7 +8,7 @@ export async function downloadImagesAsZip(
     const strBlobArr = await Promise.all(
         images.map(async ([bitmapName, bitmap]): Promise<[string, Blob]> => {
             const blob = await bitmapToBlob(bitmap)
-            return [bitmapName+'.webp', blob]
+            return [bitmapName+'.png', blob]
         })
     )
 
@@ -28,9 +28,9 @@ function bitmapToBlob( bitmap: ImageBitmap): Promise<Blob> {
         canvas.toBlob(
             (blob) => {
                 if (blob) resolve(blob)
-                else reject(new Error(`Failed to convert blob to WebP`))
+                else reject(new Error(`Failed to convert blob to png`))
             },
-            'image/webp',
+            'image/png',
             0.8
         )
     })
