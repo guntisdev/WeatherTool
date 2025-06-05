@@ -221,15 +221,16 @@ function drawContour(
 }
 
 
-function rgbHexToU8(hex: string): RGBu8 {
+function rgbHexToU8(hex: string): RGBAu8 {
     return [
         parseInt(`0x${hex.slice(1, 3)}`),
         parseInt(`0x${hex.slice(3, 5)}`),
         parseInt(`0x${hex.slice(5, 7)}`),
+        255,
     ]
 }
 
-type RGBu8 = [number, number, number]
+type RGBAu8 = [number, number, number, number]
 
 export function isMeteoEqual(meteo: MeteoParam, arr: number[]): boolean {
     const arr2 = [meteo.discipline, meteo.category, meteo.product]

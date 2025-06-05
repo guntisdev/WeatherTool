@@ -1,16 +1,15 @@
 import { ColorEntry } from '../pages/harmonie/draw/constants'
 
-type RGBu8 = [number, number, number]
 type RGBAu8 = [number, number, number, number]
 
-export function interpolateColors(value: number, a: RGBu8, b: RGBu8): RGBAu8 {
+export function interpolateColors(value: number, a: RGBAu8, b: RGBAu8): RGBAu8 {
     const color = a.slice(0).map((from, i) => {
         const to = b[i]
         const delta = (to - from) * (value/255)
         return from + delta
     })
 
-    return [...color, 255] as RGBAu8
+    return [...color] as RGBAu8
 }
 
 export function valueToColorThreshold(value: number, colorArr: ColorEntry[]): [number, number, number, number] {
@@ -37,8 +36,8 @@ export function valueToColorInterpolated(value: number, colorArr: ColorEntry[]):
         }
     }
 
-    const maxDeg = closeMax.color.slice(0, 3) as [number, number, number]
-    const minDeg = closeMin.color.slice(0, 3) as [number, number, number]
+    const maxDeg = closeMax.color
+    const minDeg = closeMin.color
     const scale = Math.abs(closeMax.value - closeMin.value)
     const delta = 255*(value - closeMin.value)/scale
     const rgba = interpolateColors(delta, minDeg, maxDeg)
