@@ -185,8 +185,8 @@ export function drawRotate(
     tempCtx.restore()
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    canvas.width = 640*4 - 510 // -offset right
-    canvas.height = 540*1.7
+    canvas.width = 640*4 - 1000 // -offset right
+    canvas.height = 540*1.7 + 140
     // canvas.style.border = "1px solid red"
     // console.log(ctx.imageSmoothingEnabled, ctx.imageSmoothingQuality)
     if (isInterpolated) {
