@@ -22,6 +22,7 @@ export const DrawView: Component<{
     createEffect(async () => {
         setIsLoading(true)
         const canvas = getCanvas()!
+        canvas.style.width = '100%'
         const ctx = canvas.getContext('2d')!
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         const cropBounds = options.getIsCrop() ? CROP_BOUNDS : undefined
