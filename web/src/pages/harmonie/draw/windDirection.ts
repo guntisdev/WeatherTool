@@ -112,10 +112,11 @@ function getAvgDirection(directions: number[][], gridRow: number, gridCol: numbe
             const directionRow = gridRow * cellSize + row;
             const directionCol = gridCol * cellSize + col;
 
-            const directionRad = directions[directionRow][directionCol]
-
-            sumSin += Math.sin(directionRad);
-            sumCos += Math.cos(directionRad);
+            if (directions[directionRow] !== undefined && directions[directionRow][directionCol] !== undefined) {
+                const directionRad = directions[directionRow][directionCol]
+                sumSin += Math.sin(directionRad);
+                sumCos += Math.cos(directionRad);
+            }
         }
     }
 

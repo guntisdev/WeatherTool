@@ -185,10 +185,9 @@ export function drawRotate(
     tempCtx.restore()
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    // canvas.width = 390
-    // canvas.height = 165
-    canvas.width = 1365
-    canvas.height = 576
+    canvas.width = 640*4 - 510 // -offset right
+    canvas.height = 540*1.7
+    // canvas.style.border = "1px solid red"
     // console.log(ctx.imageSmoothingEnabled, ctx.imageSmoothingQuality)
     if (isInterpolated) {
         ctx.imageSmoothingEnabled = true
@@ -197,9 +196,9 @@ export function drawRotate(
         ctx.imageSmoothingEnabled = false
     }
     ctx.save()
-    ctx.translate(canvas.width/2, canvas.height/2)
+    ctx.translate(canvas.width/2+255, canvas.height/2)
     ctx.scale(scale, scale)
-    ctx.drawImage(tempCanvas, -tempCanvas.width/2, -tempCanvas.height/2)
+    ctx.drawImage(tempCanvas, -tempCanvas.width/1.5, -tempCanvas.height/1.5)
     ctx.restore()
 }
 
@@ -208,7 +207,7 @@ function drawContour(
     ctx: CanvasRenderingContext2D,
 ): void {
     ctx.save()
-    ctx.translate(canvas.width/2 +120, canvas.height/2 -20)
+    ctx.translate(canvas.width/2 -20+255, canvas.height/2 -10)
     // TODO create contour image exact scale when sizes will be accepted
     const scale = 5.3/3.5
     const scaledWidth = latviaBoderImg.width/scale
