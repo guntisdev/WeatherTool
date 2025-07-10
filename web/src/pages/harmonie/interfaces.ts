@@ -52,5 +52,6 @@ export type DrawOptions = {
     getIsInterpolated: Accessor<boolean>,
 }
 
-export const CROP_BOUNDS = { x: 1906-1-440, y: 895, width: 440, height: 380, angle: 26 }
+// export const CROP_BOUNDS = { x: 1906-1-440, y: 895, width: 440, height: 380, angle: 26 }
+export const CROP_BOUNDS = { x: 1906-1-660, y: 840, width: 660, height: 620, angle: 26 }
 export type CropBounds = typeof CROP_BOUNDS
