@@ -21,7 +21,7 @@ async function processPromises<T>(
 export async function processPromisesInBatches<T>(
     promiseFns: (() => Promise<T>)[],
     onProgress: (result: T) => void,
-    batchSize = 3,
+    batchSize = 10,
 ): Promise<(T | undefined)[]> {
     const results = []
     while(await promiseFns.length > 0) {
