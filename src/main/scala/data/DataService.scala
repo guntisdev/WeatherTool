@@ -78,7 +78,7 @@ class DataService(log: Logger[IO]) {
   private val semaphore = Semaphore[IO](4).unsafeRunSync()
 
   private val blockingEC = ExecutionContext.fromExecutorService(
-    Executors.newFixedThreadPool(4) // limit concurrency
+    Executors.newFixedThreadPool(8) // limit concurrency
   )
 
   def getBinaryChunk(offset: Int, length: Int, fileName: String): IO[Array[Byte]] = {
