@@ -5,6 +5,7 @@ import data.DataService
 import db.{DBConnection, PostgresService}
 import fetch.csv.{FetchService, FileNameService}
 import fetch.dmi
+import fetch.lvgmc
 import scheduler.Scheduler
 import server.Server
 
@@ -22,25 +23,28 @@ object Main extends IOApp {
 
       scheduler <- Scheduler.of
       dataService <- DataService.of
-      fetchService <- FetchService.of
+      fetchLegacyService <- FetchService.of
+      fetchLvgmcService <- lvgmc.FetchService.of
 
-      fetchCsvList = new FileNameService().generateCurrentHour
-        .flatMap(fetchService.fetchSingleFile)
-        .flatMap {
-          case Right((name, content)) => postgresService.save(name, content)
-          case Left(_) => IO.unit // ignore error
-        }
-      fetchCsvTask = scheduler.scheduleTask("Fetch CSV", List(31), fetchCsvList).compile.drain
 
-      cleanupTask = scheduler.scheduleTask("Cleanup", List(1), dataService.deleteOldForecasts()).compile.drain
+      fetchWeatherStations = for {
+        fileName <- new FileNameService().generateCurrentHour
+        stationDataStr <- fetchLvgmcService.fetchWeatherStations()
+        _ <- IO.println(fileName)
+        // TODO refactor after legacy deleted. No need for fileName, instead pass only year
+        _ <- postgresService.save(fileName, stationDataStr)
+      } yield ()
+      fetchStationsTask = scheduler.scheduleTask("Fetch Weather Stations", List(11,13,23,30), fetchWeatherStations).compile.drain
+
+      cleanupTask = scheduler.scheduleTask("Cleanup old Grib", List(41), dataService.deleteOldForecasts()).compile.drain
 
       fetchGrib <- dmi.FetchService.of(dataService)
-      fetchGribTask = scheduler.scheduleTask("Fetch Grib", List(3), fetchGrib.fetchRecentForecasts()).compile.drain
+      fetchGribTask = scheduler.scheduleTask("Fetch Grib", List(43), fetchGrib.fetchRecentForecasts()).compile.drain
 
-      server <- Server.of(postgresService, dataService, fetchService)
+      server <- Server.of(postgresService, dataService, fetchLegacyService)
       serverTask = server.run
 
-      exitCode <- (serverTask, fetchCsvTask, cleanupTask, fetchGribTask).parMapN((_, _, _, _) => ExitCode.Success)
+      exitCode <- (serverTask, fetchStationsTask, cleanupTask, fetchGribTask).parMapN((_, _, _, _) => ExitCode.Success)
     } yield exitCode
 
     program.handleErrorWith { error =>
