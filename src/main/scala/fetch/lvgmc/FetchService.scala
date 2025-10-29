@@ -6,6 +6,7 @@ import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.io.ByteArrayOutputStream
+import java.nio.charset.StandardCharsets
 
 final case class LVGMCServerConfig(
   username: String,
@@ -84,5 +85,9 @@ class FetchService(log: Logger[IO]) {
         _ <- log.info(s"Successfully fetched file: $fileName")
       } yield content
     }
+  }
+
+  def fetchWeatherStations(): IO[String] = {
+    fetchFile("Latvija_faktiskais_laiks.csv").map(result => new String(result, StandardCharsets.UTF_8))
   }
 }
