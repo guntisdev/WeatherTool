@@ -5,8 +5,9 @@ import cats.implicits.toTraverseOps
 import com.comcast.ip4s.IpLiteralSyntax
 import data.DataService
 import db.PostgresService
-import fetch.csv.FetchService
-import fetch.lvgmc
+import fetch.csv.FileNameService
+//import fetch.csv.FetchService
+import fetch.lvgmc.FetchService
 import fs2.io.file.{Files, Path}
 import server.ValidateRoutes.{AggFieldList, AggKey, CityList, DateTimeRange, Granularity, ValidateDate, ValidateDateTime, ValidateInt, ValidateMonths, ValidateZonedDateTime}
 import io.circe.{Encoder, Json, Printer}
@@ -52,9 +53,23 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
   private val apiRoutes = HttpRoutes.of[IO] {
     // http://0.0.0.0:8080/api/show/lvgmc-forecast/Latvija_LTV_pilsetas_tekosa_dn.csv
     case GET -> Root / "show" / "lvgmc-forecast" / fileName =>
-      lvgmc.FetchService.of.flatMap(f => f.fetchFile(fileName)).flatMap(bytes =>
+      fetch.fetchFile(fileName).flatMap(bytes =>
         Ok(bytes).map(_.withContentType(`Content-Type`(MediaType.text.csv)))
       )
+
+    // http://0.0.0.0:8080/api/fetch/lvgmc/stations
+    case GET -> Root / "fetch" / "lvgmc" / "stations" =>
+      (
+        for {
+          fileName <- new FileNameService().generateCurrentHour
+          stationDataStr <- fetch.fetchWeatherStations()
+          _ <- postgresService.save(fileName, stationDataStr)
+        } yield stationDataStr
+      )
+        .flatMap(content => Ok(content))
+        .handleErrorWith(error =>
+          InternalServerError(s"Failed to fetch stations: ${error.getMessage}")
+        )
 
     // http://0.0.0.0:8080/api/show/grib-all-structure
     case GET -> Root / "show" / "grib-all-structure" =>
@@ -121,29 +136,29 @@ class Server(postgresService: PostgresService, dataService: DataService, fetch: 
       postgresService.queryCountry(from, to, fieldList)
         .flatMap(result => Ok(result.asJson.pretty))
 
-    // http://0.0.0.0:8080/api/fetch/date/20230514
-    case GET -> Root / "fetch" / "date" / ValidateDate(date) =>
-      val result = for {
-        fetchResultEither <- fetch.fetchFromDate(date).attempt
-        fetchServiceError = fetchResultEither.left.toOption.map(e => s"FetchServiceError: ${e.getMessage}").toList
-        fetchResult = fetchResultEither.getOrElse(List.empty)
-        (fetchErrors, successDownloads) = fetchResult.partitionMap(identity)
-        _ <- log.info(s"FETCHED SUCCESSFULLY files: ${successDownloads.size}")
-        saveResults <- successDownloads.traverse { case (name, content) => postgresService.save(name, content).attempt }
-        (saveErrors, successSaves) = saveResults.partitionMap(identity)
-//        successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
-        successes = successSaves
-        errors = fetchServiceError ++ fetchErrors.map(e => s"FetchError: ${e.getMessage}") ++ saveErrors.map(e => s"SaveError: ${e.getMessage}")
-        _ <- log.error(s"errors: $errors")
-        _ <- log.info(s"successes: $successes")
-      } yield (successes, errors)
-
-      result.flatMap { case (successes, errors) =>
-        Ok(Json.obj(
-            "errors" -> errors.asJson,
-            "successes" -> successes.asJson
-          ).pretty)
-      }
+//    // http://0.0.0.0:8080/api/fetch/date/20230514
+//    case GET -> Root / "fetch" / "date" / ValidateDate(date) =>
+//      val result = for {
+//        fetchResultEither <- fetch.fetchFromDate(date).attempt
+//        fetchServiceError = fetchResultEither.left.toOption.map(e => s"FetchServiceError: ${e.getMessage}").toList
+//        fetchResult = fetchResultEither.getOrElse(List.empty)
+//        (fetchErrors, successDownloads) = fetchResult.partitionMap(identity)
+//        _ <- log.info(s"FETCHED SUCCESSFULLY files: ${successDownloads.size}")
+//        saveResults <- successDownloads.traverse { case (name, content) => postgresService.save(name, content).attempt }
+//        (saveErrors, successSaves) = saveResults.partitionMap(identity)
+////        successes = successDownloads.map(s => s"fetched: ${s._1}") ++ successSaves.map(s => s"saved: $s")
+//        successes = successSaves
+//        errors = fetchServiceError ++ fetchErrors.map(e => s"FetchError: ${e.getMessage}") ++ saveErrors.map(e => s"SaveError: ${e.getMessage}")
+//        _ <- log.error(s"errors: $errors")
+//        _ <- log.info(s"successes: $successes")
+//      } yield (successes, errors)
+//
+//      result.flatMap { case (successes, errors) =>
+//        Ok(Json.obj(
+//            "errors" -> errors.asJson,
+//            "successes" -> successes.asJson
+//          ).pretty)
+//      }
 
     // http://0.0.0.0:8080/api/show/months/202304,202305,202306
     case GET -> Root / "show" / "months" / ValidateMonths(monthList) =>
