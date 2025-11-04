@@ -3,7 +3,7 @@ import cats.effect.unsafe.implicits.global
 import cats.implicits.catsSyntaxTuple4Parallel
 import data.DataService
 import db.{DBConnection, PostgresService}
-import fetch.csv.{FetchService, FileNameService}
+import fetch.csv.{FileNameService}
 import fetch.dmi
 import fetch.lvgmc
 import scheduler.Scheduler
@@ -23,7 +23,6 @@ object Main extends IOApp {
 
       scheduler <- Scheduler.of
       dataService <- DataService.of
-      fetchLegacyService <- FetchService.of
       fetchLvgmcService <- lvgmc.FetchService.of
 
 
@@ -41,7 +40,7 @@ object Main extends IOApp {
       fetchGrib <- dmi.FetchService.of(dataService)
       fetchGribTask = scheduler.scheduleTask("Fetch Grib", List(43), fetchGrib.fetchRecentForecasts()).compile.drain
 
-      server <- Server.of(postgresService, dataService, fetchLegacyService)
+      server <- Server.of(postgresService, dataService, fetchLvgmcService)
       serverTask = server.run
 
       exitCode <- (serverTask, fetchStationsTask, cleanupTask, fetchGribTask).parMapN((_, _, _, _) => ExitCode.Success)
