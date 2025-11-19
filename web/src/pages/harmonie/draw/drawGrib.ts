@@ -73,6 +73,7 @@ const CATEGORICAL_RAIN = [0, 1, 192]
 const TOTAL_PRECIPITATION = [0, 1, 52]
 const HOUR_PRECIPITATION = [0, 1, 236]
 const RAIN_PRECIPITATION = [0, 1, 65]
+const SNOW_DEPTH = [0, 1, 60]
 const TEMPERATURE = [0, 0, 0]
 const WIND_DIRECTION = [0, 2, 192]
 const WIND_SPEED = [0, 2, 1]
@@ -119,6 +120,9 @@ function fillImageData(
                 color = hourPrecipitationColors(encodedValNow, metaNow.conversion, encodedValPrev, metaPrev.conversion, isInterpolated)
             }
             else if (isMeteoEqual(meteo, RAIN_PRECIPITATION)) {
+                color = precipitationColors(encodedValue, conversion, isInterpolated)
+            }
+            else if (isMeteoEqual(meteo, SNOW_DEPTH)) {
                 color = precipitationColors(encodedValue, conversion, isInterpolated)
             }
             else if (isMeteoEqual(meteo, TEMPERATURE)) {
