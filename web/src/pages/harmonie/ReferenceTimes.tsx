@@ -10,6 +10,7 @@ import { processPromisesInBatches } from '../../helpers/progressivePromises'
 const METEO_PARAMS: [string, MeteoParam][] = [
     ['temperature', { discipline: 0, category: 0, product: 0, levelType: -1, levelValue: -1, subType: 'now' }],
     ['precipitation', { discipline: 0, category: 1, product: 236, levelType: -1, levelValue: -1, subType: 'now' }],
+    ['snow depth', { discipline: 0, category: 1, product: 60, levelType: -1, levelValue: -1, subType: 'now' }],
     ['categorical precipitation', { discipline: 0, category: 1, product: 192, levelType: -1, levelValue: -1, subType: 'now' }],
     ['wind speed', { discipline: 0, category: 2, product: 1, levelType: -1, levelValue: -1, subType: 'now' }],
     ['wind speed gust', { discipline: 0, category: 2, product: 22, levelType: -1, levelValue: -1, subType: 'now' }],

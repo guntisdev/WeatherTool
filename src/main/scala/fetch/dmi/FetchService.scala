@@ -75,7 +75,7 @@ class FetchService(dataService: DataService, log: Logger[IO]) {
         base <- edrBaseUrl
         queryParams = Query.fromPairs(
           // https://opendatadocs.dmi.govcloud.dk/Data/Forecast_Data_Weather_Model_HARMONIE_DINI_EDR
-          "parameter-name" -> "temperature-2m,total-precipitation,precipitation-type,wind-speed,gust-wind-speed-10m,wind-10m-u,wind-10m-v",
+          "parameter-name" -> "temperature-2m,total-precipitation,precipitation-type,wind-speed,gust-wind-speed-10m,wind-10m-u,wind-10m-v,snow-depth-water-equivalent",
           "datetime" -> time.toString,
           "api-key" -> edrConfig.api_key,
         )
