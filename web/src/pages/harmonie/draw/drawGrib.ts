@@ -8,6 +8,7 @@ import { temperatureColors } from './temperature'
 import { isCalculatedWindDirection, windDirectionArrows, windDirectionColors, windSpeedColors } from './windDirection'
 
 import latvia_border from '../../../assets/latvia_contour.webp'
+import { snowDepthColors } from './snowDepth'
 const latviaBoderImg = new Image()
 latviaBoderImg.onload = () => {}
 latviaBoderImg.src = latvia_border
@@ -123,7 +124,7 @@ function fillImageData(
                 color = precipitationColors(encodedValue, conversion, isInterpolated)
             }
             else if (isMeteoEqual(meteo, SNOW_DEPTH)) {
-                color = precipitationColors(encodedValue, conversion, isInterpolated)
+                color = snowDepthColors(encodedValue, conversion, isInterpolated)
             }
             else if (isMeteoEqual(meteo, TEMPERATURE)) {
                 color = temperatureColors(encodedValue, conversion, isInterpolated)
