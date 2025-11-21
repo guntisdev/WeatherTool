@@ -27,6 +27,21 @@ export const PRECIPITATION: ColorEntry[] = [
     { value: 0.1, color: [152, 233, 252, 0] },
 ]
 
+export const SNOW_DEPTH: ColorEntry[] = [
+    { value: 40, color: [126, 26, 99, 255] },
+    { value: 30, color: [120, 27, 131, 255] },
+    { value: 20, color: [84, 20, 130, 255] },
+    { value: 15, color: [49, 16, 129, 255] },
+    { value: 10, color: [9, 15, 129, 255] },
+    { value: 7, color: [0, 24, 150, 255] },
+    { value: 6, color: [0, 43, 186, 255] },
+    { value: 5, color: [10, 70, 220, 255] },
+    { value: 4, color: [40, 109, 246, 255] },
+    { value: 3, color: [80, 162, 248, 255] },
+    { value: 2, color: [118, 202, 249, 255] },
+    { value: 1, color: [152, 233, 252, 0] },
+]
+
 // from ltv
 export const TEMPERATURES: ColorEntry[] = [
     { value: 35, color: [155, 30, 30, 255] },
