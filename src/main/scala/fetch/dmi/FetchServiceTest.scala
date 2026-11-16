@@ -4,8 +4,6 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import data.DataService
 
-import java.time.{ZoneOffset, ZonedDateTime}
-
 object FetchServiceTest {
   def main(args: Array[String]): Unit = {
 //    fetchFromTimeList().unsafeRunSync()
@@ -49,12 +47,10 @@ object FetchServiceTest {
 
   private def fetchFromTimeList(): IO[Unit] = {
     val program = for {
-      nowUTC <- IO(ZonedDateTime.now(ZoneOffset.UTC))
-      referenceTime = FileName.getClosestReferenceTime(nowUTC)
-      timeList = FileName.generateTimeList(referenceTime)
       dataService <- DataService.of
       fetch <- FetchService.of(dataService)
-      nameList <- fetch.fetchFromList(timeList)
+      available <- fetch.fetchAvailableForecasts()
+      nameList <- fetch.fetchFromList(available._2.take(2))
       _ <- IO.println(nameList)
     } yield ()
 
