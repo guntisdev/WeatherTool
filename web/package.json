@@ -9,18 +9,16 @@
     "serve": "vite preview"
   },
   "devDependencies": {
-    "@types/chart.js": "^2.9.41",
-    "typescript": "^5.7.3",
-    "typescript-plugin-css-modules": "^5.1.0",
-    "vite": "^6.0.11",
-    "vite-plugin-html-env": "^1.2.8",
-    "vite-plugin-solid": "^2.11.0"
+    "typescript": "^6.0.3",
+    "typescript-plugin-css-modules": "^5.3.0",
+    "vite": "^8.3.8",
+    "vite-plugin-solid": "^2.11.16"
   },
   "dependencies": {
-    "@solidjs/router": "^0.15.2",
-    "chart.js": "^4.4.1",
-    "jszip": "^3.10.1",
-    "moment": "^2.30.1",
-    "solid-js": "^1.9.4"
+    "@solidjs/router": "^1.0.3",
+    "chart.js": "^4.6.1",
+    "jszip": "^3.10.2",
+    "moment": "^2.31.0",
+    "solid-js": "^1.9.19"
   }
 }
